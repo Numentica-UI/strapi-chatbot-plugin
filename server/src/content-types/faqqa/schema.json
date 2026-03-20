@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "chatbot_config_faqqas",
+  "info": {
+    "singularName": "faqqa",
+    "pluralName": "faqqas",
+    "displayName": "Chatbot-FAQ"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "question": {
+      "type": "string",
+      "configurable": false,
+      "required": true
+    },
+    "answer": {
+      "type": "richtext",
+      "configurable": false,
+      "required": true
+    },
+    "embedding": {
+      "type": "json",
+      "private": true,
+      "configurable": false,
+      "visible": false
+    }
+  }
+}
