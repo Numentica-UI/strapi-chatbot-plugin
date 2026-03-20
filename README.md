@@ -1,61 +1,131 @@
-# 🚀 Getting started with Strapi
+# FAQ AI Bot Plugin for Strapi
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+   
+## 📦 Setup Instructions
+    
+     
+### 1. Create a Strapi Project
 
-### `develop`
+Run the following command to create a new Strapi app:
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
-
-```
-npm run develop
-# or
-yarn develop
-```
-
-### `start`
-
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
-
-```
-npm run start
-# or
-yarn start
+```bash
+npx create-strapi@latest my-strapi-project
 ```
 
-### `build`
+Then navigate into the project:
 
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+```bash
+cd my-strapi-project
+```
+  
+  
+### 2. Create the Plugin
+
+Initialize the plugin using the Strapi SDK:
+
+```bash
+npx @strapi/sdk-plugin init src/plugins/faq-ai-bot
+```
+
+This will generate the plugin inside:
 
 ```
+src/plugins/faq-ai-bot
+```
+  
+  
+### 3. Add Plugin Code
+
+Navigate to the plugin folder:
+
+```bash
+cd src/plugins/faq-ai-bot
+```
+
+Replace the plugin folder files with this repo's files(all of them).
+  
+  
+### 4. Install Dependencies
+
+From the root of your project, run:
+
+```bash
+npm install
+```
+  
+  
+### 5. Build the Plugin
+
+Inside the plugin directory(need not run if no changes made):
+
+```bash
 npm run build
-# or
-yarn build
+```
+  
+  
+### 6. Start the Strapi App
+
+Go back to the root folder:
+
+```bash
+cd ../..
 ```
 
-## ⚙️ Deployment
+Run Strapi in development mode:
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
-
+```bash
+npm run develop
 ```
-yarn strapi deploy
-```
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
 
 ---
 
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+    
+## 📁 Plugin Structure
+
+```
+src/plugins/faq-ai-bot/
+├── admin/        # Admin panel UI
+├── server/       # Backend logic (controllers, services)
+├── plugin.ts     # Plugin entry point
+└── package.json
+```
+
+---
+
+## 💡 Usage
+
+1. Start your Strapi app.
+2. Open the admin panel.
+3. Enable/configure the `faq-ai-bot` plugin.
+4. Add your FAQ AI logic inside services/controllers.
+
+---
+
+## 📚 Helpful Links
+
+- [Strapi Docs](https://docs.strapi.io)
+- [Plugin Development](https://docs.strapi.io/dev-docs/plugins)
+
+---
+
+## ⚠️ Notes
+
+- Rebuild the plugin after changes:
+  ```bash
+  npm run build
+  ```
+- Restart the server if needed.
+
+## Additional Configuration
+
+- Add the following code to your config/plugins.ts file:
+  ```bash
+  export default {
+     'faq-ai-bot': {
+       enabled: true,
+       resolve: 'src/plugins/faq-ai-bot'
+     },
+   }
+  ```
+
+  ---
