@@ -93,7 +93,6 @@ npm run develop
 <br>
 
 ---
-
     
 ## 📁 Plugin Structure
 
@@ -108,7 +107,7 @@ config/plugin.ts
 ```
 
 ---
-<br>
+
 ## 💡 Usage
 
 1. Start your Strapi app.
@@ -117,14 +116,14 @@ config/plugin.ts
 4. Add your FAQ AI logic inside services/controllers.
 
 ---
-<br>
+
 ## 📚 Helpful Links
 
 - [Strapi Docs](https://docs.strapi.io)
 - [Plugin Development](https://docs.strapi.io/dev-docs/plugins)
 
 ---
-<br>
+
 ## ⚠️ Notes
 
 - Rebuild the plugin after changes:
