@@ -56,6 +56,7 @@ cd src/plugins/faq-ai-bot
 ```
 
 Replace the plugin folder files with this repo's files(all of them).
+
 <br>  
   
 ### 4. Install Dependencies
