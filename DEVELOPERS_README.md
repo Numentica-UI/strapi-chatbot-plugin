@@ -33,6 +33,10 @@ This will generate the plugin inside:
 ```
 src/plugins/faq-ai-bot
 ```
+Note : If version mismatch occurs while installing node_modules, run :
+```
+npm install --legacy-peer-deps
+```
 
 #### 2.1. Additional Configuration
 
