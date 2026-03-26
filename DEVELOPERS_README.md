@@ -2,7 +2,7 @@
 
    
 ## 📦 Setup Instructions (Developer Setup)
-    
+<br>    
      
 ### 1. Create a Strapi Project
 
