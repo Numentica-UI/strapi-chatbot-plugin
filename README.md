@@ -11,7 +11,7 @@ An AI-powered FAQ chatbot plugin for Strapi. Drop it into any Strapi project and
 
 ---
 
-## Installation
+## 📦 Installation
 
 Pick your package manager:
 
@@ -46,7 +46,7 @@ pnpm develop
 
 ---
 
-### Usage
+### 💡 Usage
 
 1. Start your Strapi app.
 2. Open the admin panel.
@@ -82,14 +82,14 @@ npm run build && npm run develop
 
 ---
 
-### Troubleshooting
+### ⚠️ Troubleshooting
 
 - Make sure the base domain is proper.
 - Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
 
 ---
 
-### Links
+### 📚 Links
 
 - [Strapi Docs](https://docs.strapi.io)
 - [Developer Setup](./DEVELOPERS_README.md)
