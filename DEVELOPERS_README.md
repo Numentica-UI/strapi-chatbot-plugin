@@ -1,5 +1,5 @@
 # FAQ AI Bot - Strapi Plugin
-
+<br>
    
 ## 📦 Setup Instructions (Developer Setup)
      
