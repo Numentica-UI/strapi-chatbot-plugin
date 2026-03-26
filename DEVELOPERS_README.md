@@ -135,5 +135,3 @@ config/plugin.ts
 ---
 
 [Back to User Setup](https://github.com/Numentica-UI/strapi-chatbot-plugin/blob/main/README.md)
-
----
