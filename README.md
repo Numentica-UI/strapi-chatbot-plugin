@@ -92,4 +92,4 @@ Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
 ### Links
 
 - [Strapi Docs](https://docs.strapi.io)
-- [Developer Setup](./DEVELOPER.md)
+- [Developer Setup](./DEVELOPERS_README.md)
