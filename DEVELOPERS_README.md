@@ -22,7 +22,7 @@ cd (my-strapi-project)
 ### 2. Create the Plugin
 
 Initialize the plugin using the Strapi SDK:
-Note : Don't change the plugin name.
+⚠️ Note : Don't change the plugin name.
 
 ```bash
 npx @strapi/sdk-plugin init src/plugins/faq-ai-bot
@@ -33,7 +33,7 @@ This will generate the plugin inside:
 ```
 src/plugins/faq-ai-bot
 ```
-Note : If version mismatch occurs while installing node_modules, run :
+⚠️ Note : If version mismatch occurs while installing node_modules, run :
 ```
 npm install --legacy-peer-deps
 ```
