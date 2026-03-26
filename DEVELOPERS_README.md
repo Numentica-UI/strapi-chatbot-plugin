@@ -1,8 +1,7 @@
-# FAQ AI Bot Plugin for Strapi
-## Developer Setup
+# FAQ AI Bot Plugin for Strapi 
 
    
-## 📦 Setup Instructions
+## 📦 Setup Instructions (Developer Setup)
     
      
 ### 1. Create a Strapi Project
