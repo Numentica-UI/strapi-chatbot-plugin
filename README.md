@@ -53,7 +53,7 @@ pnpm develop
 1. Start your Strapi app.
 2. Open the admin panel.
 3. Navigate to the **FAQ AI Bot** plugin in the sidebar.
-4. Setup the [OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)(Make sure GPT-4o mini and text-embedding-3-small models are available).
+4. Setup the [OpenAI API Key](https://platform.openai.com/settings/organization/api-keys) (Make sure GPT-4o mini and text-embedding-3-small models are available).
 5. Add your base domain of the frontend (To access the cards from it's public folder).
 6. Add contact link so that the AI can provide it to the user if he requests.
 7. Save the configurations.
