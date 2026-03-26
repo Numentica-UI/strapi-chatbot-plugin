@@ -84,8 +84,8 @@ npm run build && npm run develop
 
 ### Troubleshooting
 
-Make sure the base domain is proper.
-Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
+- Make sure the base domain is proper.
+- Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
 
 ---
 
