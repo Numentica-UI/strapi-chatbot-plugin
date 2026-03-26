@@ -17,7 +17,7 @@ Then navigate into the project:
 ```bash
 cd (my-strapi-project)
 ```
-  
+<br>  
   
 ### 2. Create the Plugin
 
@@ -45,6 +45,7 @@ src/plugins/faq-ai-bot
      },
    }
   ```
+<br>  
   
 ### 3. Add Plugin Code
 
@@ -55,7 +56,7 @@ cd src/plugins/faq-ai-bot
 ```
 
 Replace the plugin folder files with this repo's files(all of them).
-  
+<br>  
   
 ### 4. Install Dependencies
 
@@ -64,7 +65,7 @@ From the root of your project, run:
 ```bash
 npm install
 ```
-  
+<br>
   
 ### 5. Build the Plugin
 
@@ -73,7 +74,7 @@ Inside the plugin directory(need not run if no changes made):
 ```bash
 npm run build
 ```
-  
+<br>  
   
 ### 6. Start the Strapi App
 
@@ -88,6 +89,7 @@ Run Strapi in development mode:
 ```bash
 npm run develop
 ```
+<br>
 
 ---
 
@@ -105,7 +107,7 @@ config/plugin.ts
 ```
 
 ---
-
+<br>
 ## 💡 Usage
 
 1. Start your Strapi app.
@@ -114,14 +116,14 @@ config/plugin.ts
 4. Add your FAQ AI logic inside services/controllers.
 
 ---
-
+<br>
 ## 📚 Helpful Links
 
 - [Strapi Docs](https://docs.strapi.io)
 - [Plugin Development](https://docs.strapi.io/dev-docs/plugins)
 
 ---
-
+<br>
 ## ⚠️ Notes
 
 - Rebuild the plugin after changes:
