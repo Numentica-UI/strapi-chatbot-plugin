@@ -1,4 +1,4 @@
-# FAQ AI Bot Plugin for Strapi
+# FAQ AI Bot Plugin for Strapi(Developer Setup)
 
    
 ## 📦 Setup Instructions
