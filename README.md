@@ -46,7 +46,7 @@ pnpm develop
 
 ---
 
-## Usage
+### Usage
 
 1. Start your Strapi app.
 2. Open the admin panel.
@@ -61,7 +61,7 @@ pnpm develop
 
 ---
 
-## Updating
+### Updating
 
 ```bash
 # npm
@@ -82,14 +82,14 @@ npm run build && npm run develop
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
 Make sure the base domain is proper.
 Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
+
 ---
 
-## Links
+### Links
 
 - [Strapi Docs](https://docs.strapi.io)
 - [Developer Setup](./DEVELOPER.md)
-- [Report an Issue](https://github.com/Numentica-UI/strapi-chatbot-plugin/issues)
