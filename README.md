@@ -1,131 +1,95 @@
-# FAQ AI Bot Plugin for Strapi
+# FAQ AI Bot - Strapi Plugin
 
-   
-## 📦 Setup Instructions
-    
-     
-### 1. Create a Strapi Project
+An AI-powered FAQ chatbot plugin for Strapi. Drop it into any Strapi project and get an intelligent FAQ assistant in your admin panel.
 
-Run the following command to create a new Strapi app:
+---
 
-```bash
-npx create-strapi@latest my-strapi-project
-```
+## Requirements
 
-Then navigate into the project:
+- Node.js `>=18.0.0`
+- Strapi `>=4.x`
 
-```bash
-cd my-strapi-project
-```
-  
-  
-### 2. Create the Plugin
+---
 
-Initialize the plugin using the Strapi SDK:
+## Installation
+
+Pick your package manager:
 
 ```bash
-npx @strapi/sdk-plugin init src/plugins/faq-ai-bot
+# npm
+npm install strapi-plugin-faq-ai-bot@latest
+
+# yarn
+yarn add strapi-plugin-faq-ai-bot@latest
+
+# pnpm
+pnpm add strapi-plugin-faq-ai-bot@latest
 ```
 
-This will generate the plugin inside:
+---
 
-```
-src/plugins/faq-ai-bot
-```
-  
-  
-### 3. Add Plugin Code
-
-Navigate to the plugin folder:
+## Build & Start
 
 ```bash
-cd src/plugins/faq-ai-bot
-```
-
-Replace the plugin folder files with this repo's files(all of them).
-  
-  
-### 4. Install Dependencies
-
-From the root of your project, run:
-
-```bash
-npm install
-```
-  
-  
-### 5. Build the Plugin
-
-Inside the plugin directory(need not run if no changes made):
-
-```bash
+# npm
 npm run build
-```
-  
-  
-### 6. Start the Strapi App
-
-Go back to the root folder:
-
-```bash
-cd ../..
-```
-
-Run Strapi in development mode:
-
-```bash
 npm run develop
+
+# yarn
+yarn build
+yarn develop
+
+# pnpm
+pnpm build
+pnpm develop
 ```
 
 ---
 
-    
-## 📁 Plugin Structure
-
-```
-src/plugins/faq-ai-bot/
-├── admin/        # Admin panel UI
-├── server/       # Backend logic (controllers, services)
-├── plugin.ts     # Plugin entry point
-└── package.json
-```
-
----
-
-## 💡 Usage
+## Usage
 
 1. Start your Strapi app.
 2. Open the admin panel.
-3. Enable/configure the `faq-ai-bot` plugin.
-4. Add your FAQ AI logic inside services/controllers.
+3. Navigate to the **FAQ AI Bot** plugin in the sidebar.
+4. Setup the [OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)(Make sure GPT-4o mini and text-embedding-3-small models are available).
+5. Add your base domain of the frontend (To access the cards from it's public folder).
+6. Add contact link so that the AI can provide it to the user if he requests.
+7. Save the configurations.
+8. Entry your FAQs in the _Chatbot-FAQ_ collection.
+9. The chatbot is ready to use.
+10. You can test the Chatbot in Admin panel.
 
 ---
 
-## 📚 Helpful Links
+## Updating
+
+```bash
+# npm
+npm install strapi-plugin-faq-ai-bot@latest
+
+# yarn
+yarn add strapi-plugin-faq-ai-bot@latest
+
+# pnpm
+pnpm add strapi-plugin-faq-ai-bot@latest
+```
+
+Then rebuild and restart:
+
+```bash
+npm run build && npm run develop
+```
+
+---
+
+## Troubleshooting
+
+Make sure the base domain is proper.
+Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
+---
+
+## Links
 
 - [Strapi Docs](https://docs.strapi.io)
-- [Plugin Development](https://docs.strapi.io/dev-docs/plugins)
-
----
-
-## ⚠️ Notes
-
-- Rebuild the plugin after changes:
-  ```bash
-  npm run build
-  ```
-- Restart the server if needed.
-
-## Additional Configuration
-
-- Add the following code to your config/plugins.ts file:
-  ```bash
-  export default {
-     'faq-ai-bot': {
-       enabled: true,
-       resolve: 'src/plugins/faq-ai-bot'
-     },
-   }
-  ```
-
-  ---
+- [Developer Setup](./DEVELOPER.md)
+- [Report an Issue](https://github.com/Numentica-UI/strapi-chatbot-plugin/issues)
