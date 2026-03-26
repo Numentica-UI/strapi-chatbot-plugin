@@ -34,7 +34,7 @@ This will generate the plugin inside:
 src/plugins/faq-ai-bot
 ```
 
-### 2.1. Additional Configuration
+#### 2.1. Additional Configuration
 
 - Add the following code to your config/plugins.ts file:
   ```bash
