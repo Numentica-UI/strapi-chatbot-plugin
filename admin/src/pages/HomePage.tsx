@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Main, Typography, Flex, Button, Box, Loader } from '@strapi/design-system';
 import { Check, Information } from '@strapi/icons';
 import { useFetchClient, useNotification } from '@strapi/admin/strapi-admin';
+import styled from 'styled-components';
 
 import ChatbotPreview from '../components/ChatbotPreview';
 import BasicSettings from '../components/BasicSettings';
@@ -33,12 +34,110 @@ function normalizeDomain(url: string): string {
   return normalized;
 }
 
+const LoaderWrapper = styled(Flex)`
+  height: 100vh;
+`;
+
+const UnsavedBar = styled(Box)`
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 32px;
+  padding-left: 32px;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+`;
+
+const UnsavedText = styled(Typography)`
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 19.5px;
+`;
+
+const DiscardButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: Inter;
+  font-weight: 500;
+  font-size: 12px;
+  color: inherit;
+`;
+
+const SaveAllButton = styled(Button)`
+  width: 87.84px;
+  height: 28px;
+  border-radius: 10px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+`;
+
+const StickyHeader = styled(Box)<{ $hasUnsaved: boolean }>`
+  top: ${({ $hasUnsaved }) => ($hasUnsaved ? '50px' : '0')};
+`;
+
+const CenteredBox = styled(Box)`
+  max-width: 704px;
+  margin: 0 auto;
+  width: 100%;
+`;
+
+const PageTitle = styled(Typography)`
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 30px;
+  display: block;
+`;
+
+const PageSubtitle = styled(Typography)`
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 19.5px;
+`;
+
+const SavedBadge = styled(Box)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 8px;
+`;
+
+const SavedBadgeText = styled(Typography)`
+  font-size: 13px;
+  font-weight: 500;
+  font-family: Inter, sans-serif;
+`;
+
+const SaveButton = styled(Button)`
+  border: none;
+  color: white;
+  font-size: 13px;
+  padding: 7px 14px;
+  height: 34px;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+  gap: 6px;
+  font-family: Inter, sans-serif;
+`;
+
 const HomePage = () => {
-  // Data States
   const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>([]);
   const [activeCollections, setActiveCollections] = useState<CollectionConfig[]>([]);
 
-  // Settings States
   const [openaiKey, setOpenaiKey] = useState('');
   const [systemInstructions, setSystemInstructions] = useState('');
   const [responseInstructions, setResponseInstructions] = useState('');
@@ -48,7 +147,6 @@ const HomePage = () => {
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [cardOptions, setCardOptions] = useState<any[]>([]);
 
-  // UI States
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -60,7 +158,6 @@ const HomePage = () => {
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
 
-  // Track Unsaved Changes
   useEffect(() => {
     const currentData = JSON.stringify({
       openaiKey,
@@ -209,155 +306,75 @@ const HomePage = () => {
 
   if (isLoading)
     return (
-      <Flex justifyContent="center" height="100vh">
+      <LoaderWrapper justifyContent="center">
         <Loader />
-      </Flex>
+      </LoaderWrapper>
     );
 
   return (
     <Main>
       {/* UNSAVED CHANGES BAR */}
       {hasUnsavedChanges && (
-        <Box
-          background="warning100"
-          borderColor="warning200"
-          style={{
-            width: '100%',
-            height: '50px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingRight: '32px',
-            paddingLeft: '32px',
-            borderBottomWidth: '2px',
-            borderBottomStyle: 'solid',
-            position: 'sticky',
-            top: 0,
-            zIndex: 6,
-          }}
-        >
+        <UnsavedBar background="warning100" borderColor="warning200">
           <Flex alignItems="center" gap={2}>
-            <Information color="warning600" style={{ width: 18, height: 18 }} />
-          <Typography
-            textColor="warning600"
-            style={{
-              fontWeight: 500,
-              fontSize: '13px',
-              lineHeight: '19.5px',
-            }}
-          >
-            You have unsaved changes
-          </Typography>
-        </Flex>
+            <Information color="warning600" width={18} height={18} />
+            <UnsavedText textColor="warning600">You have unsaved changes</UnsavedText>
+          </Flex>
 
           <Flex gap={4}>
-            <button
-              onClick={() => init()}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'Inter',
-                fontWeight: 500,
-                fontSize: '12px',
-                color: 'inherit'
-              }}
-            >
-              Discard
-            </button>
-            <Button
-              onClick={save}
-              background="primary600"
-              style={{
-                width: '87.84px',
-                height: '28px',
-                borderRadius: '10px',
-                border: 'none',
-                fontSize: '12px',
-                fontWeight: 500,
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0
-              }}
-            >
+            <DiscardButton onClick={() => init()}>Discard</DiscardButton>
+            <SaveAllButton onClick={save} background="primary600">
               Save All
-            </Button>
+            </SaveAllButton>
           </Flex>
-        </Box>
+        </UnsavedBar>
       )}
 
       {/* HEADER SECTION */}
-      <Box
+      <StickyHeader
         background="neutral100"
         position="sticky"
-        top={hasUnsavedChanges ? '50px' : 0}
         zIndex={6}
         paddingTop={8}
         paddingBottom={4}
+        $hasUnsaved={hasUnsavedChanges}
       >
-        <Box style={{ maxWidth: '704px', margin: '0 auto', width: '100%' }}>
+        <CenteredBox>
           <Flex justifyContent="space-between" alignItems="baseline">
             <Box>
-              <Typography textColor="neutral800" style={{ fontWeight: 700, fontSize: '20px', lineHeight: '30px', display: 'block' }}>
-                Chatbot Configuration
-              </Typography>
+              <PageTitle textColor="neutral800">Chatbot Configuration</PageTitle>
               <Box paddingTop={1}>
-                <Typography textColor="neutral600" style={{ fontWeight: 400, fontSize: '13px', lineHeight: '19.5px' }}>
+                <PageSubtitle textColor="neutral600">
                   Configure your AI chatbot's identity, data, and behaviour.
-                </Typography>
+                </PageSubtitle>
               </Box>
             </Box>
 
             <Flex alignItems="center">
               {isSaved ? (
-                <Box
-                  background="success100"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '0 14px',
-                    height: '34px',
-                    borderRadius: '8px',
-                  }}
-                >
+                <SavedBadge background="success100">
                   <Check width={14} height={14} color="success600" />
-                  <Typography textColor="success600" style={{ fontSize: '13px', fontWeight: 500, fontFamily: 'Inter, sans-serif' }}>
-                    Saved!
-                  </Typography>
-                </Box>
+                  <SavedBadgeText textColor="success600">Saved!</SavedBadgeText>
+                </SavedBadge>
               ) : (
                 !hasUnsavedChanges && (
-                  <Button
+                  <SaveButton
                     onClick={save}
                     startIcon={<Check width={14} height={14} />}
                     background="primary600"
-                    style={{
-                      border: 'none',
-                      color: 'white',
-                      fontSize: '13px',
-                      padding: '7px 14px',
-                      height: '34px',
-                      borderRadius: '8px',
-                      fontWeight: 500,
-                      textAlign: 'center',
-                      gap: '6px',
-                      fontFamily: 'Inter, sans-serif',
-                    }}
                   >
                     Save Settings
-                  </Button>
+                  </SaveButton>
                 )
               )}
             </Flex>
           </Flex>
-        </Box>
-      </Box>
+        </CenteredBox>
+      </StickyHeader>
 
+      {/* MAIN CONTENT */}
       <Box background="neutral100" paddingTop={6} paddingBottom={8} marginBottom={8}>
-        <Box style={{ maxWidth: '704px', margin: '0 auto', width: '100%' }}>
+        <CenteredBox>
 
           <SetupProgress
             baseDomain={baseDomain}
@@ -470,7 +487,7 @@ const HomePage = () => {
               onUpdateResponse={setResponseInstructions}
             />
           </LockedSection>
-        </Box>
+        </CenteredBox>
       </Box>
 
       <ChatbotPreview />

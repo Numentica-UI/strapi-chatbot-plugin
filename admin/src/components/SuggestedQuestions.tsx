@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Flex, Typography, Button } from '@strapi/design-system';
 import { Plus, Pencil, Trash, Drag } from '@strapi/icons';
-import { useTheme } from 'styled-components';
+import styled from 'styled-components';
 
 interface SuggestedQuestionsProps {
   questions: string[];
@@ -10,6 +10,159 @@ interface SuggestedQuestionsProps {
   onRemove: (index: number) => void;
   onReorder: (newQuestions: string[]) => void;
 }
+
+const EmptyState = styled(Box)`
+  padding-top: 28px;
+  padding-bottom: 28px;
+  padding-left: 24px;
+  padding-right: 24px;
+  text-align: center;
+`;
+
+const QuestionRow = styled(Flex)<{ $isDragging: boolean }>`
+  border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
+  background: ${({ $isDragging, theme }) => ($isDragging ? theme.colors.neutral100 : 'transparent')};
+`;
+
+const DragHandle = styled(Box)`
+  cursor: grab;
+  color: ${({ theme }) => theme.colors.neutral400};
+`;
+
+const NumberBadge = styled(Box)`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.secondary100};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary600};
+`;
+
+const EditInput = styled.input`
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid ${({ theme }) => theme.colors.primary600};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  background: ${({ theme }) => theme.colors.neutral0};
+  outline: none;
+  box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary100};
+`;
+
+const EditFlex = styled(Flex)`
+  flex: 1;
+`;
+
+const SaveEditButton = styled(Button)`
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.primary600};
+  color: ${({ theme }) => theme.colors.neutral0};
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+`;
+
+const CancelEditButton = styled(Button)`
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.neutral200};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.neutral600};
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: transparent !important;
+    color: ${({ theme }) => theme.colors.neutral600} !important;
+    border-color: ${({ theme }) => theme.colors.neutral200} !important;
+    box-shadow: none !important;
+  }
+`;
+
+const QuestionText = styled(Box)`
+  flex: 1;
+`;
+
+const ActionIcons = styled(Flex)<{ $visible: boolean }>`
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  pointer-events: ${({ $visible }) => ($visible ? 'auto' : 'none')};
+  transition: opacity 0.2s;
+`;
+
+const IconBtn = styled.button`
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+`;
+
+const EditIconBtn = styled(IconBtn)`
+  color: ${({ theme }) => theme.colors.neutral600};
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary100};
+  }
+`;
+
+const TrashIconBtn = styled(IconBtn)`
+  color: ${({ theme }) => theme.colors.danger600};
+  &:hover {
+    background: ${({ theme }) => theme.colors.danger100};
+  }
+`;
+
+const AddInputRow = styled(Flex)`
+  padding: 16px 24px;
+`;
+
+const AddInput = styled.input`
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid ${({ theme }) => theme.colors.primary600};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  background: ${({ theme }) => theme.colors.neutral0};
+  outline: none;
+  box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary100};
+`;
+
+const AddButtonRow = styled(Box)`
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-left: 24px;
+  padding-right: 24px;
+  background: ${({ theme }) => theme.colors.neutral0};
+`;
+
+const GhostAddButton = styled.button`
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.primary600};
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 19.5px;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 
 const SuggestedQuestions = ({
   questions,
@@ -23,8 +176,6 @@ const SuggestedQuestions = ({
   const [tempValue, setTempValue] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const theme = useTheme();
 
   const handleStartEdit = (index: number, q: string) => {
     setIsAdding(false);
@@ -49,10 +200,8 @@ const SuggestedQuestions = ({
 
     const newItems = [...questions];
     const draggedItem = newItems[draggedIndex];
-
     newItems.splice(draggedIndex, 1);
     newItems.splice(index, 0, draggedItem);
-
     setDraggedIndex(index);
     onReorder(newItems);
   };
@@ -71,265 +220,88 @@ const SuggestedQuestions = ({
 
   return (
     <Box>
-      {/* EMPTY STATE */}
       {questions.length === 0 && !isAdding && (
-        <Box paddingTop={7} paddingBottom={7} paddingLeft={6} paddingRight={6} textAlign="center">
+        <EmptyState textAlign="center">
           <Typography textColor="neutral600" style={{ fontSize: '13px' }}>
             No suggested questions yet.
           </Typography>
-        </Box>
+        </EmptyState>
       )}
 
-      {/* QUESTIONS LIST */}
-      {questions.map((q, index) => {
-        const showActions = hoveredIndex === index || editingIndex === index;
+      {questions.map((q, index) => (
+        <QuestionRow
+          key={`${q}-${index}`}
+          alignItems="center"
+          draggable={editingIndex === null && !isAdding}
+          onMouseEnter={() => setHoveredIndex(index)}
+          onMouseLeave={() => setHoveredIndex(null)}
+          onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, index)}
+          onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, index)}
+          onDragEnd={() => setDraggedIndex(null)}
+          paddingLeft={6}
+          paddingRight={6}
+          paddingBottom={4}
+          paddingTop={4}
+          gap={3}
+          $isDragging={draggedIndex === index}
+        >
+          <DragHandle>
+            <Drag />
+          </DragHandle>
 
-        return (
-          <Flex
-            key={`${q}-${index}`}
-            alignItems="center"
-            draggable={editingIndex === null && !isAdding}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, index)}
-            onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, index)}
-            onDragEnd={() => setDraggedIndex(null)}
-            paddingLeft={6}
-            paddingRight={6}
-            paddingBottom={4}
-            paddingTop={4}
-            gap={3}
-            background={draggedIndex === index ? 'neutral100' : 'transparent'}
-            style={{
-              borderBottom: `1px solid ${theme.colors.neutral150}`,
-            }}
-          >
-            {/* DRAG HANDLE */}
-            <Box cursor="grab" color="neutral400">
-              <Drag />
-            </Box>
+          <NumberBadge>{index + 1}</NumberBadge>
 
-            {/* NUMBER BADGE */}
-            <Box
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                background: theme.colors.secondary100,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 10,
-                fontWeight: 700,
-                color: theme.colors.primary600,
-              }}
-            >
-              {index + 1}
-            </Box>
+          {editingIndex === index ? (
+            <EditFlex gap={2}>
+              <EditInput
+                autoFocus
+                value={tempValue}
+                onChange={(e) => setTempValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(index)}
+              />
+              <SaveEditButton onClick={() => handleSaveEdit(index)}>Save</SaveEditButton>
+              <CancelEditButton onClick={() => setEditingIndex(null)}>Cancel</CancelEditButton>
+            </EditFlex>
+          ) : (
+            <>
+              <QuestionText>
+                <Typography textColor="neutral800" style={{ fontSize: '13px' }}>
+                  {q}
+                </Typography>
+              </QuestionText>
 
-            {/* EDIT MODE */}
-            {editingIndex === index ? (
-              <Flex flex={1} gap={2}>
-                <input
-                  autoFocus
-                  value={tempValue}
-                  onChange={(e) => setTempValue(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(index)}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: `1.5px solid ${theme.colors.primary600}`,
-                    fontSize: '13px',
-                    color: theme.colors.neutral800,
-                    background: theme.colors.neutral0,
-                    outline: 'none',
-                    boxShadow: `0 0 0 3px ${theme.colors.primary100}`,
-                  }}
-                />
+              <ActionIcons gap={1} $visible={hoveredIndex === index}>
+                <EditIconBtn onClick={() => handleStartEdit(index, q)}>
+                  <Pencil width="13" height="13" />
+                </EditIconBtn>
+                <TrashIconBtn onClick={() => onRemove(index)}>
+                  <Trash width="13" height="13" />
+                </TrashIconBtn>
+              </ActionIcons>
+            </>
+          )}
+        </QuestionRow>
+      ))}
 
-                <Button
-                  onClick={() => handleSaveEdit(index)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    background: theme.colors.primary600,
-                    color: theme.colors.neutral0,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '12px',
-                  }}
-                >
-                  Save
-                </Button>
-
-                <Button
-                  onClick={() => setEditingIndex(null)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${theme.colors.neutral200}`,
-                    background: 'transparent',
-                    color: theme.colors.neutral600,
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                  }}
-                >
-                  Cancel
-                </Button>
-              </Flex>
-            ) : (
-              <>
-                {/* QUESTION TEXT */}
-                <Box flex={1}>
-                  <Typography textColor="neutral800" style={{ fontSize: '13px' }}>
-                    {q}
-                  </Typography>
-                </Box>
-
-                {/* ACTION ICONS */}
-                <Flex
-                  gap={1}
-                  style={{
-                    opacity: hoveredIndex === index ? 1 : 0,
-                    pointerEvents: hoveredIndex === index ? 'auto' : 'none',
-                    transition: 'opacity 0.2s',
-                  }}
-                >
-                  <button
-                    onClick={() => handleStartEdit(index, q)}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = theme.colors.primary100)
-                    }
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 8,
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: theme.colors.neutral600,
-                    }}
-                  >
-                    <Pencil width="13" height="13" />
-                  </button>
-
-                  <button
-                    onClick={() => onRemove(index)}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = theme.colors.danger100)
-                    }
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 8,
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: theme.colors.danger600,
-                    }}
-                  >
-                    <Trash width="13" height="13" />
-                  </button>
-                </Flex>
-              </>
-            )}
-          </Flex>
-        );
-      })}
-
-      {/* ADD NEW QUESTION */}
       {isAdding ? (
-        <Flex paddingLeft={6} paddingRight={6} paddingTop={4} paddingBottom={4} gap={3}>
-          <input
+        <AddInputRow paddingLeft={6} paddingRight={6} paddingTop={4} paddingBottom={4} gap={3}>
+          <AddInput
             autoFocus
             placeholder="Type a question and press Enter..."
             value={tempValue}
             onChange={(e) => setTempValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddSubmit()}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: `1.5px solid ${theme.colors.primary600}`,
-              fontSize: '13px',
-              color: theme.colors.neutral800,
-              background: theme.colors.neutral0,
-              outline: 'none',
-              boxShadow: `0 0 0 3px ${theme.colors.primary100}`,
-            }}
           />
-
-          <Button
-            onClick={handleAddSubmit}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              background: theme.colors.primary600,
-              color: theme.colors.neutral0,
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '12px',
-            }}
-          >
-            Add
-          </Button>
-
-          <Button
-            onClick={() => setIsAdding(false)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: `1px solid ${theme.colors.neutral200}`,
-              background: 'transparent',
-              color: theme.colors.neutral600,
-              cursor: 'pointer',
-              fontSize: '12px',
-            }}
-          >
-            Cancel
-          </Button>
-        </Flex>
+          <SaveEditButton onClick={handleAddSubmit}>Add</SaveEditButton>
+          <CancelEditButton onClick={() => setIsAdding(false)}>Cancel</CancelEditButton>
+        </AddInputRow>
       ) : (
-        <Box
-          paddingTop={3}
-          paddingBottom={3}
-          paddingLeft={6}
-          paddingRight={6}
-          style={{
-            background: theme.colors.neutral0,
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleStartAdd}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              color: theme.colors.primary600,
-              fontWeight: 500,
-              fontSize: '13px',
-              lineHeight: '19.5px',
-            }}
-          >
+        <AddButtonRow>
+          <GhostAddButton type="button" onClick={handleStartAdd}>
             <Plus width={12} height={12} />
             Add question
-          </button>
-        </Box>
+          </GhostAddButton>
+        </AddButtonRow>
       )}
     </Box>
   );

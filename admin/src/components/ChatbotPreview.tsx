@@ -46,6 +46,42 @@ const FloatingButton = styled.button`
   }
 `;
 
+const ChatLayout = styled(Flex)`
+  height: 100%;
+`;
+
+const IconButton = styled(Box).attrs({ as: 'button' })`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+`;
+
+const MessagesArea = styled(Box)`
+  flex: 1;
+  overflow-y: auto;
+`;
+
+const MessageBubble = styled(Box)<{ $isUser: boolean }>`
+  align-self: ${({ $isUser }) => ($isUser ? 'flex-end' : 'flex-start')};
+  max-width: 85%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+`;
+
+const InputBar = styled(Box)`
+  border-top: 1px solid #f0f0f5;
+`;
+
+const InputGrow = styled(Box)`
+  flex-grow: 1;
+`;
+
+const SendButton = styled(Button)`
+  height: 40px;
+`;
+
 const ChatbotPreview = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
@@ -78,7 +114,6 @@ const ChatbotPreview = () => {
       if (!reader) throw new Error('No stream');
 
       const decoder = new TextDecoder();
-
       let botMessage = '';
 
       setMessages((prev) => [...prev, { text: '', isUser: false }]);
@@ -94,25 +129,19 @@ const ChatbotPreview = () => {
 
         for (let rawLine of lines) {
           const line = rawLine.replace(/\r/g, '');
-
           if (!line) continue;
 
-          // Detect cards event
           if (line.startsWith('event: cards')) {
             isCardsEvent = true;
             continue;
           }
 
-          // Skip card JSON payload
           if (isCardsEvent && line.startsWith('data: ')) {
-            isCardsEvent = false; // skip only this one
+            isCardsEvent = false;
             continue;
           }
 
-          // Stop at DONE
-          if (line.includes('[DONE]')) {
-            return;
-          }
+          if (line.includes('[DONE]')) return;
 
           if (line.startsWith('data: ')) {
             const token = line.replace('data: ', '');
@@ -120,10 +149,7 @@ const ChatbotPreview = () => {
 
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = {
-                text: botMessage,
-                isUser: false,
-              };
+              updated[updated.length - 1] = { text: botMessage, isUser: false };
               return updated;
             });
           }
@@ -140,13 +166,12 @@ const ChatbotPreview = () => {
 
   return (
     <>
-      {/* TRIGGER BUTTON: Now shows ChevronDown when open */}
       <FloatingButton onClick={() => setIsOpen(!isOpen)} title="Toggle Chatbot Preview">
         {isOpen ? <ChevronDown width={24} height={24} /> : <Message width={28} height={28} />}
       </FloatingButton>
 
       <ChatWindowWrapper $isOpen={isOpen} background="neutral0" hasRadius>
-        <Flex direction="column" alignItems="stretch" style={{ height: '100%' }}>
+        <ChatLayout direction="column" alignItems="stretch">
           {/* Header */}
           <Box padding={4} background="primary600">
             <Flex justifyContent="space-between" alignItems="center">
@@ -155,80 +180,54 @@ const ChatbotPreview = () => {
                 <Typography fontWeight="bold" textColor="neutral0">
                   Chatbot Preview
                 </Typography>
-                <Box
-                  as="button"
-                  onClick={handleClearHistory}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
-                  title="Clear History"
-                >
+                <IconButton onClick={handleClearHistory} title="Clear History">
                   <ArrowClockwise color="neutral0" width={14} />
-                </Box>
+                </IconButton>
               </Flex>
 
-              {/* NEW: Close button in top right of header */}
-              <Box
-                as="button"
-                onClick={() => setIsOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
-                title="Close Chat"
-              >
+              <IconButton onClick={() => setIsOpen(false)} title="Close Chat">
                 <Cross color="neutral0" width={14} />
-              </Box>
+              </IconButton>
             </Flex>
           </Box>
 
           {/* Messages */}
-          <Box
-            ref={scrollRef}
-            padding={4}
-            background="neutral100"
-            style={{ flex: 1, overflowY: 'auto' }}
-          >
+          <MessagesArea ref={scrollRef} padding={4} background="neutral100">
             <Flex direction="column" alignItems="stretch" gap={3}>
               {messages.map((msg, idx) => (
-                <Box
+                <MessageBubble
                   key={idx}
                   padding={3}
                   hasRadius
                   background={msg.isUser ? 'primary600' : 'neutral0'}
                   shadow="filterShadow"
-                  style={{
-                    alignSelf: msg.isUser ? 'flex-end' : 'flex-start',
-                    maxWidth: '85%',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere',
-                    whiteSpace: 'pre-wrap',
-                  }}
+                  $isUser={msg.isUser}
                 >
                   <Typography textColor={msg.isUser ? 'neutral0' : 'neutral800'}>
                     {msg.text}
                   </Typography>
-                </Box>
+                </MessageBubble>
               ))}
             </Flex>
-          </Box>
+          </MessagesArea>
 
           {/* Input */}
-          <Box padding={3} background="neutral0" style={{ borderTop: '1px solid #f0f0f5' }}>
+          <InputBar padding={3} background="neutral0">
             <Flex gap={2} alignItems="center">
-              <Box style={{ flexGrow: 1 }}>
+              <InputGrow>
                 <TextInput
                   placeholder="Type a message..."
                   value={chatInput}
                   onChange={(e: any) => setChatInput(e.target.value)}
                   onKeyDown={(e: any) => e.key === 'Enter' && handleSendMessage()}
                 />
-              </Box>
-              <Button
-                onClick={handleSendMessage}
-                style={{ height: '40px' }}
-                startIcon={<PaperPlane />}
-              >
+              </InputGrow>
+              <SendButton onClick={handleSendMessage} startIcon={<PaperPlane />}>
                 Send
-              </Button>
+              </SendButton>
             </Flex>
-          </Box>
-        </Flex>
+          </InputBar>
+        </ChatLayout>
       </ChatWindowWrapper>
     </>
   );

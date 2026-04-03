@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Box, Typography, Flex, Checkbox, Accordion } from '@strapi/design-system';
 import { Plus, Trash, Information } from '@strapi/icons';
-import { useTheme } from 'styled-components';
 
 const CustomText = styled.span<{ weight?: number; size?: string; lh?: string; color?: string }>`
   font-weight: ${({ weight }) => weight || 400};
@@ -120,19 +119,19 @@ const CardStyleButton = styled.button<{ active?: boolean }>`
 `;
 
 const ActionButton = styled.button`
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  width: 32px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.danger200};
+  color: ${({ theme }) => theme.colors.danger600};
   &:hover {
     color: ${({ theme }) => theme.colors.danger600};
     background: ${({ theme }) => theme.colors.danger100};
-    border-radius: 8px;
   }
 `;
 
@@ -230,6 +229,32 @@ const CancelButton = styled.button`
   }
 `;
 
+const AccordionRoot = styled(Accordion.Root)`
+  border: none;
+  box-shadow: none;
+`;
+
+const AccordionContent = styled(Accordion.Content)`
+  border: none;
+`;
+
+const FieldsRow = styled(Flex)`
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  align-items: center;
+`;
+
+const FieldItem = styled(Flex)`
+  gap: 8px;
+  align-items: center;
+  min-height: 1.5rem;
+`;
+
+const CardStyleRow = styled(Flex)`
+  gap: 8px;
+`;
+
 interface ResponseTemplatesProps {
   collections: any[];
   availableCollections: any[];
@@ -254,7 +279,6 @@ const ResponseTemplates = ({
   const [isAdding, setIsAdding] = useState(false);
   const [selectedUid, setSelectedUid] = useState('');
   const [openItem, setOpenItem] = useState<string | undefined>();
-  const theme = useTheme();
 
   const handleAdd = () => {
     if (selectedUid) {
@@ -267,11 +291,7 @@ const ResponseTemplates = ({
 
   return (
     <>
-      <Accordion.Root
-        value={openItem}
-        onValueChange={setOpenItem}
-        style={{ border: 'none', boxShadow: 'none' }}
-      >
+      <AccordionRoot value={openItem} onValueChange={setOpenItem}>
         {collections.map((c) => {
           const enabledCount = c.fields.filter((f: any) => f.enabled).length;
           const totalCount = c.fields.length;
@@ -310,32 +330,16 @@ const ResponseTemplates = ({
                         e.stopPropagation();
                         onRemoveCollection(c.uid);
                       }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = theme.colors.danger100)
-                      }
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: theme.colors.danger600,
-                      }}
                     >
                       <Trash width="13" height="13" />
                     </ActionButton>
                   </ActionsContainer>
                 </HeaderRow>
               </StyledHeader>
-              <Accordion.Content style={{ border: 'none' }}>
+              <AccordionContent>
                 <Box padding={6} background="transparent">
                   <SectionTitle>FIELDS</SectionTitle>
-                  <Flex gap={4} wrap="wrap" marginBottom={6} alignItems="center">
+                  <FieldsRow>
                     <Flex gap={2} alignItems="center">
                       <Checkbox
                         checked={enabledCount === totalCount}
@@ -347,22 +351,17 @@ const ResponseTemplates = ({
                     </Flex>
                     <VerticalDivider />
                     {c.fields.map((f: any) => (
-                      <Flex
-                        key={f.name}
-                        gap={2}
-                        alignItems="center"
-                        style={{ minHeight: '1.5rem' }}
-                      >
+                      <FieldItem key={f.name}>
                         <Checkbox
                           checked={f.enabled}
                           onCheckedChange={() => onToggleField(c.uid, f.name)}
                         />
                         <CustomText size="13px">{f.name}</CustomText>
-                      </Flex>
+                      </FieldItem>
                     ))}
-                  </Flex>
+                  </FieldsRow>
                   <SectionTitle>CARD STYLE</SectionTitle>
-                  <Flex gap={2}>
+                  <CardStyleRow>
                     <CardStyleButton
                       type="button"
                       active={!c.cardStyle}
@@ -380,13 +379,13 @@ const ResponseTemplates = ({
                         {opt.label}
                       </CardStyleButton>
                     ))}
-                  </Flex>
+                  </CardStyleRow>
                 </Box>
-              </Accordion.Content>
+              </AccordionContent>
             </StyledAccordionItem>
           );
         })}
-      </Accordion.Root>
+      </AccordionRoot>
 
       {collections.length === 0 && !isAdding && (
         <EmptyStateWrapper>

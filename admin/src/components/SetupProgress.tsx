@@ -25,7 +25,6 @@ const ZapIcon = ({ width = 15, height = 15, color }: { width?: number; height?: 
 const ProgressContainer = styled(Box)`
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.colors.neutral200};
-//   box-shadow: ${({ theme }) => theme.colors.neutral900} 0px 1px 4px;
   background: ${({ theme }) => theme.colors.neutral0};
   margin-bottom: 24px;
   overflow: hidden;
@@ -42,9 +41,10 @@ const ProgressBarWrapper = styled.div`
 const ProgressBar = styled.div<{ percent: number; isFull: boolean }>`
   height: 100%;
   width: ${({ percent }) => percent}%;
-  background: ${({ isFull, theme }) => (isFull
-    ? `linear-gradient(90deg, ${theme.colors.success600}, ${theme.colors.success200})`
-    : `linear-gradient(90deg, ${theme.colors.primary600}, ${theme.colors.primary500})`)};
+  background: ${({ isFull, theme }) =>
+    isFull
+      ? `linear-gradient(90deg, ${theme.colors.success600}, ${theme.colors.success200})`
+      : `linear-gradient(90deg, ${theme.colors.primary600}, ${theme.colors.primary500})`};
   transition: width 0.5s ease-in-out;
   border-radius: 999px;
 `;
@@ -58,9 +58,9 @@ const StatusTag = styled.div<{ active: boolean }>`
   font-size: 11px;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
-
   background: ${({ active, theme }) => (active ? theme.colors.success100 : theme.colors.neutral100)};
-  border: 1px solid ${({ active, theme }) => (active ? theme.colors.success200 : theme.colors.neutral150)};
+  border: 1px solid
+    ${({ active, theme }) => (active ? theme.colors.success200 : theme.colors.neutral150)};
   color: ${({ active, theme }) => (active ? theme.colors.success600 : theme.colors.neutral500)};
 
   svg {
@@ -78,6 +78,27 @@ const CountBadge = styled.span<{ isFull: boolean }>`
   font-weight: 700;
 `;
 
+const TitleRow = styled(Flex)`
+  gap: 8px;
+  align-items: center;
+`;
+
+const TitleText = styled(Typography)`
+  font-size: 14px;
+`;
+
+const SubText = styled(Typography)`
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+`;
+
+const TagsRow = styled(Flex)`
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+`;
+
 interface SetupProgressProps {
   baseDomain: string;
   openaiKey: string;
@@ -87,7 +108,14 @@ interface SetupProgressProps {
   instructions: boolean;
 }
 
-const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questions, instructions }: SetupProgressProps) => {
+const SetupProgress = ({
+  baseDomain,
+  openaiKey,
+  contactLink,
+  collections,
+  questions,
+  instructions,
+}: SetupProgressProps) => {
   const tasks = [
     { label: 'Base Domain', done: !!baseDomain && baseDomain !== '' },
     { label: 'OpenAI API Key', done: !!openaiKey && openaiKey !== '' },
@@ -106,33 +134,35 @@ const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questi
       <Box padding={6}>
         <Flex justifyContent="space-between" alignItems="flex-start" marginBottom={3}>
           <Box>
-            <Flex gap={2} alignItems="center">
+            <TitleRow>
               <ZapIcon />
-              <Typography variant="delta" fontWeight="bold" textColor="neutral800" style={{ fontSize: '14px' }}>
+              <TitleText variant="delta" fontWeight="bold" textColor="neutral800">
                 Setup Progress
-              </Typography>
-            </Flex>
-            <Typography variant="pi" textColor="neutral600" style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}>
+              </TitleText>
+            </TitleRow>
+            <SubText variant="pi" textColor="neutral600">
               {isFull
                 ? '🎉 Your chatbot is fully configured and ready to go!'
                 : "Configure your AI chatbot's identity, data, and behaviour."}
-            </Typography>
+            </SubText>
           </Box>
-          <CountBadge isFull={isFull}>{completedCount}/{tasks.length}</CountBadge>
+          <CountBadge isFull={isFull}>
+            {completedCount}/{tasks.length}
+          </CountBadge>
         </Flex>
 
         <ProgressBarWrapper>
           <ProgressBar percent={percentage} isFull={isFull} />
         </ProgressBarWrapper>
 
-        <Flex gap={2} wrap="wrap" marginTop={4}>
+        <TagsRow>
           {tasks.map((task, i) => (
             <StatusTag key={i} active={task.done}>
               {task.done ? <CheckCircle /> : <CrossCircle />}
               {task.label}
             </StatusTag>
           ))}
-        </Flex>
+        </TagsRow>
       </Box>
     </ProgressContainer>
   );

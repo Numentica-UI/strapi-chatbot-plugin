@@ -3,7 +3,7 @@ import { Page } from "@strapi/strapi/admin";
 import { NavLink, useParams, Routes, Route } from "react-router-dom";
 import * as React from "react";
 import React__default, { useContext, useRef, useCallback, useDebugValue, useMemo, useState, useEffect, useLayoutEffect, createContext as createContext$1, createElement, useReducer } from "react";
-import { Flex, Box, Popover, Typography, Button, LinkButton, Link, Portal, Alert, Field, SubNav, Badge, TextInput, Accordion, Checkbox, Loader, Main } from "@strapi/design-system";
+import { Flex, Box, Popover, Typography, Button, LinkButton, Link, Portal, Alert, Field, SubNav, Badge, TextInput, Checkbox, Accordion, Loader, Main } from "@strapi/design-system";
 import { WarningCircle, CaretDown, ChevronDown, Message, ArrowClockwise, Cross, PaperPlane, Eye, EyeStriked, Check, Pencil, Paragraph, Trash, Information, Plus, Drag, CheckCircle, CrossCircle, Lock } from "@strapi/icons";
 import "react-dom/client";
 import ReactDOM, { unstable_batchedUpdates as unstable_batchedUpdates$1 } from "react-dom";
@@ -25145,6 +25145,35 @@ const FloatingButton = styled$1.button`
     transform: scale(1.05);
   }
 `;
+const ChatLayout = styled$1(Flex)`
+  height: 100%;
+`;
+const IconButton = styled$1(Box).attrs({ as: "button" })`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+`;
+const MessagesArea = styled$1(Box)`
+  flex: 1;
+  overflow-y: auto;
+`;
+const MessageBubble = styled$1(Box)`
+  align-self: ${({ $isUser }) => $isUser ? "flex-end" : "flex-start"};
+  max-width: 85%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+`;
+const InputBar = styled$1(Box)`
+  border-top: 1px solid #f0f0f5;
+`;
+const InputGrow = styled$1(Box)`
+  flex-grow: 1;
+`;
+const SendButton = styled$1(Button)`
+  height: 40px;
+`;
 const ChatbotPreview = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -25189,18 +25218,13 @@ const ChatbotPreview = () => {
             isCardsEvent = false;
             continue;
           }
-          if (line.includes("[DONE]")) {
-            return;
-          }
+          if (line.includes("[DONE]")) return;
           if (line.startsWith("data: ")) {
             const token = line.replace("data: ", "");
             botMessage += token;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = {
-                text: botMessage,
-                isUser: false
-              };
+              updated[updated.length - 1] = { text: botMessage, isUser: false };
               return updated;
             });
           }
@@ -25215,62 +25239,29 @@ const ChatbotPreview = () => {
   };
   return /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx(FloatingButton, { onClick: () => setIsOpen(!isOpen), title: "Toggle Chatbot Preview", children: isOpen ? /* @__PURE__ */ jsx(ChevronDown, { width: 24, height: 24 }) : /* @__PURE__ */ jsx(Message, { width: 28, height: 28 }) }),
-    /* @__PURE__ */ jsx(ChatWindowWrapper, { $isOpen: isOpen, background: "neutral0", hasRadius: true, children: /* @__PURE__ */ jsxs(Flex, { direction: "column", alignItems: "stretch", style: { height: "100%" }, children: [
+    /* @__PURE__ */ jsx(ChatWindowWrapper, { $isOpen: isOpen, background: "neutral0", hasRadius: true, children: /* @__PURE__ */ jsxs(ChatLayout, { direction: "column", alignItems: "stretch", children: [
       /* @__PURE__ */ jsx(Box, { padding: 4, background: "primary600", children: /* @__PURE__ */ jsxs(Flex, { justifyContent: "space-between", alignItems: "center", children: [
         /* @__PURE__ */ jsxs(Flex, { gap: 2, children: [
           /* @__PURE__ */ jsx(Message, { color: "neutral0", width: 18 }),
           /* @__PURE__ */ jsx(Typography, { fontWeight: "bold", textColor: "neutral0", children: "Chatbot Preview" }),
-          /* @__PURE__ */ jsx(
-            Box,
-            {
-              as: "button",
-              onClick: handleClearHistory,
-              style: { background: "none", border: "none", cursor: "pointer", display: "flex" },
-              title: "Clear History",
-              children: /* @__PURE__ */ jsx(ArrowClockwise, { color: "neutral0", width: 14 })
-            }
-          )
+          /* @__PURE__ */ jsx(IconButton, { onClick: handleClearHistory, title: "Clear History", children: /* @__PURE__ */ jsx(ArrowClockwise, { color: "neutral0", width: 14 }) })
         ] }),
-        /* @__PURE__ */ jsx(
-          Box,
-          {
-            as: "button",
-            onClick: () => setIsOpen(false),
-            style: { background: "none", border: "none", cursor: "pointer", display: "flex" },
-            title: "Close Chat",
-            children: /* @__PURE__ */ jsx(Cross, { color: "neutral0", width: 14 })
-          }
-        )
+        /* @__PURE__ */ jsx(IconButton, { onClick: () => setIsOpen(false), title: "Close Chat", children: /* @__PURE__ */ jsx(Cross, { color: "neutral0", width: 14 }) })
       ] }) }),
-      /* @__PURE__ */ jsx(
-        Box,
+      /* @__PURE__ */ jsx(MessagesArea, { ref: scrollRef, padding: 4, background: "neutral100", children: /* @__PURE__ */ jsx(Flex, { direction: "column", alignItems: "stretch", gap: 3, children: messages.map((msg, idx) => /* @__PURE__ */ jsx(
+        MessageBubble,
         {
-          ref: scrollRef,
-          padding: 4,
-          background: "neutral100",
-          style: { flex: 1, overflowY: "auto" },
-          children: /* @__PURE__ */ jsx(Flex, { direction: "column", alignItems: "stretch", gap: 3, children: messages.map((msg, idx) => /* @__PURE__ */ jsx(
-            Box,
-            {
-              padding: 3,
-              hasRadius: true,
-              background: msg.isUser ? "primary600" : "neutral0",
-              shadow: "filterShadow",
-              style: {
-                alignSelf: msg.isUser ? "flex-end" : "flex-start",
-                maxWidth: "85%",
-                wordBreak: "break-word",
-                overflowWrap: "anywhere",
-                whiteSpace: "pre-wrap"
-              },
-              children: /* @__PURE__ */ jsx(Typography, { textColor: msg.isUser ? "neutral0" : "neutral800", children: msg.text })
-            },
-            idx
-          )) })
-        }
-      ),
-      /* @__PURE__ */ jsx(Box, { padding: 3, background: "neutral0", style: { borderTop: "1px solid #f0f0f5" }, children: /* @__PURE__ */ jsxs(Flex, { gap: 2, alignItems: "center", children: [
-        /* @__PURE__ */ jsx(Box, { style: { flexGrow: 1 }, children: /* @__PURE__ */ jsx(
+          padding: 3,
+          hasRadius: true,
+          background: msg.isUser ? "primary600" : "neutral0",
+          shadow: "filterShadow",
+          $isUser: msg.isUser,
+          children: /* @__PURE__ */ jsx(Typography, { textColor: msg.isUser ? "neutral0" : "neutral800", children: msg.text })
+        },
+        idx
+      )) }) }),
+      /* @__PURE__ */ jsx(InputBar, { padding: 3, background: "neutral0", children: /* @__PURE__ */ jsxs(Flex, { gap: 2, alignItems: "center", children: [
+        /* @__PURE__ */ jsx(InputGrow, { children: /* @__PURE__ */ jsx(
           TextInput,
           {
             placeholder: "Type a message...",
@@ -25279,19 +25270,215 @@ const ChatbotPreview = () => {
             onKeyDown: (e2) => e2.key === "Enter" && handleSendMessage()
           }
         ) }),
-        /* @__PURE__ */ jsx(
-          Button,
-          {
-            onClick: handleSendMessage,
-            style: { height: "40px" },
-            startIcon: /* @__PURE__ */ jsx(PaperPlane, {}),
-            children: "Send"
-          }
-        )
+        /* @__PURE__ */ jsx(SendButton, { onClick: handleSendMessage, startIcon: /* @__PURE__ */ jsx(PaperPlane, {}), children: "Send" })
       ] }) })
     ] }) })
   ] });
 };
+const Wrapper = styled$1(Box)`
+  background: ${({ theme }) => theme.colors.neutral0};
+  border: 1px solid ${({ theme }) => theme.colors.neutral200};
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+`;
+const Header = styled$1(Box)`
+  padding: 16px 24px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
+`;
+const HeaderTitle = styled$1(Typography)`
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+`;
+const HeaderDesc = styled$1(Typography)`
+  font-size: 12px;
+  margin-top: 3px;
+  line-height: 1.5;
+  margin-bottom: 0;
+`;
+const RowBox = styled$1(Box)`
+  display: flex;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: ${({ $isLast, theme }) => $isLast ? "none" : `1px solid ${theme.colors.neutral150}`};
+  background: ${({ $isEditing, theme }) => $isEditing ? theme.colors.primary100 : theme.colors.neutral0};
+  transition: background 0.2s ease;
+  align-items: flex-start;
+`;
+const LeftCol = styled$1(Box)`
+  width: 168px;
+  flex-shrink: 0;
+`;
+const RowTitle = styled$1(Typography)`
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
+`;
+const RowDesc = styled$1(Typography)`
+  line-height: 1.4;
+  font-size: 11px;
+`;
+const RightCol = styled$1(Box)`
+  flex: 1;
+`;
+const EditColumn = styled$1(Box)`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+const InputRow = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+const InputWrapper = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 8px;
+  border: 1.5px solid ${({ $hasError, theme }) => $hasError ? theme.colors.danger600 : theme.colors.primary600};
+  background: ${({ theme }) => theme.colors.neutral0};
+  overflow: hidden;
+`;
+const StyledInput = styled$1.input`
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  background: transparent;
+`;
+const EyeButton = styled$1.button`
+  padding-right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+`;
+const SaveButton$1 = styled$1.button`
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.primary600};
+  color: ${({ theme }) => theme.colors.neutral0};
+  border: none;
+  cursor: ${({ $loading }) => $loading ? "not-allowed" : "pointer"};
+  font-weight: 600;
+  font-size: 12px;
+  opacity: ${({ $loading }) => $loading ? 0.6 : 1};
+  white-space: nowrap;
+`;
+const CancelButton$1 = styled$1.button`
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.neutral200};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.neutral600};
+  cursor: pointer;
+  font-size: 12px;
+`;
+const ErrorBox = styled$1(Box)`
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.danger100};
+  border: 1px solid ${({ theme }) => theme.colors.danger200};
+  max-width: 480px;
+`;
+const ErrorText = styled$1(Typography)`
+  font-size: 12px;
+`;
+const ViewColumn = styled$1(Box)`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+const ViewRow = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+const ValueText = styled$1(Typography)`
+  font-size: 13px;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+const NotConfiguredBadge = styled$1(Box)`
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.danger100};
+`;
+const NotConfiguredText = styled$1(Typography)`
+  font-size: 11px;
+  letter-spacing: 0.04em;
+`;
+const SavedIndicator = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+const SavedText = styled$1(Typography)`
+  font-size: 12px;
+  font-weight: 500;
+`;
+const EditButton = styled$1.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.primary600};
+  color: ${({ theme }) => theme.colors.primary600};
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+  opacity: ${({ $visible }) => $visible ? 1 : 0};
+  transition: all 0.2s ease;
+`;
+const TokenPillsRow = styled$1(Box)`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+const TokenPill = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: ${({ theme }) => theme.colors.primary100};
+  border: 1px solid ${({ theme }) => theme.colors.secondary100};
+  border-radius: 8px;
+  padding: 5px 10px;
+`;
+const TokenIconBox = styled$1(Box)`
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: ${({ $bg }) => $bg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+const TokenLabel = styled$1(Typography)`
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+`;
+const TokenDivider = styled$1(Box)`
+  width: 1px;
+  height: 14px;
+  background: ${({ theme }) => theme.colors.secondary100};
+`;
+const TokenValue = styled$1(Typography)`
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+`;
 const SettingRow = ({
   title,
   description,
@@ -25312,7 +25499,6 @@ const SettingRow = ({
   const [showKey, setShowKey] = React__default.useState(false);
   const [isValidating, setIsValidating] = React__default.useState(false);
   const [keyError, setKeyError] = React__default.useState(null);
-  const theme = useTheme();
   const handleSave = async () => {
     if (type2 === "key" && tempValue.trim()) {
       setIsValidating(true);
@@ -25343,355 +25529,97 @@ const SettingRow = ({
     setTimeout(() => setSaved(null), 2e3);
   };
   return /* @__PURE__ */ jsxs(
-    Box,
+    RowBox,
     {
       onMouseEnter: () => setHovered(type2),
       onMouseLeave: () => setHovered(null),
-      style: {
-        display: "flex",
-        gap: "16px",
-        padding: "16px 24px",
-        borderBottom: isLast ? "none" : `1px solid ${theme.colors.neutral150}`,
-        background: editing === type2 ? theme.colors.primary100 : theme.colors.neutral0,
-        transition: "background 0.2s ease",
-        alignItems: "flex-start"
-      },
+      $isEditing: editing === type2,
+      $isLast: isLast,
       children: [
-        /* @__PURE__ */ jsxs(Box, { style: { width: "168px", flexShrink: 0 }, children: [
-          /* @__PURE__ */ jsx(
-            Typography,
-            {
-              variant: "omega",
-              fontWeight: "600",
-              textColor: "neutral800",
-              style: { fontSize: "13px", display: "block", marginBottom: "2px" },
-              children: title
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            Typography,
-            {
-              variant: "pi",
-              textColor: "neutral500",
-              style: { lineHeight: 1.4, fontSize: "11px" },
-              children: description
-            }
-          )
+        /* @__PURE__ */ jsxs(LeftCol, { children: [
+          /* @__PURE__ */ jsx(RowTitle, { variant: "omega", fontWeight: "600", textColor: "neutral800", children: title }),
+          /* @__PURE__ */ jsx(RowDesc, { variant: "pi", textColor: "neutral500", children: description })
         ] }),
-        /* @__PURE__ */ jsx(Box, { style: { flex: 1 }, children: editing === type2 ? /* @__PURE__ */ jsxs(Box, { style: { display: "flex", flexDirection: "column", gap: "8px" }, children: [
-          /* @__PURE__ */ jsxs(Box, { style: { display: "flex", alignItems: "center", gap: "12px" }, children: [
-            /* @__PURE__ */ jsxs(
-              Box,
-              {
-                style: {
-                  display: "flex",
-                  alignItems: "center",
-                  width: "100%",
-                  maxWidth: "360px",
-                  borderRadius: "8px",
-                  border: `1.5px solid ${keyError ? theme.colors.danger600 : theme.colors.primary600}`,
-                  background: theme.colors.neutral0,
-                  overflow: "hidden"
-                },
-                children: [
-                  /* @__PURE__ */ jsx(
-                    "input",
-                    {
-                      autoFocus: true,
-                      type: type2 === "key" && !showKey ? "password" : "text",
-                      placeholder: type2 === "domain" ? "https://your-domain.com" : type2 === "contact" ? "https://your-domain.com/contact" : "sk-…",
-                      value: tempValue,
-                      onChange: (e2) => {
-                        setTempValue(e2.target.value);
-                        setKeyError(null);
-                      },
-                      onKeyDown: (e2) => e2.key === "Enter" && handleSave(),
-                      style: {
-                        flex: 1,
-                        padding: "8px 12px",
-                        border: "none",
-                        outline: "none",
-                        fontSize: "13px",
-                        color: theme.colors.neutral800,
-                        background: "transparent"
-                      }
-                    }
-                  ),
-                  type2 === "key" && /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      onClick: () => setShowKey(!showKey),
-                      style: {
-                        paddingRight: "12px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center"
-                      },
-                      children: showKey ? /* @__PURE__ */ jsx(Eye, { width: 16, height: 16, fill: theme.colors.neutral500 }) : /* @__PURE__ */ jsx(EyeStriked, { width: 16, height: 16, fill: theme.colors.neutral500 })
-                    }
-                  )
-                ]
-              }
-            ),
+        /* @__PURE__ */ jsx(RightCol, { children: editing === type2 ? /* @__PURE__ */ jsxs(EditColumn, { children: [
+          /* @__PURE__ */ jsxs(InputRow, { children: [
+            /* @__PURE__ */ jsxs(InputWrapper, { $hasError: !!keyError, children: [
+              /* @__PURE__ */ jsx(
+                StyledInput,
+                {
+                  autoFocus: true,
+                  type: type2 === "key" && !showKey ? "password" : "text",
+                  placeholder: type2 === "domain" ? "https://your-domain.com" : type2 === "contact" ? "https://your-domain.com/contact" : "sk-…",
+                  value: tempValue,
+                  onChange: (e2) => {
+                    setTempValue(e2.target.value);
+                    setKeyError(null);
+                  },
+                  onKeyDown: (e2) => e2.key === "Enter" && handleSave()
+                }
+              ),
+              type2 === "key" && /* @__PURE__ */ jsx(EyeButton, { onClick: () => setShowKey(!showKey), children: showKey ? /* @__PURE__ */ jsx(Eye, { width: 16, height: 16 }) : /* @__PURE__ */ jsx(EyeStriked, { width: 16, height: 16 }) })
+            ] }),
+            /* @__PURE__ */ jsx(SaveButton$1, { onClick: handleSave, disabled: isValidating, $loading: isValidating, children: isValidating ? "Validating..." : "Save" }),
             /* @__PURE__ */ jsx(
-              "button",
-              {
-                onClick: handleSave,
-                disabled: isValidating,
-                style: {
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  background: theme.colors.primary600,
-                  color: theme.colors.neutral0,
-                  border: "none",
-                  cursor: isValidating ? "not-allowed" : "pointer",
-                  fontWeight: 600,
-                  fontSize: "12px",
-                  opacity: isValidating ? 0.6 : 1,
-                  whiteSpace: "nowrap"
-                },
-                children: isValidating ? "Validating..." : "Save"
-              }
-            ),
-            /* @__PURE__ */ jsx(
-              "button",
+              CancelButton$1,
               {
                 onClick: () => {
                   setEditing(null);
                   setKeyError(null);
                 },
-                style: {
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  border: `1px solid ${theme.colors.neutral200}`,
-                  background: "transparent",
-                  color: theme.colors.neutral600,
-                  cursor: "pointer",
-                  fontSize: "12px"
-                },
                 children: "Cancel"
               }
             )
           ] }),
-          keyError && type2 === "key" && /* @__PURE__ */ jsx(
-            Box,
-            {
-              style: {
-                padding: "8px 12px",
-                borderRadius: "8px",
-                background: theme.colors.danger100,
-                border: `1px solid ${theme.colors.danger200}`,
-                maxWidth: "480px"
-              },
-              children: /* @__PURE__ */ jsx(Typography, { variant: "pi", textColor: "danger600", style: { fontSize: "12px" }, children: keyError })
-            }
-          )
-        ] }) : (
-          /* ── VIEW MODE ── same structure for all three types ── */
-          /* @__PURE__ */ jsxs(Box, { style: { display: "flex", flexDirection: "column", gap: "8px" }, children: [
-            /* @__PURE__ */ jsxs(Box, { style: { display: "flex", alignItems: "center", gap: "12px" }, children: [
-              value ? /* @__PURE__ */ jsx(
-                Typography,
-                {
-                  variant: "omega",
-                  textColor: type2 === "key" ? "neutral500" : "primary600",
-                  style: {
-                    fontSize: "13px",
-                    maxWidth: "320px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap"
-                  },
-                  children: type2 === "key" ? "••••••••••••" : value
-                }
-              ) : /* @__PURE__ */ jsx(
-                Box,
-                {
-                  style: {
-                    padding: "2px 10px",
-                    borderRadius: "999px",
-                    background: theme.colors.danger100
-                  },
-                  children: /* @__PURE__ */ jsx(
-                    Typography,
-                    {
-                      variant: "pi",
-                      textColor: "danger600",
-                      fontWeight: "600",
-                      style: { fontSize: "11px", letterSpacing: "0.04em" },
-                      children: "NOT CONFIGURED"
-                    }
-                  )
-                }
-              ),
-              saved === type2 && /* @__PURE__ */ jsxs(Box, { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [
-                /* @__PURE__ */ jsx(Check, { width: 12, height: 12, fill: theme.colors.success600 }),
-                /* @__PURE__ */ jsx(
-                  Typography,
-                  {
-                    variant: "pi",
-                    textColor: "success600",
-                    style: { fontSize: "12px", fontWeight: 500 },
-                    children: "Saved"
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsxs(
-                "button",
-                {
-                  onClick: () => {
-                    setEditing(type2);
-                    setTempValue(value);
-                  },
-                  style: {
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "4px 10px",
-                    borderRadius: "8px",
-                    border: `1px solid ${theme.colors.primary600}`,
-                    color: theme.colors.primary600,
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    background: "transparent",
-                    cursor: "pointer",
-                    opacity: hovered === type2 || saved === type2 || !value ? 1 : 0,
-                    transition: "all 0.2s ease"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsx(Pencil, { width: 11, height: 11 }),
-                    value ? "Edit" : "Add"
-                  ]
-                }
-              )
+          keyError && type2 === "key" && /* @__PURE__ */ jsx(ErrorBox, { children: /* @__PURE__ */ jsx(ErrorText, { variant: "pi", textColor: "danger600", children: keyError }) })
+        ] }) : /* @__PURE__ */ jsxs(ViewColumn, { children: [
+          /* @__PURE__ */ jsxs(ViewRow, { children: [
+            value ? /* @__PURE__ */ jsx(
+              ValueText,
+              {
+                variant: "omega",
+                textColor: type2 === "key" ? "neutral500" : "primary600",
+                $isKey: type2 === "key",
+                children: type2 === "key" ? "••••••••••••" : value
+              }
+            ) : /* @__PURE__ */ jsx(NotConfiguredBadge, { children: /* @__PURE__ */ jsx(NotConfiguredText, { variant: "pi", textColor: "danger600", fontWeight: "600", children: "NOT CONFIGURED" }) }),
+            saved === type2 && /* @__PURE__ */ jsxs(SavedIndicator, { children: [
+              /* @__PURE__ */ jsx(Check, { width: 12, height: 12 }),
+              /* @__PURE__ */ jsx(SavedText, { variant: "pi", textColor: "success600", children: "Saved" })
             ] }),
-            type2 === "key" && value && tokenUsage && /* @__PURE__ */ jsxs(Box, { style: { display: "flex", gap: "8px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ jsxs(
-                Box,
-                {
-                  style: {
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: theme.colors.primary100,
-                    border: `1px solid ${theme.colors.secondary100}`,
-                    borderRadius: "8px",
-                    padding: "5px 10px"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsx(
-                      Box,
-                      {
-                        style: {
-                          width: 18,
-                          height: 18,
-                          borderRadius: 4,
-                          background: theme.colors.secondary100,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0
-                        },
-                        children: /* @__PURE__ */ jsx(Paragraph, { width: 11, height: 11, fill: theme.colors.primary600 })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(
-                      Typography,
-                      {
-                        variant: "pi",
-                        style: {
-                          fontSize: "11px",
-                          color: theme.colors.neutral500,
-                          fontWeight: 500,
-                          whiteSpace: "nowrap"
-                        },
-                        children: "Tokens Used"
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(Box, { style: { width: 1, height: 14, background: theme.colors.secondary100 } }),
-                    /* @__PURE__ */ jsx(
-                      Typography,
-                      {
-                        variant: "pi",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: theme.colors.neutral800,
-                          whiteSpace: "nowrap"
-                        },
-                        children: tokenUsage.tokensUsed.toLocaleString()
-                      }
-                    )
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxs(
-                Box,
-                {
-                  style: {
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: theme.colors.primary100,
-                    border: `1px solid ${theme.colors.secondary100}`,
-                    borderRadius: "8px",
-                    padding: "5px 10px"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsx(
-                      Box,
-                      {
-                        style: {
-                          width: 18,
-                          height: 18,
-                          borderRadius: 4,
-                          background: theme.colors.success100,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0
-                        },
-                        children: /* @__PURE__ */ jsx(WarningCircle, { width: 11, height: 11, fill: theme.colors.success600 })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(
-                      Typography,
-                      {
-                        variant: "pi",
-                        style: {
-                          fontSize: "11px",
-                          color: theme.colors.neutral500,
-                          fontWeight: 500,
-                          whiteSpace: "nowrap"
-                        },
-                        children: "Est. Cost"
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(Box, { style: { width: 1, height: 14, background: theme.colors.secondary100 } }),
-                    /* @__PURE__ */ jsxs(
-                      Typography,
-                      {
-                        variant: "pi",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: theme.colors.neutral800,
-                          whiteSpace: "nowrap"
-                        },
-                        children: [
-                          "$",
-                          tokenUsage.estimatedCost.toFixed(2)
-                        ]
-                      }
-                    )
-                  ]
-                }
-              )
+            /* @__PURE__ */ jsxs(
+              EditButton,
+              {
+                $visible: hovered === type2 || saved === type2 || !value,
+                onClick: () => {
+                  setEditing(type2);
+                  setTempValue(value);
+                },
+                children: [
+                  /* @__PURE__ */ jsx(Pencil, { width: 11, height: 11 }),
+                  value ? "Edit" : "Add"
+                ]
+              }
+            )
+          ] }),
+          type2 === "key" && value && tokenUsage && /* @__PURE__ */ jsxs(TokenPillsRow, { children: [
+            /* @__PURE__ */ jsxs(TokenPill, { children: [
+              /* @__PURE__ */ jsx(TokenIconBox, { $bg: "secondary100", children: /* @__PURE__ */ jsx(Paragraph, { width: 11, height: 11, fill: "primary600" }) }),
+              /* @__PURE__ */ jsx(TokenLabel, { variant: "pi", textColor: "neutral500", children: "Tokens Used" }),
+              /* @__PURE__ */ jsx(TokenDivider, {}),
+              /* @__PURE__ */ jsx(TokenValue, { variant: "pi", textColor: "neutral800", children: tokenUsage.tokensUsed.toLocaleString() })
+            ] }),
+            /* @__PURE__ */ jsxs(TokenPill, { children: [
+              /* @__PURE__ */ jsx(TokenIconBox, { $bg: "success100", children: /* @__PURE__ */ jsx(WarningCircle, { width: 11, height: 11, fill: "success600" }) }),
+              /* @__PURE__ */ jsx(TokenLabel, { variant: "pi", textColor: "neutral500", children: "Est. Cost" }),
+              /* @__PURE__ */ jsx(TokenDivider, {}),
+              /* @__PURE__ */ jsxs(TokenValue, { variant: "pi", textColor: "neutral800", children: [
+                "$",
+                tokenUsage.estimatedCost.toFixed(2)
+              ] })
             ] })
           ] })
-        ) })
+        ] }) })
       ]
     }
   );
@@ -25707,7 +25635,6 @@ const BasicSettings = ({
   const [editing, setEditing] = React__default.useState(null);
   const [saved, setSaved] = React__default.useState(null);
   const [tempValue, setTempValue] = React__default.useState("");
-  const theme = useTheme();
   const [tokenUsage, setTokenUsage] = React__default.useState(void 0);
   React__default.useEffect(() => {
     fetch("/api/faq-ai-bot/usage").then((r2) => r2.json()).then((data) => {
@@ -25719,96 +25646,68 @@ const BasicSettings = ({
       }
     }).catch((e2) => console.error("[usage fetch error]", e2));
   }, [savedOpenaiKey]);
-  return /* @__PURE__ */ jsxs(
-    Box,
-    {
-      style: {
-        background: theme.colors.neutral0,
-        border: `1px solid ${theme.colors.neutral200}`,
-        borderRadius: "12px",
-        overflow: "hidden",
-        marginBottom: "24px"
-      },
-      children: [
-        /* @__PURE__ */ jsx(Box, { style: { padding: "16px 24px", borderBottom: `1px solid ${theme.colors.neutral150}` }, children: /* @__PURE__ */ jsxs("div", { children: [
-          /* @__PURE__ */ jsx(
-            Typography,
-            {
-              as: "h2",
-              textColor: "neutral800",
-              style: { fontSize: "14px", fontWeight: 700, margin: 0 },
-              children: "Basic Settings"
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            Typography,
-            {
-              as: "p",
-              textColor: "neutral600",
-              style: { fontSize: "12px", marginTop: "3px", lineHeight: 1.5, marginBottom: 0 },
-              children: "Core identity and access configuration for your chatbot."
-            }
-          )
-        ] }) }),
-        /* @__PURE__ */ jsx(
-          SettingRow,
-          {
-            type: "domain",
-            title: "Base Domain",
-            description: "Root URL used to scope chatbot context",
-            value: baseDomain,
-            hovered,
-            editing,
-            saved,
-            tempValue,
-            setHovered,
-            setEditing,
-            setSaved,
-            setTempValue,
-            onManage
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          SettingRow,
-          {
-            type: "key",
-            title: "OpenAI API Key",
-            description: "Stored encrypted — never exposed to users",
-            value: openaiKey,
-            tokenUsage,
-            hovered,
-            editing,
-            saved,
-            tempValue,
-            setHovered,
-            setEditing,
-            setSaved,
-            setTempValue,
-            onManage
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          SettingRow,
-          {
-            type: "contact",
-            title: "Contact Link",
-            description: "Shown as 'Talk to Support' in the chatbot",
-            value: contactLink,
-            hovered,
-            editing,
-            saved,
-            tempValue,
-            setHovered,
-            setEditing,
-            setSaved,
-            setTempValue,
-            onManage,
-            isLast: true
-          }
-        )
-      ]
-    }
-  );
+  return /* @__PURE__ */ jsxs(Wrapper, { children: [
+    /* @__PURE__ */ jsx(Header, { children: /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsx(HeaderTitle, { as: "h2", textColor: "neutral800", children: "Basic Settings" }),
+      /* @__PURE__ */ jsx(HeaderDesc, { as: "p", textColor: "neutral600", children: "Core identity and access configuration for your chatbot." })
+    ] }) }),
+    /* @__PURE__ */ jsx(
+      SettingRow,
+      {
+        type: "domain",
+        title: "Base Domain",
+        description: "Root URL used to scope chatbot context",
+        value: baseDomain,
+        hovered,
+        editing,
+        saved,
+        tempValue,
+        setHovered,
+        setEditing,
+        setSaved,
+        setTempValue,
+        onManage
+      }
+    ),
+    /* @__PURE__ */ jsx(
+      SettingRow,
+      {
+        type: "key",
+        title: "OpenAI API Key",
+        description: "Stored encrypted — never exposed to users",
+        value: openaiKey,
+        tokenUsage,
+        hovered,
+        editing,
+        saved,
+        tempValue,
+        setHovered,
+        setEditing,
+        setSaved,
+        setTempValue,
+        onManage
+      }
+    ),
+    /* @__PURE__ */ jsx(
+      SettingRow,
+      {
+        type: "contact",
+        title: "Contact Link",
+        description: "Shown as 'Talk to Support' in the chatbot",
+        value: contactLink,
+        hovered,
+        editing,
+        saved,
+        tempValue,
+        setHovered,
+        setEditing,
+        setSaved,
+        setTempValue,
+        onManage,
+        isLast: true
+      }
+    )
+  ] });
 };
 const CustomText = styled$1.span`
   font-weight: ${({ weight }) => weight || 400};
@@ -25883,7 +25782,7 @@ const StyledHeader = styled$1(Accordion.Header)`
     background: ${({ theme, $isOpen }) => $isOpen ? theme.colors.primary100 : theme.colors.neutral0} !important;
   }
 `;
-const SectionTitle = styled$1(Typography)`
+const SectionTitle$1 = styled$1(Typography)`
   font-size: 11px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.neutral500};
@@ -25914,19 +25813,19 @@ const CardStyleButton = styled$1.button`
   }
 `;
 const ActionButton = styled$1.button`
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  width: 32px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.danger200};
+  color: ${({ theme }) => theme.colors.danger600};
   &:hover {
     color: ${({ theme }) => theme.colors.danger600};
     background: ${({ theme }) => theme.colors.danger100};
-    border-radius: 8px;
   }
 `;
 const EmptyStateWrapper = styled$1(Flex)`
@@ -25951,7 +25850,7 @@ const AddButtonWrapper = styled$1(Box)`
   padding: 12px 24px;
   background: ${({ theme }) => theme.colors.neutral0};
 `;
-const GhostAddButton = styled$1.button`
+const GhostAddButton$1 = styled$1.button`
   background: transparent;
   border: none;
   display: flex;
@@ -26015,6 +25914,27 @@ const CancelButton = styled$1.button`
     background: ${({ theme }) => theme.colors.neutral100};
   }
 `;
+const AccordionRoot = styled$1(Accordion.Root)`
+  border: none;
+  box-shadow: none;
+`;
+const AccordionContent = styled$1(Accordion.Content)`
+  border: none;
+`;
+const FieldsRow = styled$1(Flex)`
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  align-items: center;
+`;
+const FieldItem = styled$1(Flex)`
+  gap: 8px;
+  align-items: center;
+  min-height: 1.5rem;
+`;
+const CardStyleRow = styled$1(Flex)`
+  gap: 8px;
+`;
 const ResponseTemplates = ({
   collections,
   availableCollections,
@@ -26028,7 +25948,6 @@ const ResponseTemplates = ({
   const [isAdding, setIsAdding] = useState(false);
   const [selectedUid, setSelectedUid] = useState("");
   const [openItem, setOpenItem] = useState();
-  const theme = useTheme();
   const handleAdd = () => {
     if (selectedUid) {
       onAddCollection(selectedUid);
@@ -26038,135 +25957,104 @@ const ResponseTemplates = ({
     setSelectedUid("");
   };
   return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(
-      Accordion.Root,
-      {
-        value: openItem,
-        onValueChange: setOpenItem,
-        style: { border: "none", boxShadow: "none" },
-        children: collections.map((c2) => {
-          const enabledCount = c2.fields.filter((f2) => f2.enabled).length;
-          const totalCount = c2.fields.length;
-          const cardLabel = cardOptions.find((opt) => opt.id === c2.cardStyle)?.label || "None";
-          const isOpen = openItem === c2.uid;
-          return /* @__PURE__ */ jsxs(StyledAccordionItem, { value: c2.uid, children: [
-            /* @__PURE__ */ jsx(StyledHeader, { $isOpen: isOpen, style: { border: "none" }, children: /* @__PURE__ */ jsxs(HeaderRow, { alignItems: "center", children: [
-              /* @__PURE__ */ jsx(StyledTrigger, { children: /* @__PURE__ */ jsxs(Box, { children: [
-                /* @__PURE__ */ jsx(
-                  CustomText,
-                  {
-                    weight: 600,
-                    color: isOpen ? "primary600" : "neutral800",
-                    size: "13px",
-                    lh: "19.5px",
-                    children: c2.name
-                  }
-                ),
-                /* @__PURE__ */ jsxs(
-                  CustomText,
-                  {
-                    weight: 400,
-                    size: "11px",
-                    lh: "16.5px",
-                    color: "neutral500",
-                    style: { display: "block" },
-                    children: [
-                      enabledCount,
-                      " of ",
-                      totalCount,
-                      " fields active · ",
-                      cardLabel
-                    ]
-                  }
-                )
-              ] }) }),
-              /* @__PURE__ */ jsx(ActionsContainer, { children: /* @__PURE__ */ jsx(
-                ActionButton,
+    /* @__PURE__ */ jsx(AccordionRoot, { value: openItem, onValueChange: setOpenItem, children: collections.map((c2) => {
+      const enabledCount = c2.fields.filter((f2) => f2.enabled).length;
+      const totalCount = c2.fields.length;
+      const cardLabel = cardOptions.find((opt) => opt.id === c2.cardStyle)?.label || "None";
+      const isOpen = openItem === c2.uid;
+      return /* @__PURE__ */ jsxs(StyledAccordionItem, { value: c2.uid, children: [
+        /* @__PURE__ */ jsx(StyledHeader, { $isOpen: isOpen, style: { border: "none" }, children: /* @__PURE__ */ jsxs(HeaderRow, { alignItems: "center", children: [
+          /* @__PURE__ */ jsx(StyledTrigger, { children: /* @__PURE__ */ jsxs(Box, { children: [
+            /* @__PURE__ */ jsx(
+              CustomText,
+              {
+                weight: 600,
+                color: isOpen ? "primary600" : "neutral800",
+                size: "13px",
+                lh: "19.5px",
+                children: c2.name
+              }
+            ),
+            /* @__PURE__ */ jsxs(
+              CustomText,
+              {
+                weight: 400,
+                size: "11px",
+                lh: "16.5px",
+                color: "neutral500",
+                style: { display: "block" },
+                children: [
+                  enabledCount,
+                  " of ",
+                  totalCount,
+                  " fields active · ",
+                  cardLabel
+                ]
+              }
+            )
+          ] }) }),
+          /* @__PURE__ */ jsx(ActionsContainer, { children: /* @__PURE__ */ jsx(
+            ActionButton,
+            {
+              type: "button",
+              onClick: (e2) => {
+                e2.stopPropagation();
+                onRemoveCollection(c2.uid);
+              },
+              children: /* @__PURE__ */ jsx(Trash, { width: "13", height: "13" })
+            }
+          ) })
+        ] }) }),
+        /* @__PURE__ */ jsx(AccordionContent, { children: /* @__PURE__ */ jsxs(Box, { padding: 6, background: "transparent", children: [
+          /* @__PURE__ */ jsx(SectionTitle$1, { children: "FIELDS" }),
+          /* @__PURE__ */ jsxs(FieldsRow, { children: [
+            /* @__PURE__ */ jsxs(Flex, { gap: 2, alignItems: "center", children: [
+              /* @__PURE__ */ jsx(
+                Checkbox,
                 {
-                  type: "button",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
-                    onRemoveCollection(c2.uid);
-                  },
-                  onMouseEnter: (e2) => e2.currentTarget.style.background = theme.colors.danger100,
-                  onMouseLeave: (e2) => e2.currentTarget.style.background = "transparent",
-                  style: {
-                    width: 28,
-                    height: 28,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    color: theme.colors.danger600
-                  },
-                  children: /* @__PURE__ */ jsx(Trash, { width: "13", height: "13" })
+                  checked: enabledCount === totalCount,
+                  onCheckedChange: (val) => onToggleAll(c2.uid, val)
                 }
-              ) })
-            ] }) }),
-            /* @__PURE__ */ jsx(Accordion.Content, { style: { border: "none" }, children: /* @__PURE__ */ jsxs(Box, { padding: 6, background: "transparent", children: [
-              /* @__PURE__ */ jsx(SectionTitle, { children: "FIELDS" }),
-              /* @__PURE__ */ jsxs(Flex, { gap: 4, wrap: "wrap", marginBottom: 6, alignItems: "center", children: [
-                /* @__PURE__ */ jsxs(Flex, { gap: 2, alignItems: "center", children: [
-                  /* @__PURE__ */ jsx(
-                    Checkbox,
-                    {
-                      checked: enabledCount === totalCount,
-                      onCheckedChange: (val) => onToggleAll(c2.uid, val)
-                    }
-                  ),
-                  /* @__PURE__ */ jsx(CustomText, { size: "13px", weight: 500, children: "All" })
-                ] }),
-                /* @__PURE__ */ jsx(VerticalDivider, {}),
-                c2.fields.map((f2) => /* @__PURE__ */ jsxs(
-                  Flex,
-                  {
-                    gap: 2,
-                    alignItems: "center",
-                    style: { minHeight: "1.5rem" },
-                    children: [
-                      /* @__PURE__ */ jsx(
-                        Checkbox,
-                        {
-                          checked: f2.enabled,
-                          onCheckedChange: () => onToggleField(c2.uid, f2.name)
-                        }
-                      ),
-                      /* @__PURE__ */ jsx(CustomText, { size: "13px", children: f2.name })
-                    ]
-                  },
-                  f2.name
-                ))
-              ] }),
-              /* @__PURE__ */ jsx(SectionTitle, { children: "CARD STYLE" }),
-              /* @__PURE__ */ jsxs(Flex, { gap: 2, children: [
-                /* @__PURE__ */ jsx(
-                  CardStyleButton,
-                  {
-                    type: "button",
-                    active: !c2.cardStyle,
-                    onClick: () => onUpdateCardStyle(c2.uid, ""),
-                    children: "None"
-                  }
-                ),
-                cardOptions.map((opt) => /* @__PURE__ */ jsx(
-                  CardStyleButton,
-                  {
-                    type: "button",
-                    active: c2.cardStyle === opt.id,
-                    onClick: () => onUpdateCardStyle(c2.uid, opt.id),
-                    children: opt.label
-                  },
-                  opt.id
-                ))
-              ] })
-            ] }) })
-          ] }, c2.uid);
-        })
-      }
-    ),
+              ),
+              /* @__PURE__ */ jsx(CustomText, { size: "13px", weight: 500, children: "All" })
+            ] }),
+            /* @__PURE__ */ jsx(VerticalDivider, {}),
+            c2.fields.map((f2) => /* @__PURE__ */ jsxs(FieldItem, { children: [
+              /* @__PURE__ */ jsx(
+                Checkbox,
+                {
+                  checked: f2.enabled,
+                  onCheckedChange: () => onToggleField(c2.uid, f2.name)
+                }
+              ),
+              /* @__PURE__ */ jsx(CustomText, { size: "13px", children: f2.name })
+            ] }, f2.name))
+          ] }),
+          /* @__PURE__ */ jsx(SectionTitle$1, { children: "CARD STYLE" }),
+          /* @__PURE__ */ jsxs(CardStyleRow, { children: [
+            /* @__PURE__ */ jsx(
+              CardStyleButton,
+              {
+                type: "button",
+                active: !c2.cardStyle,
+                onClick: () => onUpdateCardStyle(c2.uid, ""),
+                children: "None"
+              }
+            ),
+            cardOptions.map((opt) => /* @__PURE__ */ jsx(
+              CardStyleButton,
+              {
+                type: "button",
+                active: c2.cardStyle === opt.id,
+                onClick: () => onUpdateCardStyle(c2.uid, opt.id),
+                children: opt.label
+              },
+              opt.id
+            ))
+          ] })
+        ] }) })
+      ] }, c2.uid);
+    }) }),
     collections.length === 0 && !isAdding && /* @__PURE__ */ jsxs(EmptyStateWrapper, { children: [
       /* @__PURE__ */ jsx(InfoCircle, { children: /* @__PURE__ */ jsx(Information, { width: 18, height: 18 }) }),
       /* @__PURE__ */ jsx(CustomText, { size: "13px", color: "neutral600", children: "No collections yet. Add one to get started." })
@@ -26179,7 +26067,7 @@ const ResponseTemplates = ({
       /* @__PURE__ */ jsx(SubmitButton, { type: "button", onClick: handleAdd, children: "Add" }),
       /* @__PURE__ */ jsx(CancelButton, { type: "button", onClick: () => setIsAdding(false), children: "Cancel" })
     ] }) : availableCollections.length > 0 && /* @__PURE__ */ jsx(AddButtonWrapper, { children: /* @__PURE__ */ jsxs(
-      GhostAddButton,
+      GhostAddButton$1,
       {
         type: "button",
         onClick: () => {
@@ -26194,6 +26082,142 @@ const ResponseTemplates = ({
     ) })
   ] });
 };
+const EmptyState = styled$1(Box)`
+  padding-top: 28px;
+  padding-bottom: 28px;
+  padding-left: 24px;
+  padding-right: 24px;
+  text-align: center;
+`;
+const QuestionRow = styled$1(Flex)`
+  border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
+  background: ${({ $isDragging, theme }) => $isDragging ? theme.colors.neutral100 : "transparent"};
+`;
+const DragHandle = styled$1(Box)`
+  cursor: grab;
+  color: ${({ theme }) => theme.colors.neutral400};
+`;
+const NumberBadge = styled$1(Box)`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.secondary100};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary600};
+`;
+const EditInput = styled$1.input`
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid ${({ theme }) => theme.colors.primary600};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  background: ${({ theme }) => theme.colors.neutral0};
+  outline: none;
+  box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary100};
+`;
+const EditFlex = styled$1(Flex)`
+  flex: 1;
+`;
+const SaveEditButton = styled$1(Button)`
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.primary600};
+  color: ${({ theme }) => theme.colors.neutral0};
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+`;
+const CancelEditButton = styled$1(Button)`
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.neutral200};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.neutral600};
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: transparent !important;
+    color: ${({ theme }) => theme.colors.neutral600} !important;
+    border-color: ${({ theme }) => theme.colors.neutral200} !important;
+    box-shadow: none !important;
+  }
+`;
+const QuestionText = styled$1(Box)`
+  flex: 1;
+`;
+const ActionIcons = styled$1(Flex)`
+  opacity: ${({ $visible }) => $visible ? 1 : 0};
+  pointer-events: ${({ $visible }) => $visible ? "auto" : "none"};
+  transition: opacity 0.2s;
+`;
+const IconBtn = styled$1.button`
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+`;
+const EditIconBtn = styled$1(IconBtn)`
+  color: ${({ theme }) => theme.colors.neutral600};
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary100};
+  }
+`;
+const TrashIconBtn = styled$1(IconBtn)`
+  color: ${({ theme }) => theme.colors.danger600};
+  &:hover {
+    background: ${({ theme }) => theme.colors.danger100};
+  }
+`;
+const AddInputRow = styled$1(Flex)`
+  padding: 16px 24px;
+`;
+const AddInput = styled$1.input`
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid ${({ theme }) => theme.colors.primary600};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  background: ${({ theme }) => theme.colors.neutral0};
+  outline: none;
+  box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary100};
+`;
+const AddButtonRow = styled$1(Box)`
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-left: 24px;
+  padding-right: 24px;
+  background: ${({ theme }) => theme.colors.neutral0};
+`;
+const GhostAddButton = styled$1.button`
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.primary600};
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 19.5px;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 const SuggestedQuestions = ({
   questions,
   onAdd,
@@ -26206,7 +26230,6 @@ const SuggestedQuestions = ({
   const [tempValue, setTempValue] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const theme = useTheme();
   const handleStartEdit = (index, q2) => {
     setIsAdding(false);
     setEditingIndex(index);
@@ -26242,254 +26265,66 @@ const SuggestedQuestions = ({
     setTempValue("");
   };
   return /* @__PURE__ */ jsxs(Box, { children: [
-    questions.length === 0 && !isAdding && /* @__PURE__ */ jsx(Box, { paddingTop: 7, paddingBottom: 7, paddingLeft: 6, paddingRight: 6, textAlign: "center", children: /* @__PURE__ */ jsx(Typography, { textColor: "neutral600", style: { fontSize: "13px" }, children: "No suggested questions yet." }) }),
-    questions.map((q2, index) => {
-      return /* @__PURE__ */ jsxs(
-        Flex,
-        {
-          alignItems: "center",
-          draggable: editingIndex === null && !isAdding,
-          onMouseEnter: () => setHoveredIndex(index),
-          onMouseLeave: () => setHoveredIndex(null),
-          onDragStart: (e2) => handleDragStart(e2, index),
-          onDragOver: (e2) => handleDragOver(e2, index),
-          onDragEnd: () => setDraggedIndex(null),
-          paddingLeft: 6,
-          paddingRight: 6,
-          paddingBottom: 4,
-          paddingTop: 4,
-          gap: 3,
-          background: draggedIndex === index ? "neutral100" : "transparent",
-          style: {
-            borderBottom: `1px solid ${theme.colors.neutral150}`
-          },
-          children: [
-            /* @__PURE__ */ jsx(Box, { cursor: "grab", color: "neutral400", children: /* @__PURE__ */ jsx(Drag, {}) }),
+    questions.length === 0 && !isAdding && /* @__PURE__ */ jsx(EmptyState, { textAlign: "center", children: /* @__PURE__ */ jsx(Typography, { textColor: "neutral600", style: { fontSize: "13px" }, children: "No suggested questions yet." }) }),
+    questions.map((q2, index) => /* @__PURE__ */ jsxs(
+      QuestionRow,
+      {
+        alignItems: "center",
+        draggable: editingIndex === null && !isAdding,
+        onMouseEnter: () => setHoveredIndex(index),
+        onMouseLeave: () => setHoveredIndex(null),
+        onDragStart: (e2) => handleDragStart(e2, index),
+        onDragOver: (e2) => handleDragOver(e2, index),
+        onDragEnd: () => setDraggedIndex(null),
+        paddingLeft: 6,
+        paddingRight: 6,
+        paddingBottom: 4,
+        paddingTop: 4,
+        gap: 3,
+        $isDragging: draggedIndex === index,
+        children: [
+          /* @__PURE__ */ jsx(DragHandle, { children: /* @__PURE__ */ jsx(Drag, {}) }),
+          /* @__PURE__ */ jsx(NumberBadge, { children: index + 1 }),
+          editingIndex === index ? /* @__PURE__ */ jsxs(EditFlex, { gap: 2, children: [
             /* @__PURE__ */ jsx(
-              Box,
+              EditInput,
               {
-                style: {
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: theme.colors.secondary100,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: theme.colors.primary600
-                },
-                children: index + 1
+                autoFocus: true,
+                value: tempValue,
+                onChange: (e2) => setTempValue(e2.target.value),
+                onKeyDown: (e2) => e2.key === "Enter" && handleSaveEdit(index)
               }
             ),
-            editingIndex === index ? /* @__PURE__ */ jsxs(Flex, { flex: 1, gap: 2, children: [
-              /* @__PURE__ */ jsx(
-                "input",
-                {
-                  autoFocus: true,
-                  value: tempValue,
-                  onChange: (e2) => setTempValue(e2.target.value),
-                  onKeyDown: (e2) => e2.key === "Enter" && handleSaveEdit(index),
-                  style: {
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: `1.5px solid ${theme.colors.primary600}`,
-                    fontSize: "13px",
-                    color: theme.colors.neutral800,
-                    background: theme.colors.neutral0,
-                    outline: "none",
-                    boxShadow: `0 0 0 3px ${theme.colors.primary100}`
-                  }
-                }
-              ),
-              /* @__PURE__ */ jsx(
-                Button,
-                {
-                  onClick: () => handleSaveEdit(index),
-                  style: {
-                    padding: "6px 12px",
-                    borderRadius: "8px",
-                    background: theme.colors.primary600,
-                    color: theme.colors.neutral0,
-                    border: "none",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: "12px"
-                  },
-                  children: "Save"
-                }
-              ),
-              /* @__PURE__ */ jsx(
-                Button,
-                {
-                  onClick: () => setEditingIndex(null),
-                  style: {
-                    padding: "6px 12px",
-                    borderRadius: "8px",
-                    border: `1px solid ${theme.colors.neutral200}`,
-                    background: "transparent",
-                    color: theme.colors.neutral600,
-                    cursor: "pointer",
-                    fontSize: "12px"
-                  },
-                  children: "Cancel"
-                }
-              )
-            ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-              /* @__PURE__ */ jsx(Box, { flex: 1, children: /* @__PURE__ */ jsx(Typography, { textColor: "neutral800", style: { fontSize: "13px" }, children: q2 }) }),
-              /* @__PURE__ */ jsxs(
-                Flex,
-                {
-                  gap: 1,
-                  style: {
-                    opacity: hoveredIndex === index ? 1 : 0,
-                    pointerEvents: hoveredIndex === index ? "auto" : "none",
-                    transition: "opacity 0.2s"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        onClick: () => handleStartEdit(index, q2),
-                        onMouseEnter: (e2) => e2.currentTarget.style.background = theme.colors.primary100,
-                        onMouseLeave: (e2) => e2.currentTarget.style.background = "transparent",
-                        style: {
-                          width: 28,
-                          height: 28,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          borderRadius: 8,
-                          border: "none",
-                          background: "transparent",
-                          cursor: "pointer",
-                          color: theme.colors.neutral600
-                        },
-                        children: /* @__PURE__ */ jsx(Pencil, { width: "13", height: "13" })
-                      }
-                    ),
-                    /* @__PURE__ */ jsx(
-                      "button",
-                      {
-                        onClick: () => onRemove(index),
-                        onMouseEnter: (e2) => e2.currentTarget.style.background = theme.colors.danger100,
-                        onMouseLeave: (e2) => e2.currentTarget.style.background = "transparent",
-                        style: {
-                          width: 28,
-                          height: 28,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          borderRadius: 8,
-                          border: "none",
-                          background: "transparent",
-                          cursor: "pointer",
-                          color: theme.colors.danger600
-                        },
-                        children: /* @__PURE__ */ jsx(Trash, { width: "13", height: "13" })
-                      }
-                    )
-                  ]
-                }
-              )
+            /* @__PURE__ */ jsx(SaveEditButton, { onClick: () => handleSaveEdit(index), children: "Save" }),
+            /* @__PURE__ */ jsx(CancelEditButton, { onClick: () => setEditingIndex(null), children: "Cancel" })
+          ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(QuestionText, { children: /* @__PURE__ */ jsx(Typography, { textColor: "neutral800", style: { fontSize: "13px" }, children: q2 }) }),
+            /* @__PURE__ */ jsxs(ActionIcons, { gap: 1, $visible: hoveredIndex === index, children: [
+              /* @__PURE__ */ jsx(EditIconBtn, { onClick: () => handleStartEdit(index, q2), children: /* @__PURE__ */ jsx(Pencil, { width: "13", height: "13" }) }),
+              /* @__PURE__ */ jsx(TrashIconBtn, { onClick: () => onRemove(index), children: /* @__PURE__ */ jsx(Trash, { width: "13", height: "13" }) })
             ] })
-          ]
-        },
-        `${q2}-${index}`
-      );
-    }),
-    isAdding ? /* @__PURE__ */ jsxs(Flex, { paddingLeft: 6, paddingRight: 6, paddingTop: 4, paddingBottom: 4, gap: 3, children: [
+          ] })
+        ]
+      },
+      `${q2}-${index}`
+    )),
+    isAdding ? /* @__PURE__ */ jsxs(AddInputRow, { paddingLeft: 6, paddingRight: 6, paddingTop: 4, paddingBottom: 4, gap: 3, children: [
       /* @__PURE__ */ jsx(
-        "input",
+        AddInput,
         {
           autoFocus: true,
           placeholder: "Type a question and press Enter...",
           value: tempValue,
           onChange: (e2) => setTempValue(e2.target.value),
-          onKeyDown: (e2) => e2.key === "Enter" && handleAddSubmit(),
-          style: {
-            flex: 1,
-            padding: "8px 12px",
-            borderRadius: "8px",
-            border: `1.5px solid ${theme.colors.primary600}`,
-            fontSize: "13px",
-            color: theme.colors.neutral800,
-            background: theme.colors.neutral0,
-            outline: "none",
-            boxShadow: `0 0 0 3px ${theme.colors.primary100}`
-          }
+          onKeyDown: (e2) => e2.key === "Enter" && handleAddSubmit()
         }
       ),
-      /* @__PURE__ */ jsx(
-        Button,
-        {
-          onClick: handleAddSubmit,
-          style: {
-            padding: "6px 12px",
-            borderRadius: "8px",
-            background: theme.colors.primary600,
-            color: theme.colors.neutral0,
-            border: "none",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: "12px"
-          },
-          children: "Add"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        Button,
-        {
-          onClick: () => setIsAdding(false),
-          style: {
-            padding: "6px 12px",
-            borderRadius: "8px",
-            border: `1px solid ${theme.colors.neutral200}`,
-            background: "transparent",
-            color: theme.colors.neutral600,
-            cursor: "pointer",
-            fontSize: "12px"
-          },
-          children: "Cancel"
-        }
-      )
-    ] }) : /* @__PURE__ */ jsx(
-      Box,
-      {
-        paddingTop: 3,
-        paddingBottom: 3,
-        paddingLeft: 6,
-        paddingRight: 6,
-        style: {
-          background: theme.colors.neutral0
-        },
-        children: /* @__PURE__ */ jsxs(
-          "button",
-          {
-            type: "button",
-            onClick: handleStartAdd,
-            style: {
-              background: "transparent",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-              color: theme.colors.primary600,
-              fontWeight: 500,
-              fontSize: "13px",
-              lineHeight: "19.5px"
-            },
-            children: [
-              /* @__PURE__ */ jsx(Plus, { width: 12, height: 12 }),
-              "Add question"
-            ]
-          }
-        )
-      }
-    )
+      /* @__PURE__ */ jsx(SaveEditButton, { onClick: handleAddSubmit, children: "Add" }),
+      /* @__PURE__ */ jsx(CancelEditButton, { onClick: () => setIsAdding(false), children: "Cancel" })
+    ] }) : /* @__PURE__ */ jsx(AddButtonRow, { children: /* @__PURE__ */ jsxs(GhostAddButton, { type: "button", onClick: handleStartAdd, children: [
+      /* @__PURE__ */ jsx(Plus, { width: 12, height: 12 }),
+      "Add question"
+    ] }) })
   ] });
 };
 const tonePrompts = {
@@ -26505,6 +26340,82 @@ const getCleanText = (text) => {
   });
   return cleaned.trim();
 };
+const Container$1 = styled$1(Box)`
+  padding: 16px 24px 20px;
+`;
+const SectionBlock = styled$1(Box)`
+  margin-bottom: 20px;
+`;
+const LabelRow = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+`;
+const Label = styled$1.span`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.neutral800};
+`;
+const HelpText = styled$1.p`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.neutral500};
+  margin-bottom: 8px;
+`;
+const TextAreaWrapper = styled$1(Box)`
+  border: 1.5px solid ${({ theme }) => theme.colors.neutral200};
+  border-radius: 8px;
+  padding: 8px;
+  background: ${({ theme }) => theme.colors.neutral0};
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: ${({ theme }) => theme.colors.primary600};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary100};
+  }
+`;
+const StyledTextarea = styled$1.textarea`
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.neutral800};
+  line-height: 1.7;
+  font-family: Inter, sans-serif;
+  background: transparent;
+`;
+const ToneSection = styled$1(Box)`
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.neutral150};
+`;
+const ToneSectionTitle = styled$1.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.neutral800};
+  margin-bottom: 6px;
+`;
+const PillRow = styled$1(Box)`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+`;
+const TonePill = styled$1.button`
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: 1.5px solid
+    ${({ $active, theme }) => $active ? theme.colors.primary600 : theme.colors.neutral200};
+  background: ${({ $active, theme }) => $active ? theme.colors.primary100 : theme.colors.neutral0};
+  color: ${({ $active, theme }) => $active ? theme.colors.primary600 : theme.colors.neutral600};
+  font-weight: ${({ $active }) => $active ? 600 : 400};
+`;
 const AiInstructions = ({
   systemInstructions,
   responseInstructions,
@@ -26536,209 +26447,52 @@ const AiInstructions = ({
 ${cleanContent}` : cleanContent;
     onUpdateResponse(combined);
   };
-  const pillStyle = (active) => ({
-    padding: "6px 12px",
-    borderRadius: "999px",
-    fontSize: "12px",
-    transition: "all .15s",
-    cursor: "pointer",
-    border: active ? `1.5px solid ${theme.colors.primary600}` : `1.5px solid ${theme.colors.neutral200}`,
-    background: active ? theme.colors.primary100 : theme.colors.neutral0,
-    color: active ? theme.colors.primary600 : theme.colors.neutral600,
-    fontWeight: active ? 600 : 400
-  });
-  return /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsxs(Box, { style: { padding: "16px 24px 20px" }, children: [
-    /* @__PURE__ */ jsxs(Box, { style: { marginBottom: "20px" }, children: [
-      /* @__PURE__ */ jsxs(
-        Box,
+  return /* @__PURE__ */ jsxs(Container$1, { children: [
+    /* @__PURE__ */ jsxs(SectionBlock, { children: [
+      /* @__PURE__ */ jsxs(LabelRow, { children: [
+        /* @__PURE__ */ jsx(Label, { children: "System Instructions" }),
+        /* @__PURE__ */ jsx(Information, { width: 13, height: 13, fill: theme.colors.neutral500 })
+      ] }),
+      /* @__PURE__ */ jsx(HelpText, { children: "Each line is a separate instruction. Changes auto-save when you click elsewhere." }),
+      /* @__PURE__ */ jsx(TextAreaWrapper, { children: /* @__PURE__ */ jsx(
+        StyledTextarea,
         {
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            marginBottom: "6px"
-          },
-          children: [
-            /* @__PURE__ */ jsx(
-              "span",
-              {
-                style: {
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: theme.colors.neutral800
-                },
-                children: "System Instructions"
-              }
-            ),
-            /* @__PURE__ */ jsx(
-              Information,
-              {
-                width: 13,
-                height: 13,
-                fill: theme.colors.neutral500,
-                color: theme.colors.neutral500
-              }
-            )
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "p",
-        {
-          style: {
-            fontSize: "11px",
-            color: theme.colors.neutral500,
-            marginBottom: "8px"
-          },
-          children: "Each line is a separate instruction. Changes auto-save when you click elsewhere."
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        Box,
-        {
-          style: {
-            border: `1.5px solid ${theme.colors.neutral200}`,
-            borderRadius: "8px",
-            padding: "8px",
-            background: theme.colors.neutral0,
-            transition: "border-color .15s, box-shadow .15s"
-          },
-          onFocus: (e2) => {
-            e2.currentTarget.style.border = `1.5px solid ${theme.colors.primary600}`;
-            e2.currentTarget.style.boxShadow = `0 0 0 2px ${theme.colors.primary100}`;
-          },
-          onBlur: (e2) => {
-            e2.currentTarget.style.border = `1.5px solid ${theme.colors.neutral200}`;
-            e2.currentTarget.style.boxShadow = "none";
-          },
-          children: /* @__PURE__ */ jsx(
-            Box,
-            {
-              as: "textarea",
-              value: systemInstructions,
-              onChange: (e2) => onUpdateSystem(e2.target.value),
-              placeholder: `Replace Madras with Chennai
+          value: systemInstructions,
+          onChange: (e2) => onUpdateSystem(e2.target.value),
+          placeholder: `Replace Madras with Chennai
 Always respond in English
-Don't mention competitor airlines`,
-              style: {
-                width: "100%",
-                minHeight: "120px",
-                padding: "10px 12px",
-                border: "none",
-                outline: "none",
-                resize: "vertical",
-                fontSize: "13px",
-                color: theme.colors.neutral800,
-                lineHeight: 1.7,
-                fontFamily: "Inter, sans-serif",
-                background: "transparent"
-              }
-            }
-          )
+Don't mention competitor airlines`
         }
-      )
+      ) })
     ] }),
-    /* @__PURE__ */ jsxs(
-      Box,
-      {
-        style: {
-          marginTop: "20px",
-          paddingTop: "16px",
-          borderTop: `1px solid ${theme.colors.neutral150}`
-        },
-        children: [
-          /* @__PURE__ */ jsx(
-            "div",
-            {
-              style: {
-                fontSize: "12px",
-                fontWeight: 600,
-                color: theme.colors.neutral800,
-                marginBottom: "6px"
-              },
-              children: "Response Tone"
-            }
-          ),
-          /* @__PURE__ */ jsxs(Box, { style: { display: "flex", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ jsx("button", { style: pillStyle(tone === "friendly"), onClick: () => selectTone("friendly"), children: "Friendly & Warm" }),
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                style: pillStyle(tone === "professional"),
-                onClick: () => selectTone("professional"),
-                children: "Professional"
-              }
-            ),
-            /* @__PURE__ */ jsx("button", { style: pillStyle(tone === "concise"), onClick: () => selectTone("concise"), children: "Concise" })
-          ] }),
-          /* @__PURE__ */ jsx(
-            "p",
-            {
-              style: {
-                fontSize: "11px",
-                color: theme.colors.neutral500,
-                marginBottom: "8px"
-              },
-              children: "Customize the AI response message. Changes auto-save when you click elsewhere."
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            Box,
-            {
-              style: {
-                border: `1.5px solid ${theme.colors.neutral200}`,
-                borderRadius: "8px",
-                padding: "8px",
-                background: theme.colors.neutral0,
-                transition: "border-color .15s, box-shadow .15s"
-              },
-              onFocus: (e2) => {
-                e2.currentTarget.style.border = `1.5px solid ${theme.colors.primary600}`;
-                e2.currentTarget.style.boxShadow = `0 0 0 2px ${theme.colors.primary100}`;
-              },
-              onBlur: (e2) => {
-                e2.currentTarget.style.border = `1.5px solid ${theme.colors.neutral200}`;
-                e2.currentTarget.style.boxShadow = "none";
-              },
-              children: /* @__PURE__ */ jsx(
-                Box,
-                {
-                  as: "textarea",
-                  value: localResponse,
-                  onFocus: () => setIsFocused(true),
-                  onBlur: () => setIsFocused(false),
-                  onChange: (e2) => {
-                    setLocalResponse(e2.target.value);
-                    const toneText = tone ? tonePrompts[tone] : "";
-                    const combined = toneText ? `${toneText}
+    /* @__PURE__ */ jsxs(ToneSection, { children: [
+      /* @__PURE__ */ jsx(ToneSectionTitle, { children: "Response Tone" }),
+      /* @__PURE__ */ jsxs(PillRow, { children: [
+        /* @__PURE__ */ jsx(TonePill, { $active: tone === "friendly", onClick: () => selectTone("friendly"), children: "Friendly & Warm" }),
+        /* @__PURE__ */ jsx(TonePill, { $active: tone === "professional", onClick: () => selectTone("professional"), children: "Professional" }),
+        /* @__PURE__ */ jsx(TonePill, { $active: tone === "concise", onClick: () => selectTone("concise"), children: "Concise" })
+      ] }),
+      /* @__PURE__ */ jsx(HelpText, { children: "Customize the AI response message. Changes auto-save when you click elsewhere." }),
+      /* @__PURE__ */ jsx(TextAreaWrapper, { children: /* @__PURE__ */ jsx(
+        StyledTextarea,
+        {
+          value: localResponse,
+          onFocus: () => setIsFocused(true),
+          onBlur: () => setIsFocused(false),
+          onChange: (e2) => {
+            setLocalResponse(e2.target.value);
+            const toneText = tone ? tonePrompts[tone] : "";
+            const combined = toneText ? `${toneText}
 
 ${e2.target.value}` : e2.target.value;
-                    onUpdateResponse(combined);
-                  },
-                  placeholder: `Reply in proper formatted way.
-Always keep in mind that you are wokring for ABC company.
-                `,
-                  style: {
-                    width: "100%",
-                    minHeight: "120px",
-                    padding: "10px 12px",
-                    border: "none",
-                    outline: "none",
-                    resize: "vertical",
-                    fontSize: "13px",
-                    color: theme.colors.neutral800,
-                    lineHeight: 1.7,
-                    fontFamily: "Inter, sans-serif",
-                    background: "transparent"
-                  }
-                }
-              )
-            }
-          )
-        ]
-      }
-    )
-  ] }) });
+            onUpdateResponse(combined);
+          },
+          placeholder: `Reply in proper formatted way.
+Always keep in mind that you are working for ABC company.`
+        }
+      ) })
+    ] })
+  ] });
 };
 const ZapIcon = ({ width = 15, height = 15, color }) => {
   const theme = useTheme();
@@ -26761,7 +26515,6 @@ const ZapIcon = ({ width = 15, height = 15, color }) => {
 const ProgressContainer = styled$1(Box)`
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.colors.neutral200};
-//   box-shadow: ${({ theme }) => theme.colors.neutral900} 0px 1px 4px;
   background: ${({ theme }) => theme.colors.neutral0};
   margin-bottom: 24px;
   overflow: hidden;
@@ -26789,9 +26542,9 @@ const StatusTag = styled$1.div`
   font-size: 11px;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
-
   background: ${({ active, theme }) => active ? theme.colors.success100 : theme.colors.neutral100};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.success200 : theme.colors.neutral150};
+  border: 1px solid
+    ${({ active, theme }) => active ? theme.colors.success200 : theme.colors.neutral150};
   color: ${({ active, theme }) => active ? theme.colors.success600 : theme.colors.neutral500};
 
   svg {
@@ -26807,7 +26560,31 @@ const CountBadge = styled$1.span`
   font-size: 13px;
   font-weight: 700;
 `;
-const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questions, instructions }) => {
+const TitleRow = styled$1(Flex)`
+  gap: 8px;
+  align-items: center;
+`;
+const TitleText = styled$1(Typography)`
+  font-size: 14px;
+`;
+const SubText = styled$1(Typography)`
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+`;
+const TagsRow = styled$1(Flex)`
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+`;
+const SetupProgress = ({
+  baseDomain,
+  openaiKey,
+  contactLink,
+  collections,
+  questions,
+  instructions
+}) => {
   const tasks = [
     { label: "Base Domain", done: !!baseDomain && baseDomain !== "" },
     { label: "OpenAI API Key", done: !!openaiKey && openaiKey !== "" },
@@ -26822,11 +26599,11 @@ const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questi
   return /* @__PURE__ */ jsx(ProgressContainer, { children: /* @__PURE__ */ jsxs(Box, { padding: 6, children: [
     /* @__PURE__ */ jsxs(Flex, { justifyContent: "space-between", alignItems: "flex-start", marginBottom: 3, children: [
       /* @__PURE__ */ jsxs(Box, { children: [
-        /* @__PURE__ */ jsxs(Flex, { gap: 2, alignItems: "center", children: [
+        /* @__PURE__ */ jsxs(TitleRow, { children: [
           /* @__PURE__ */ jsx(ZapIcon, {}),
-          /* @__PURE__ */ jsx(Typography, { variant: "delta", fontWeight: "bold", textColor: "neutral800", style: { fontSize: "14px" }, children: "Setup Progress" })
+          /* @__PURE__ */ jsx(TitleText, { variant: "delta", fontWeight: "bold", textColor: "neutral800", children: "Setup Progress" })
         ] }),
-        /* @__PURE__ */ jsx(Typography, { variant: "pi", textColor: "neutral600", style: { fontSize: "12px", marginTop: "4px", display: "block" }, children: isFull ? "🎉 Your chatbot is fully configured and ready to go!" : "Configure your AI chatbot's identity, data, and behaviour." })
+        /* @__PURE__ */ jsx(SubText, { variant: "pi", textColor: "neutral600", children: isFull ? "🎉 Your chatbot is fully configured and ready to go!" : "Configure your AI chatbot's identity, data, and behaviour." })
       ] }),
       /* @__PURE__ */ jsxs(CountBadge, { isFull, children: [
         completedCount,
@@ -26835,7 +26612,7 @@ const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questi
       ] })
     ] }),
     /* @__PURE__ */ jsx(ProgressBarWrapper, { children: /* @__PURE__ */ jsx(ProgressBar, { percent: percentage, isFull }) }),
-    /* @__PURE__ */ jsx(Flex, { gap: 2, wrap: "wrap", marginTop: 4, children: tasks.map((task, i2) => /* @__PURE__ */ jsxs(StatusTag, { active: task.done, children: [
+    /* @__PURE__ */ jsx(TagsRow, { children: tasks.map((task, i2) => /* @__PURE__ */ jsxs(StatusTag, { active: task.done, children: [
       task.done ? /* @__PURE__ */ jsx(CheckCircle, {}) : /* @__PURE__ */ jsx(CrossCircle, {}),
       task.label
     ] }, i2)) })
@@ -26844,7 +26621,6 @@ const SetupProgress = ({ baseDomain, openaiKey, contactLink, collections, questi
 const Container = styled$1(Box)`
   border-radius: 14px;
   border: 1px solid ${({ theme }) => theme.colors.neutral200};
-  // box-shadow: ${({ theme }) => theme.colors.neutral900} 0px 1px 4px 0px;
   background: ${({ theme }) => theme.colors.neutral0};
   overflow: hidden;
   position: relative;
@@ -26873,11 +26649,9 @@ const BlurOverlay = styled$1.div`
   position: absolute;
   inset: 0;
   z-index: 5;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: ${({ theme }) => theme.colors.neutral100};
   opacity: 0.88;
   backdrop-filter: blur(2px);
@@ -26887,11 +26661,9 @@ const LockCircle = styled$1.div`
   height: 36px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.primary100};
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-bottom: 8px;
 
   svg {
@@ -26902,37 +26674,45 @@ const HeaderBox = styled$1(Box)`
   padding: 16px 24px 18px 24px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral200};
 `;
-const LockedSection = ({
-  title,
-  description,
-  isLocked,
-  children
-}) => {
+const SectionTitle = styled$1(Typography)`
+  font-size: 14px;
+`;
+const SectionDesc = styled$1(Typography)`
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+`;
+const ContentArea = styled$1(Box)`
+  opacity: ${({ $isLocked }) => $isLocked ? 0.35 : 1};
+  pointer-events: ${({ $isLocked }) => $isLocked ? "none" : "auto"};
+`;
+const OverlayText = styled$1(Typography)`
+  font-size: 13px;
+  text-align: center;
+`;
+const BoldInline = styled$1(Typography)`
+  font-size: 13px;
+`;
+const LockedSection = ({ title, description, isLocked, children }) => {
   return /* @__PURE__ */ jsxs(Container, { marginBottom: 6, children: [
     /* @__PURE__ */ jsx(HeaderBox, { children: /* @__PURE__ */ jsxs(Flex, { justifyContent: "space-between", alignItems: "center", children: [
       /* @__PURE__ */ jsxs(Box, { children: [
         /* @__PURE__ */ jsx(
-          Typography,
+          SectionTitle,
           {
             variant: "delta",
             fontWeight: "bold",
             textColor: isLocked ? "neutral500" : "neutral800",
-            style: {
-              fontSize: "14px"
-            },
+            $isLocked: isLocked,
             children: title
           }
         ),
         /* @__PURE__ */ jsx(
-          Typography,
+          SectionDesc,
           {
             variant: "pi",
             textColor: isLocked ? "neutral500" : "neutral600",
-            style: {
-              fontSize: "12px",
-              marginTop: "4px",
-              display: "block"
-            },
+            $isLocked: isLocked,
             children: description
           }
         )
@@ -26945,36 +26725,22 @@ const LockedSection = ({
     /* @__PURE__ */ jsxs(Box, { position: "relative", children: [
       isLocked && /* @__PURE__ */ jsx(BlurOverlay, { children: /* @__PURE__ */ jsxs(Flex, { direction: "column", alignItems: "center", gap: 2, children: [
         /* @__PURE__ */ jsx(LockCircle, { children: /* @__PURE__ */ jsx(Lock, { width: 16 }) }),
-        /* @__PURE__ */ jsxs(
-          Typography,
-          {
-            variant: "omega",
-            textColor: "neutral600",
-            style: { fontSize: "13px", textAlign: "center" },
-            children: [
-              "Fill in ",
-              /* @__PURE__ */ jsx(Typography, { fontWeight: "bold", textColor: "neutral800", style: { fontSize: "13px" }, children: "Base Domain" }),
-              ",",
-              " ",
-              /* @__PURE__ */ jsx(Typography, { fontWeight: "bold", textColor: "neutral800", style: { fontSize: "13px" }, children: "OpenAI API Key" }),
-              " and",
-              " ",
-              /* @__PURE__ */ jsx(Typography, { fontWeight: "bold", textColor: "neutral800", style: { fontSize: "13px" }, children: "Contact Link" }),
-              " first."
-            ]
-          }
-        )
+        /* @__PURE__ */ jsxs(OverlayText, { variant: "omega", textColor: "neutral600", children: [
+          "Fill in",
+          " ",
+          /* @__PURE__ */ jsx(BoldInline, { fontWeight: "bold", textColor: "neutral800", children: "Base Domain" }),
+          ",",
+          " ",
+          /* @__PURE__ */ jsx(BoldInline, { fontWeight: "bold", textColor: "neutral800", children: "OpenAI API Key" }),
+          " ",
+          "and",
+          " ",
+          /* @__PURE__ */ jsx(BoldInline, { fontWeight: "bold", textColor: "neutral800", children: "Contact Link" }),
+          " ",
+          "first."
+        ] })
       ] }) }),
-      /* @__PURE__ */ jsx(
-        Box,
-        {
-          style: {
-            opacity: isLocked ? 0.35 : 1,
-            pointerEvents: isLocked ? "none" : "auto"
-          },
-          children
-        }
-      )
+      /* @__PURE__ */ jsx(ContentArea, { $isLocked: isLocked, children })
     ] })
   ] });
 };
@@ -26987,6 +26753,94 @@ function normalizeDomain(url) {
   normalized = normalized.replace(/\/+$/, "");
   return normalized;
 }
+const LoaderWrapper = styled$1(Flex)`
+  height: 100vh;
+`;
+const UnsavedBar = styled$1(Box)`
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 32px;
+  padding-left: 32px;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+`;
+const UnsavedText = styled$1(Typography)`
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 19.5px;
+`;
+const DiscardButton = styled$1.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: Inter;
+  font-weight: 500;
+  font-size: 12px;
+  color: inherit;
+`;
+const SaveAllButton = styled$1(Button)`
+  width: 87.84px;
+  height: 28px;
+  border-radius: 10px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+`;
+const StickyHeader = styled$1(Box)`
+  top: ${({ $hasUnsaved }) => $hasUnsaved ? "50px" : "0"};
+`;
+const CenteredBox = styled$1(Box)`
+  max-width: 704px;
+  margin: 0 auto;
+  width: 100%;
+`;
+const PageTitle = styled$1(Typography)`
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 30px;
+  display: block;
+`;
+const PageSubtitle = styled$1(Typography)`
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 19.5px;
+`;
+const SavedBadge = styled$1(Box)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 8px;
+`;
+const SavedBadgeText = styled$1(Typography)`
+  font-size: 13px;
+  font-weight: 500;
+  font-family: Inter, sans-serif;
+`;
+const SaveButton = styled$1(Button)`
+  border: none;
+  color: white;
+  font-size: 13px;
+  padding: 7px 14px;
+  height: 34px;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+  gap: 6px;
+  font-family: Inter, sans-serif;
+`;
 const HomePage = () => {
   const [allContentTypes, setAllContentTypes] = useState([]);
   const [activeCollections, setActiveCollections] = useState([]);
@@ -27136,141 +26990,48 @@ const HomePage = () => {
     }
   };
   if (isLoading)
-    return /* @__PURE__ */ jsx(Flex, { justifyContent: "center", height: "100vh", children: /* @__PURE__ */ jsx(Loader, {}) });
+    return /* @__PURE__ */ jsx(LoaderWrapper, { justifyContent: "center", children: /* @__PURE__ */ jsx(Loader, {}) });
   return /* @__PURE__ */ jsxs(Main, { children: [
-    hasUnsavedChanges && /* @__PURE__ */ jsxs(
-      Box,
-      {
-        background: "warning100",
-        borderColor: "warning200",
-        style: {
-          width: "100%",
-          height: "50px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingRight: "32px",
-          paddingLeft: "32px",
-          borderBottomWidth: "2px",
-          borderBottomStyle: "solid",
-          position: "sticky",
-          top: 0,
-          zIndex: 6
-        },
-        children: [
-          /* @__PURE__ */ jsxs(Flex, { alignItems: "center", gap: 2, children: [
-            /* @__PURE__ */ jsx(Information, { color: "warning600", style: { width: 18, height: 18 } }),
-            /* @__PURE__ */ jsx(
-              Typography,
-              {
-                textColor: "warning600",
-                style: {
-                  fontWeight: 500,
-                  fontSize: "13px",
-                  lineHeight: "19.5px"
-                },
-                children: "You have unsaved changes"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs(Flex, { gap: 4, children: [
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                onClick: () => init(),
-                style: {
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "Inter",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  color: "inherit"
-                },
-                children: "Discard"
-              }
-            ),
-            /* @__PURE__ */ jsx(
-              Button,
-              {
-                onClick: save,
-                background: "primary600",
-                style: {
-                  width: "87.84px",
-                  height: "28px",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: 0
-                },
-                children: "Save All"
-              }
-            )
-          ] })
-        ]
-      }
-    ),
+    hasUnsavedChanges && /* @__PURE__ */ jsxs(UnsavedBar, { background: "warning100", borderColor: "warning200", children: [
+      /* @__PURE__ */ jsxs(Flex, { alignItems: "center", gap: 2, children: [
+        /* @__PURE__ */ jsx(Information, { color: "warning600", width: 18, height: 18 }),
+        /* @__PURE__ */ jsx(UnsavedText, { textColor: "warning600", children: "You have unsaved changes" })
+      ] }),
+      /* @__PURE__ */ jsxs(Flex, { gap: 4, children: [
+        /* @__PURE__ */ jsx(DiscardButton, { onClick: () => init(), children: "Discard" }),
+        /* @__PURE__ */ jsx(SaveAllButton, { onClick: save, background: "primary600", children: "Save All" })
+      ] })
+    ] }),
     /* @__PURE__ */ jsx(
-      Box,
+      StickyHeader,
       {
         background: "neutral100",
         position: "sticky",
-        top: hasUnsavedChanges ? "50px" : 0,
         zIndex: 6,
         paddingTop: 8,
         paddingBottom: 4,
-        children: /* @__PURE__ */ jsx(Box, { style: { maxWidth: "704px", margin: "0 auto", width: "100%" }, children: /* @__PURE__ */ jsxs(Flex, { justifyContent: "space-between", alignItems: "baseline", children: [
+        $hasUnsaved: hasUnsavedChanges,
+        children: /* @__PURE__ */ jsx(CenteredBox, { children: /* @__PURE__ */ jsxs(Flex, { justifyContent: "space-between", alignItems: "baseline", children: [
           /* @__PURE__ */ jsxs(Box, { children: [
-            /* @__PURE__ */ jsx(Typography, { textColor: "neutral800", style: { fontWeight: 700, fontSize: "20px", lineHeight: "30px", display: "block" }, children: "Chatbot Configuration" }),
-            /* @__PURE__ */ jsx(Box, { paddingTop: 1, children: /* @__PURE__ */ jsx(Typography, { textColor: "neutral600", style: { fontWeight: 400, fontSize: "13px", lineHeight: "19.5px" }, children: "Configure your AI chatbot's identity, data, and behaviour." }) })
+            /* @__PURE__ */ jsx(PageTitle, { textColor: "neutral800", children: "Chatbot Configuration" }),
+            /* @__PURE__ */ jsx(Box, { paddingTop: 1, children: /* @__PURE__ */ jsx(PageSubtitle, { textColor: "neutral600", children: "Configure your AI chatbot's identity, data, and behaviour." }) })
           ] }),
-          /* @__PURE__ */ jsx(Flex, { alignItems: "center", children: isSaved ? /* @__PURE__ */ jsxs(
-            Box,
-            {
-              background: "success100",
-              style: {
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "0 14px",
-                height: "34px",
-                borderRadius: "8px"
-              },
-              children: [
-                /* @__PURE__ */ jsx(Check, { width: 14, height: 14, color: "success600" }),
-                /* @__PURE__ */ jsx(Typography, { textColor: "success600", style: { fontSize: "13px", fontWeight: 500, fontFamily: "Inter, sans-serif" }, children: "Saved!" })
-              ]
-            }
-          ) : !hasUnsavedChanges && /* @__PURE__ */ jsx(
-            Button,
+          /* @__PURE__ */ jsx(Flex, { alignItems: "center", children: isSaved ? /* @__PURE__ */ jsxs(SavedBadge, { background: "success100", children: [
+            /* @__PURE__ */ jsx(Check, { width: 14, height: 14, color: "success600" }),
+            /* @__PURE__ */ jsx(SavedBadgeText, { textColor: "success600", children: "Saved!" })
+          ] }) : !hasUnsavedChanges && /* @__PURE__ */ jsx(
+            SaveButton,
             {
               onClick: save,
               startIcon: /* @__PURE__ */ jsx(Check, { width: 14, height: 14 }),
               background: "primary600",
-              style: {
-                border: "none",
-                color: "white",
-                fontSize: "13px",
-                padding: "7px 14px",
-                height: "34px",
-                borderRadius: "8px",
-                fontWeight: 500,
-                textAlign: "center",
-                gap: "6px",
-                fontFamily: "Inter, sans-serif"
-              },
               children: "Save Settings"
             }
           ) })
         ] }) })
       }
     ),
-    /* @__PURE__ */ jsx(Box, { background: "neutral100", paddingTop: 6, paddingBottom: 8, marginBottom: 8, children: /* @__PURE__ */ jsxs(Box, { style: { maxWidth: "704px", margin: "0 auto", width: "100%" }, children: [
+    /* @__PURE__ */ jsx(Box, { background: "neutral100", paddingTop: 6, paddingBottom: 8, marginBottom: 8, children: /* @__PURE__ */ jsxs(CenteredBox, { children: [
       /* @__PURE__ */ jsx(
         SetupProgress,
         {

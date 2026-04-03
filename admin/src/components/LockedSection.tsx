@@ -6,7 +6,6 @@ import { Lock } from '@strapi/icons';
 const Container = styled(Box)`
   border-radius: 14px;
   border: 1px solid ${({ theme }) => theme.colors.neutral200};
-  // box-shadow: ${({ theme }) => theme.colors.neutral900} 0px 1px 4px 0px;
   background: ${({ theme }) => theme.colors.neutral0};
   overflow: hidden;
   position: relative;
@@ -37,11 +36,9 @@ const BlurOverlay = styled.div`
   position: absolute;
   inset: 0;
   z-index: 5;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: ${({ theme }) => theme.colors.neutral100};
   opacity: 0.88;
   backdrop-filter: blur(2px);
@@ -52,11 +49,9 @@ const LockCircle = styled.div`
   height: 36px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.primary100};
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-bottom: 8px;
 
   svg {
@@ -69,6 +64,30 @@ const HeaderBox = styled(Box)`
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral200};
 `;
 
+const SectionTitle = styled(Typography)<{ $isLocked: boolean }>`
+  font-size: 14px;
+`;
+
+const SectionDesc = styled(Typography)<{ $isLocked: boolean }>`
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+`;
+
+const ContentArea = styled(Box)<{ $isLocked: boolean }>`
+  opacity: ${({ $isLocked }) => ($isLocked ? 0.35 : 1)};
+  pointer-events: ${({ $isLocked }) => ($isLocked ? 'none' : 'auto')};
+`;
+
+const OverlayText = styled(Typography)`
+  font-size: 13px;
+  text-align: center;
+`;
+
+const BoldInline = styled(Typography)`
+  font-size: 13px;
+`;
+
 interface LockedSectionProps {
   title: string;
   description: string;
@@ -76,40 +95,28 @@ interface LockedSectionProps {
   children: React.ReactNode;
 }
 
-const LockedSection = ({
-  title,
-  description,
-  isLocked,
-  children,
-}: LockedSectionProps) => {
+const LockedSection = ({ title, description, isLocked, children }: LockedSectionProps) => {
   return (
     <Container marginBottom={6}>
-      {/* HEADER - Always visible and above the blur */}
+      {/* HEADER */}
       <HeaderBox>
         <Flex justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography
-                variant="delta"
-                fontWeight="bold"
-                textColor={isLocked ? "neutral500" : "neutral800"}
-                style={{
-                    fontSize: '14px',
-                }}
+            <SectionTitle
+              variant="delta"
+              fontWeight="bold"
+              textColor={isLocked ? 'neutral500' : 'neutral800'}
+              $isLocked={isLocked}
             >
-                {title}
-            </Typography>
-
-            <Typography
-                variant="pi"
-                textColor={isLocked ? "neutral500" : "neutral600"}
-                style={{
-                    fontSize: '12px',
-                    marginTop: '4px',
-                    display: 'block',
-                }}
+              {title}
+            </SectionTitle>
+            <SectionDesc
+              variant="pi"
+              textColor={isLocked ? 'neutral500' : 'neutral600'}
+              $isLocked={isLocked}
             >
-                {description}
-            </Typography>
+              {description}
+            </SectionDesc>
           </Box>
 
           {isLocked && (
@@ -122,36 +129,33 @@ const LockedSection = ({
       </HeaderBox>
 
       {/* CONTENT AREA */}
-      <Box position="relative"> 
-        {/* The overlay is now INSIDE this box, covering only the children */}
+      <Box position="relative">
         {isLocked && (
           <BlurOverlay>
             <Flex direction="column" alignItems="center" gap={2}>
               <LockCircle>
                 <Lock width={16} />
               </LockCircle>
-
-              <Typography
-                variant="omega"
-                textColor="neutral600"
-                style={{ fontSize: '13px', textAlign: 'center' }}
-              >
-                Fill in <Typography fontWeight="bold" textColor="neutral800" style={{ fontSize: '13px' }}>Base Domain</Typography>,{' '}
-                <Typography fontWeight="bold" textColor="neutral800" style={{ fontSize: '13px' }}>OpenAI API Key</Typography> and{' '}
-                <Typography fontWeight="bold" textColor="neutral800" style={{ fontSize: '13px' }}>Contact Link</Typography> first.
-              </Typography>
+              <OverlayText variant="omega" textColor="neutral600">
+                Fill in{' '}
+                <BoldInline fontWeight="bold" textColor="neutral800">
+                  Base Domain
+                </BoldInline>
+                ,{' '}
+                <BoldInline fontWeight="bold" textColor="neutral800">
+                  OpenAI API Key
+                </BoldInline>{' '}
+                and{' '}
+                <BoldInline fontWeight="bold" textColor="neutral800">
+                  Contact Link
+                </BoldInline>{' '}
+                first.
+              </OverlayText>
             </Flex>
           </BlurOverlay>
         )}
 
-        <Box
-          style={{
-            opacity: isLocked ? 0.35 : 1,
-            pointerEvents: isLocked ? 'none' : 'auto',
-          }}
-        >
-          {children}
-        </Box>
+        <ContentArea $isLocked={isLocked}>{children}</ContentArea>
       </Box>
     </Container>
   );
