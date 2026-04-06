@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Box, Flex, Typography, Button } from '@strapi/design-system';
-import { Plus, Pencil, Trash, Drag } from '@strapi/icons';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { Box, Flex, Typography, Button } from "@strapi/design-system";
+import { Plus, Pencil, Trash, Drag } from "@strapi/icons";
+import styled from "styled-components";
+import { useForm } from "react-hook-form";
 
 interface SuggestedQuestionsProps {
   questions: string[];
@@ -10,6 +11,10 @@ interface SuggestedQuestionsProps {
   onRemove: (index: number) => void;
   onReorder: (newQuestions: string[]) => void;
 }
+
+type InputFormValues = {
+  value: string;
+};
 
 const EmptyState = styled(Box)`
   padding-top: 28px;
@@ -21,7 +26,8 @@ const EmptyState = styled(Box)`
 
 const QuestionRow = styled(Flex)<{ $isDragging: boolean }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
-  background: ${({ $isDragging, theme }) => ($isDragging ? theme.colors.neutral100 : 'transparent')};
+  background: ${({ $isDragging, theme }) =>
+    $isDragging ? theme.colors.neutral100 : "transparent"};
 `;
 
 const DragHandle = styled(Box)`
@@ -94,7 +100,7 @@ const QuestionText = styled(Box)`
 
 const ActionIcons = styled(Flex)<{ $visible: boolean }>`
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-  pointer-events: ${({ $visible }) => ($visible ? 'auto' : 'none')};
+  pointer-events: ${({ $visible }) => ($visible ? "auto" : "none")};
   transition: opacity 0.2s;
 `;
 
@@ -173,25 +179,47 @@ const SuggestedQuestions = ({
 }: SuggestedQuestionsProps) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [tempValue, setTempValue] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<InputFormValues>({
+    defaultValues: { value: "" },
+  });
 
   const handleStartEdit = (index: number, q: string) => {
     setIsAdding(false);
     setEditingIndex(index);
-    setTempValue(q);
+    reset({ value: q });
   };
 
   const handleStartAdd = () => {
     setEditingIndex(null);
     setIsAdding(true);
-    setTempValue('');
+    reset({ value: "" });
   };
+
+  const onSubmitAdd = ({ value }: InputFormValues) => {
+    if (value.trim()) onAdd(value);
+    setIsAdding(false);
+    reset({ value: "" });
+  };
+
+  const onSubmitEdit =
+    (index: number) =>
+    ({ value }: InputFormValues) => {
+      if (value.trim()) onEdit(index, value);
+      setEditingIndex(null);
+      reset({ value: "" });
+    };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -206,23 +234,11 @@ const SuggestedQuestions = ({
     onReorder(newItems);
   };
 
-  const handleAddSubmit = () => {
-    if (tempValue.trim()) onAdd(tempValue);
-    setIsAdding(false);
-    setTempValue('');
-  };
-
-  const handleSaveEdit = (index: number) => {
-    onEdit(index, tempValue);
-    setEditingIndex(null);
-    setTempValue('');
-  };
-
   return (
     <Box>
       {questions.length === 0 && !isAdding && (
         <EmptyState textAlign="center">
-          <Typography textColor="neutral600" style={{ fontSize: '13px' }}>
+          <Typography textColor="neutral600" style={{ fontSize: "13px" }}>
             No suggested questions yet.
           </Typography>
         </EmptyState>
@@ -235,8 +251,12 @@ const SuggestedQuestions = ({
           draggable={editingIndex === null && !isAdding}
           onMouseEnter={() => setHoveredIndex(index)}
           onMouseLeave={() => setHoveredIndex(null)}
-          onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, index)}
-          onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, index)}
+          onDragStart={(e: React.DragEvent<HTMLDivElement>) =>
+            handleDragStart(e, index)
+          }
+          onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
+            handleDragOver(e, index)
+          }
           onDragEnd={() => setDraggedIndex(null)}
           paddingLeft={6}
           paddingRight={6}
@@ -255,26 +275,39 @@ const SuggestedQuestions = ({
             <EditFlex gap={2}>
               <EditInput
                 autoFocus
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(index)}
+                {...register("value")}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && handleSubmit(onSubmitEdit(index))()
+                }
               />
-              <SaveEditButton onClick={() => handleSaveEdit(index)}>Save</SaveEditButton>
-              <CancelEditButton onClick={() => setEditingIndex(null)}>Cancel</CancelEditButton>
+              <SaveEditButton onClick={handleSubmit(onSubmitEdit(index))}>
+                Save
+              </SaveEditButton>
+              <CancelEditButton
+                onClick={() => {
+                  setEditingIndex(null);
+                  reset();
+                }}
+              >
+                Cancel
+              </CancelEditButton>
             </EditFlex>
           ) : (
             <>
               <QuestionText>
-                <Typography textColor="neutral800" style={{ fontSize: '13px' }}>
+                <Typography textColor="neutral800" style={{ fontSize: "13px" }}>
                   {q}
                 </Typography>
               </QuestionText>
 
               <ActionIcons gap={1} $visible={hoveredIndex === index}>
-                <EditIconBtn onClick={() => handleStartEdit(index, q)}>
+                <EditIconBtn
+                  type="button"
+                  onClick={() => handleStartEdit(index, q)}
+                >
                   <Pencil width="13" height="13" />
                 </EditIconBtn>
-                <TrashIconBtn onClick={() => onRemove(index)}>
+                <TrashIconBtn type="button" onClick={() => onRemove(index)}>
                   <Trash width="13" height="13" />
                 </TrashIconBtn>
               </ActionIcons>
@@ -284,16 +317,30 @@ const SuggestedQuestions = ({
       ))}
 
       {isAdding ? (
-        <AddInputRow paddingLeft={6} paddingRight={6} paddingTop={4} paddingBottom={4} gap={3}>
+        <AddInputRow
+          paddingLeft={6}
+          paddingRight={6}
+          paddingTop={4}
+          paddingBottom={4}
+          gap={3}
+        >
           <AddInput
             autoFocus
             placeholder="Type a question and press Enter..."
-            value={tempValue}
-            onChange={(e) => setTempValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddSubmit()}
+            {...register("value")}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit(onSubmitAdd)()}
           />
-          <SaveEditButton onClick={handleAddSubmit}>Add</SaveEditButton>
-          <CancelEditButton onClick={() => setIsAdding(false)}>Cancel</CancelEditButton>
+          <SaveEditButton onClick={handleSubmit(onSubmitAdd)}>
+            Add
+          </SaveEditButton>
+          <CancelEditButton
+            onClick={() => {
+              setIsAdding(false);
+              reset();
+            }}
+          >
+            Cancel
+          </CancelEditButton>
         </AddInputRow>
       ) : (
         <AddButtonRow>
