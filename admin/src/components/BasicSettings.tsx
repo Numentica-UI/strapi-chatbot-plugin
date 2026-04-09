@@ -1,23 +1,18 @@
-import React from "react";
-import { Box, Typography } from "@strapi/design-system";
-import {
-  Pencil,
-  Check,
-  Eye,
-  EyeStriked,
-  WarningCircle,
-  Paragraph,
-} from "@strapi/icons";
-import styled from "styled-components";
-import { useForm } from "react-hook-form";
+import React from 'react';
+import { Box, Typography } from '@strapi/design-system';
+import { Pencil, Check, Eye, EyeStriked, WarningCircle, Paragraph } from '@strapi/icons';
+import styled from 'styled-components';
+import { useForm } from 'react-hook-form';
+import { useFetchClient } from '@strapi/admin/strapi-admin';
 
-type SettingType = "key" | "domain" | "contact";
+type SettingType = 'key' | 'domain' | 'contact';
 
 interface BasicSettingsProps {
   openaiKey: string;
   savedOpenaiKey: string;
   baseDomain: string;
   contactLink: string;
+  canEdit: boolean;
   onManage: (type: SettingType, value?: string) => void;
 }
 
@@ -32,6 +27,7 @@ interface SettingRowProps {
   value: string;
   type: SettingType;
   tokenUsage?: TokenUsage;
+  canEdit: boolean;
   onManage: (type: SettingType, value?: string) => void;
   isLast?: boolean;
 }
@@ -67,7 +63,7 @@ const RowBox = styled(Box)<{ $isEditing: boolean; $isLast: boolean }>`
   gap: 16px;
   padding: 16px 24px;
   border-bottom: ${({ $isLast, theme }) =>
-    $isLast ? "none" : `1px solid ${theme.colors.neutral150}`};
+    $isLast ? 'none' : `1px solid ${theme.colors.neutral150}`};
   background: ${({ $isEditing, theme }) =>
     $isEditing ? theme.colors.primary100 : theme.colors.neutral0};
   transition: background 0.2s ease;
@@ -113,8 +109,7 @@ const InputWrapper = styled(Box)<{ $hasError: boolean }>`
   max-width: 360px;
   border-radius: 8px;
   border: 1.5px solid
-    ${({ $hasError, theme }) =>
-      $hasError ? theme.colors.danger600 : theme.colors.primary600};
+    ${({ $hasError, theme }) => ($hasError ? theme.colors.danger600 : theme.colors.primary600)};
   background: ${({ theme }) => theme.colors.neutral0};
   overflow: hidden;
 `;
@@ -144,7 +139,7 @@ const SaveButton = styled.button<{ $loading: boolean }>`
   background: ${({ theme }) => theme.colors.primary600};
   color: ${({ theme }) => theme.colors.neutral0};
   border: none;
-  cursor: ${({ $loading }) => ($loading ? "not-allowed" : "pointer")};
+  cursor: ${({ $loading }) => ($loading ? 'not-allowed' : 'pointer')};
   font-weight: 600;
   font-size: 12px;
   opacity: ${({ $loading }) => ($loading ? 0.6 : 1)};
@@ -282,9 +277,11 @@ const SettingRow = ({
   value,
   type,
   tokenUsage,
+  canEdit,
   onManage,
   isLast = false,
 }: SettingRowProps) => {
+  const { post } = useFetchClient();
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSaved, setIsSaved] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
@@ -305,22 +302,15 @@ const SettingRow = ({
   }, [value, reset]);
 
   const onSave = async ({ fieldValue }: { fieldValue: string }) => {
-    if (type === "key" && fieldValue.trim()) {
+    if (type === 'key' && fieldValue.trim()) {
       try {
-        const res = await fetch("/api/faq-ai-bot/validate-key", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: fieldValue }),
-        });
-        const data = await res.json();
+        const { data } = await post('/faq-ai-bot/validate-key', { data: { key: fieldValue } });
         if (!data.valid) {
-          setError("fieldValue", { message: data.message });
+          setError('fieldValue', { message: data.message });
           return;
         }
       } catch {
-        setError("fieldValue", {
-          message: "Could not validate key. Check your connection.",
-        });
+        setError('fieldValue', { message: 'Could not validate key. Check your connection.' });
         return;
       }
     }
@@ -337,8 +327,15 @@ const SettingRow = ({
   };
 
   const handleStartEdit = () => {
+    if (!canEdit) return;
     setIsEditing(true);
     reset({ fieldValue: value });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSubmit(onSave)();
+    }
   };
 
   return (
@@ -366,19 +363,19 @@ const SettingRow = ({
               <InputWrapper $hasError={!!errors.fieldValue}>
                 <StyledInput
                   autoFocus
-                  type={type === "key" && !showKey ? "password" : "text"}
+                  type={type === 'key' && !showKey ? 'password' : 'text'}
                   placeholder={
-                    type === "domain"
-                      ? "https://your-domain.com"
-                      : type === "contact"
-                        ? "https://your-domain.com/contact"
-                        : "sk-…"
+                    type === 'domain'
+                      ? 'https://your-domain.com'
+                      : type === 'contact'
+                        ? 'https://your-domain.com/contact'
+                        : 'sk-…'
                   }
-                  {...register("fieldValue")}
-                  onKeyDown={(e) => e.key === "Enter" && handleSubmit(onSave)()}
+                  {...register('fieldValue')}
+                  onKeyDown={handleKeyDown}
                 />
-                {type === "key" && (
-                  <EyeButton type="button" onClick={() => setShowKey(!showKey)}>
+                {type === 'key' && (
+                  <EyeButton type="button" onClick={() => setShowKey((prev) => !prev)}>
                     {showKey ? (
                       <Eye width={16} height={16} />
                     ) : (
@@ -394,7 +391,7 @@ const SettingRow = ({
                 disabled={isSubmitting}
                 $loading={isSubmitting}
               >
-                {isSubmitting ? "Validating..." : "Save"}
+                {isSubmitting ? 'Validating...' : 'Save'}
               </SaveButton>
 
               <CancelButton type="button" onClick={handleCancel}>
@@ -402,7 +399,7 @@ const SettingRow = ({
               </CancelButton>
             </InputRow>
 
-            {errors.fieldValue && type === "key" && (
+            {errors.fieldValue && type === 'key' && (
               <ErrorBox>
                 <ErrorText variant="pi" textColor="danger600">
                   {errors.fieldValue.message}
@@ -416,18 +413,14 @@ const SettingRow = ({
               {value ? (
                 <ValueText
                   variant="omega"
-                  textColor={type === "key" ? "neutral500" : "primary600"}
-                  $isKey={type === "key"}
+                  textColor={type === 'key' ? 'neutral500' : 'primary600'}
+                  $isKey={type === 'key'}
                 >
-                  {type === "key" ? "••••••••••••" : value}
+                  {type === 'key' ? '••••••••••••' : value}
                 </ValueText>
               ) : (
                 <NotConfiguredBadge>
-                  <NotConfiguredText
-                    variant="pi"
-                    textColor="danger600"
-                    fontWeight="600"
-                  >
+                  <NotConfiguredText variant="pi" textColor="danger600" fontWeight="600">
                     NOT CONFIGURED
                   </NotConfiguredText>
                 </NotConfiguredBadge>
@@ -442,16 +435,19 @@ const SettingRow = ({
                 </SavedIndicator>
               )}
 
-              <EditButton
-                $visible={isHovered || isSaved || !value}
-                onClick={handleStartEdit}
-              >
-                <Pencil width={11} height={11} />
-                {value ? "Edit" : "Add"}
-              </EditButton>
+              {/* Only show Edit button if user has edit permission */}
+              {canEdit && (
+                <EditButton
+                  $visible={isHovered || isSaved || !value}
+                  onClick={handleStartEdit}
+                >
+                  <Pencil width={11} height={11} />
+                  {value ? 'Edit' : 'Add'}
+                </EditButton>
+              )}
             </ViewRow>
 
-            {type === "key" && value && tokenUsage && (
+            {type === 'key' && value && tokenUsage && (
               <TokenPillsRow>
                 <TokenPill>
                   <TokenIconBox $bg="secondary100">
@@ -492,25 +488,23 @@ const BasicSettings = ({
   savedOpenaiKey,
   baseDomain,
   contactLink,
+  canEdit,
   onManage,
 }: BasicSettingsProps) => {
-  const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(
-    undefined,
-  );
+  const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(undefined);
+  const { get } = useFetchClient();
 
   React.useEffect(() => {
-    fetch("/api/faq-ai-bot/usage")
-      .then((r) => r.json())
-      .then((data) => {
-        if (typeof data?.tokensUsed === "number") {
+    get('/faq-ai-bot/usage')
+      .then(({ data }) => {
+        if (typeof data?.tokensUsed === 'number') {
           setTokenUsage({
             tokensUsed: data.tokensUsed,
-            estimatedCost:
-              typeof data.estimatedCost === "number" ? data.estimatedCost : 0,
+            estimatedCost: typeof data.estimatedCost === 'number' ? data.estimatedCost : 0,
           });
         }
       })
-      .catch((e) => console.error("[usage fetch error]", e));
+      .catch((e) => console.error('[usage fetch error]', e));
   }, [savedOpenaiKey]);
 
   return (
@@ -531,6 +525,7 @@ const BasicSettings = ({
         title="Base Domain"
         description="Root URL used to scope chatbot context"
         value={baseDomain}
+        canEdit={canEdit}
         onManage={onManage}
       />
 
@@ -540,6 +535,7 @@ const BasicSettings = ({
         description="Stored encrypted — never exposed to users"
         value={openaiKey}
         tokenUsage={tokenUsage}
+        canEdit={canEdit}
         onManage={onManage}
       />
 
@@ -548,6 +544,7 @@ const BasicSettings = ({
         title="Contact Link"
         description="Shown as 'Talk to Support' in the chatbot"
         value={contactLink}
+        canEdit={canEdit}
         onManage={onManage}
         isLast
       />

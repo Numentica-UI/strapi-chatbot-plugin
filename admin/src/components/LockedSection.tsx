@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Box, Flex, Typography } from '@strapi/design-system';
-import { Lock } from '@strapi/icons';
+import { Lock, Eye } from '@strapi/icons';
 
 const Container = styled(Box)`
   border-radius: 14px;
@@ -74,9 +74,10 @@ const SectionDesc = styled(Typography)<{ $isLocked: boolean }>`
   display: block;
 `;
 
-const ContentArea = styled(Box)<{ $isLocked: boolean }>`
-  opacity: ${({ $isLocked }) => ($isLocked ? 0.35 : 1)};
-  pointer-events: ${({ $isLocked }) => ($isLocked ? 'none' : 'auto')};
+const ContentArea = styled(Box)<{ $isLocked: boolean; $isReadOnly: boolean }>`
+  opacity: ${({ $isLocked, $isReadOnly }) => ($isLocked ? 0.35 : $isReadOnly ? 0.55 : 1)};
+  pointer-events: ${({ $isLocked, $isReadOnly }) =>
+    $isLocked || $isReadOnly ? 'none' : 'auto'};
 `;
 
 const OverlayText = styled(Typography)`
@@ -92,10 +93,11 @@ interface LockedSectionProps {
   title: string;
   description: string;
   isLocked: boolean;
+  isReadOnly?: boolean;
   children: React.ReactNode;
 }
 
-const LockedSection = ({ title, description, isLocked, children }: LockedSectionProps) => {
+const LockedSection = ({ title, description, isLocked, isReadOnly = false, children }: LockedSectionProps) => {
   return (
     <Container marginBottom={6}>
       {/* HEADER */}
@@ -123,6 +125,13 @@ const LockedSection = ({ title, description, isLocked, children }: LockedSection
             <LockBadge>
               <Lock width={11} />
               <span>Complete Basic Settings to unlock</span>
+            </LockBadge>
+          )}
+
+          {!isLocked && isReadOnly && (
+            <LockBadge>
+              <Eye width={11} />
+              <span>Read only — no edit permission</span>
             </LockBadge>
           )}
         </Flex>
@@ -155,7 +164,7 @@ const LockedSection = ({ title, description, isLocked, children }: LockedSection
           </BlurOverlay>
         )}
 
-        <ContentArea $isLocked={isLocked}>{children}</ContentArea>
+        <ContentArea $isLocked={isLocked} $isReadOnly={isReadOnly}>{children}</ContentArea>
       </Box>
     </Container>
   );

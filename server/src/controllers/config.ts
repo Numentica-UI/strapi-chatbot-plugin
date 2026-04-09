@@ -1,48 +1,98 @@
 import dns from 'dns/promises';
-import axios from 'axios';
 import type { Core } from '@strapi/strapi';
+
+const ALLOWED_SETTINGS_KEYS: Record<string, { type: string; maxLength?: number }> = {
+  openaiKey: { type: 'string', maxLength: 200 },
+  baseDomain: { type: 'string', maxLength: 500 },
+  systemInstructions: { type: 'string', maxLength: 4000 },
+  responseInstructions: { type: 'string', maxLength: 4000 },
+  contactLink: { type: 'string', maxLength: 500 },
+  cardStyles: { type: 'object' },
+  config: { type: 'object' },
+  suggestedQuestions: { type: 'array' },
+};
+
+function sanitizeSettings(raw: any): Record<string, any> {
+  const sanitized: Record<string, any> = {};
+  for (const [key, rules] of Object.entries(ALLOWED_SETTINGS_KEYS)) {
+    if (!(key in raw)) continue;
+    const value = raw[key];
+    if (rules.type === 'string') {
+      if (typeof value !== 'string') continue;
+      sanitized[key] = rules.maxLength ? value.slice(0, rules.maxLength) : value;
+    } else if (rules.type === 'array') {
+      if (!Array.isArray(value)) continue;
+      sanitized[key] = value;
+    } else if (rules.type === 'object') {
+      if (typeof value !== 'object' || Array.isArray(value) || value === null) continue;
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
+const PRIVATE_IP_RANGES = [
+  /^127\./,
+  /^10\./,
+  /^192\.168\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^::1$/,
+  /^fc00:/i,
+  /^fe80:/i,
+  /^169\.254\./,
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./,
+];
+
+const METADATA_HOSTNAMES = ['169.254.169.254', 'metadata.google.internal'];
 
 async function validateBaseDomain(
   url: string,
   isDev: boolean
 ): Promise<{ valid: boolean; message?: string }> {
   try {
-    // Allow empty value
     if (!url) return { valid: true };
 
     let normalized = url.trim().toLowerCase();
 
-    // Add protocol if missing
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
       normalized = 'https://' + normalized;
     }
-
-    // Remove trailing slash
     normalized = normalized.replace(/\/+$/, '');
 
     const parsed = new URL(normalized);
+    const hostname = parsed.hostname;
 
-    // DEV mode → skip DNS & reachability checks
+    if (METADATA_HOSTNAMES.includes(hostname)) {
+      return { valid: false, message: 'Base domain is not allowed.' };
+    }
+
     if (isDev) {
       return { valid: true };
     }
 
-    // DNS check
-    await dns.lookup(parsed.hostname);
+    const result = await dns.lookup(hostname);
+    const resolvedIp = result.address;
 
-    // Reachability check (accept any HTTP status)
-    await axios.get(parsed.origin, {
-      timeout: 2000,
-      validateStatus: () => true,
-    });
+    if (PRIVATE_IP_RANGES.some((re) => re.test(resolvedIp))) {
+      return { valid: false, message: 'Base domain resolves to a private/internal address.' };
+    }
 
     return { valid: true };
   } catch {
     return {
       valid: false,
-      message: 'Base domain is invalid, DNS failed, or site not reachable.',
+      message: 'Base domain is invalid or DNS resolution failed.',
     };
   }
+}
+
+function maskSettings(settings: any): any {
+  if (!settings) return settings;
+  const masked = { ...settings };
+  if (masked.openaiKey) {
+    masked.openaiKey = '********' + masked.openaiKey.slice(-4);
+  }
+  return masked;
 }
 
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
@@ -60,17 +110,19 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       }));
 
     ctx.body = {
-      settings,
+      settings: maskSettings(settings),
       contentTypes,
     };
   },
 
   async update(ctx: any) {
-    const settings = ctx.request.body;
+    const rawBody = ctx.request.body?.data ?? ctx.request.body;
+
+    const settings = sanitizeSettings(rawBody);
 
     const isDev = process.env.NODE_ENV !== 'production';
 
-    const check = await validateBaseDomain(settings.baseDomain, isDev);
+    const check = await validateBaseDomain(settings.baseDomain ?? '', isDev);
 
     if (!check.valid) {
       ctx.status = 400;
@@ -84,7 +136,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       name: 'faq-ai-bot',
     });
     const existingSettings = await pluginStore.get({ key: 'settings' });
-    console.log('[DEBUG] existingSettings:', existingSettings);
 
     if (settings.openaiKey && (existingSettings as any)?.openaiKey !== settings.openaiKey) {
       await pluginStore.set({
@@ -95,6 +146,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
     const data = await strapi.plugin('faq-ai-bot').service('config').setConfig(settings);
 
-    ctx.body = data;
+    ctx.body = maskSettings(data);
   },
 });

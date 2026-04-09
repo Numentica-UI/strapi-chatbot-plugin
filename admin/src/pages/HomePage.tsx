@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from "react";
-import {
-  Main,
-  Typography,
-  Flex,
-  Button,
-  Box,
-  Loader,
-} from "@strapi/design-system";
-import { Check, Information } from "@strapi/icons";
-import { useFetchClient, useNotification } from "@strapi/admin/strapi-admin";
-import styled from "styled-components";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useState } from 'react';
+import { Main, Typography, Flex, Button, Box, Loader } from '@strapi/design-system';
+import { Check, Information } from '@strapi/icons';
+import { useFetchClient, useNotification } from '@strapi/admin/strapi-admin';
+import styled from 'styled-components';
+import { useForm } from 'react-hook-form';
 
-import ChatbotPreview from "../components/ChatbotPreview";
-import BasicSettings from "../components/BasicSettings";
-import ResponseTemplates from "../components/ResponseTemplates";
-import SuggestedQuestions from "../components/SuggestedQuestions";
-import AiInstructions from "../components/AiInstructions";
-import SetupProgress from "../components/SetupProgress";
-import LockedSection from "../components/LockedSection";
+import ChatbotPreview from '../components/ChatbotPreview';
+import BasicSettings from '../components/BasicSettings';
+import ResponseTemplates from '../components/ResponseTemplates';
+import SuggestedQuestions from '../components/SuggestedQuestions';
+import AiInstructions from '../components/AiInstructions';
+import SetupProgress from '../components/SetupProgress';
+import LockedSection from '../components/LockedSection';
 
 type FieldConfig = {
   name: string;
@@ -43,12 +36,12 @@ type FormValues = {
 };
 
 function normalizeDomain(url: string): string {
-  if (!url) return "";
+  if (!url) return '';
   let normalized = url.trim().toLowerCase();
-  if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
-    normalized = "https://" + normalized;
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = 'https://' + normalized;
   }
-  normalized = normalized.replace(/\/+$/, "");
+  normalized = normalized.replace(/\/+$/, '');
   return normalized;
 }
 
@@ -102,7 +95,7 @@ const SaveAllButton = styled(Button)`
 `;
 
 const StickyHeader = styled(Box)<{ $hasUnsaved: boolean }>`
-  top: ${({ $hasUnsaved }) => ($hasUnsaved ? "50px" : "0")};
+  top: ${({ $hasUnsaved }) => ($hasUnsaved ? '50px' : '0')};
 `;
 
 const CenteredBox = styled(Box)`
@@ -153,13 +146,12 @@ const SaveButton = styled(Button)`
 `;
 
 const HomePage = () => {
-  const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>(
-    [],
-  );
+  const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>([]);
   const [cardOptions, setCardOptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
-  const [savedOpenaiKey, setSavedOpenaiKey] = useState("");
+  const [savedOpenaiKey, setSavedOpenaiKey] = useState('');
+  const [canEdit, setCanEdit] = useState(false);
 
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
@@ -168,96 +160,91 @@ const HomePage = () => {
     watch,
     reset,
     setValue,
+    getValues,
     handleSubmit,
     formState: { isDirty, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: {
-      openaiKey: "",
-      baseDomain: "",
-      contactLink: "",
-      systemInstructions: "",
-      responseInstructions: "",
+      openaiKey: '',
+      baseDomain: '',
+      contactLink: '',
+      systemInstructions: '',
+      responseInstructions: '',
       suggestedQuestions: [],
       activeCollections: [],
     },
   });
 
   const values = watch();
-  const isLocked =
-    !values.baseDomain || !values.openaiKey || !values.contactLink;
+  const isLocked = !values.baseDomain || !values.openaiKey || !values.contactLink;
 
   const init = async () => {
     try {
-      const { data } = await get("/faq-ai-bot/collections");
+      const { data } = await get('/faq-ai-bot/collections');
+
+      // Check if this user has edit permission
+      try {
+        const { data: permData } = await get('/admin/permissions/check', {
+          params: { permissions: [{ action: 'plugin::faq-ai-bot.update' }] },
+        });
+        setCanEdit(permData?.data?.[0]?.hasPermission ?? false);
+      } catch {
+        setCanEdit(false);
+      }
       const settings = data.settings || {};
       const savedConfig = settings.config || {};
       const savedStyles = settings.cardStyles || {};
 
-      const normalizedBase = normalizeDomain(settings.baseDomain || "");
+      const normalizedBase = normalizeDomain(settings.baseDomain || '');
 
-      // Fetch card mapping if base domain is set
       if (normalizedBase) {
-        fetch(`${normalizedBase}/card-mapping.json`, { cache: "no-store" })
+        fetch(`${normalizedBase}/card-mapping.json`, { cache: 'no-store' })
           .then((res) => {
-            if (!res.ok && res.status !== 304)
-              throw new Error("Failed to load card mapping");
+            if (!res.ok && res.status !== 304) throw new Error('Failed to load card mapping');
             return res.status === 304 ? null : res.json();
           })
-          .then((data) => {
-            if (data) setCardOptions(data);
-          })
+          .then((data) => { if (data) setCardOptions(data); })
           .catch(() => setCardOptions([]));
       }
 
       const SYSTEM_FIELDS = [
-        "createdAt",
-        "updatedAt",
-        "publishedAt",
-        "createdBy",
-        "updatedBy",
-        "locale",
-        "localizations",
-        "__component",
-        "id",
+        'createdAt', 'updatedAt', 'publishedAt', 'createdBy', 'updatedBy',
+        'locale', 'localizations', '__component', 'id',
       ];
 
-      const formattedAll: CollectionConfig[] = (data.contentTypes || []).map(
-        (ct: any) => ({
-          uid: ct.uid,
-          name: ct.displayName,
-          cardStyle: savedStyles[ct.uid] || undefined,
-          fields: ct.attributes
-            .filter((attr: any) => !SYSTEM_FIELDS.includes(attr.name))
-            .map((attr: any) => ({
-              name: attr.name,
-              enabled: savedConfig[ct.uid]?.includes(attr.name) || false,
-            })),
-        }),
-      );
+      const formattedAll: CollectionConfig[] = (data.contentTypes || []).map((ct: any) => ({
+        uid: ct.uid,
+        name: ct.displayName,
+        cardStyle: savedStyles[ct.uid] || undefined,
+        fields: ct.attributes
+          .filter((attr: any) => !SYSTEM_FIELDS.includes(attr.name))
+          .map((attr: any) => ({
+            name: attr.name,
+            enabled: savedConfig[ct.uid]?.includes(attr.name) || false,
+          })),
+      }));
 
       setAllContentTypes(formattedAll);
 
       const initialActive = formattedAll.filter((ct: CollectionConfig) =>
-        Object.keys(savedConfig).includes(ct.uid),
+        Object.keys(savedConfig).includes(ct.uid)
       );
 
-      setSavedOpenaiKey(settings.openaiKey || "");
+      setSavedOpenaiKey(settings.openaiKey || '');
 
       reset({
-        openaiKey: settings.openaiKey || "",
+        openaiKey: settings.openaiKey || '',
         baseDomain: normalizedBase,
-        contactLink: settings.contactLink || "",
-        systemInstructions: settings.systemInstructions || "",
-        responseInstructions: settings.responseInstructions || "",
+        contactLink: settings.contactLink || '',
+        systemInstructions: settings.systemInstructions || '',
+        responseInstructions: settings.responseInstructions || '',
         suggestedQuestions: settings.suggestedQuestions || [],
         activeCollections: initialActive,
       });
+
     } catch (err: any) {
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        "Error loading settings.";
-      toggleNotification({ type: "warning", message });
+      const message = err?.response?.data?.error || err?.response?.data?.message || 'Error loading settings.';
+      toggleNotification({ type: 'warning', message });
     } finally {
       setIsLoading(false);
     }
@@ -280,32 +267,29 @@ const HomePage = () => {
         if (item.cardStyle) stylesToSave[item.uid] = item.cardStyle;
       });
 
-      await post("/faq-ai-bot/collections", {
-        config: configToSave,
-        cardStyles: stylesToSave,
-        openaiKey: data.openaiKey,
-        systemInstructions: data.systemInstructions,
-        responseInstructions: data.responseInstructions,
-        baseDomain: normalizedDomain,
-        contactLink: data.contactLink,
-        suggestedQuestions: data.suggestedQuestions,
+      await post('/faq-ai-bot/collections', {
+        data: {
+          config: configToSave,
+          cardStyles: stylesToSave,
+          openaiKey: data.openaiKey,
+          systemInstructions: data.systemInstructions,
+          responseInstructions: data.responseInstructions,
+          baseDomain: normalizedDomain,
+          contactLink: data.contactLink,
+          suggestedQuestions: data.suggestedQuestions,
+        },
       });
 
       setSavedOpenaiKey(data.openaiKey);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
 
-      toggleNotification({
-        type: "success",
-        message: "Settings saved successfully!",
-      });
+      toggleNotification({ type: 'success', message: 'Settings saved successfully!' });
 
       await init();
+
     } catch {
-      toggleNotification({
-        type: "warning",
-        message: "Error saving settings.",
-      });
+      toggleNotification({ type: 'warning', message: 'Error saving settings.' });
     }
   };
 
@@ -318,28 +302,25 @@ const HomePage = () => {
 
   return (
     <Main>
-      {isDirty && (
+      {isDirty && canEdit && (
         <UnsavedBar background="warning100" borderColor="warning200">
           <Flex alignItems="center" gap={2}>
             <Information color="warning600" width={18} height={18} />
-            <UnsavedText textColor="warning600">
-              You have unsaved changes
-            </UnsavedText>
+            <UnsavedText textColor="warning600">You have unsaved changes</UnsavedText>
           </Flex>
           <Flex gap={4}>
-            <DiscardButton onClick={() => reset()}>Discard</DiscardButton>
+            <DiscardButton onClick={init}>Discard</DiscardButton>
             <SaveAllButton
               onClick={handleSubmit(onSubmit)}
               disabled={isSubmitting}
               background="primary600"
             >
-              {isSubmitting ? "Saving..." : "Save All"}
+              {isSubmitting ? 'Saving...' : 'Save All'}
             </SaveAllButton>
           </Flex>
         </UnsavedBar>
       )}
 
-      {/* HEADER */}
       <StickyHeader
         background="neutral100"
         position="sticky"
@@ -351,9 +332,7 @@ const HomePage = () => {
         <CenteredBox>
           <Flex justifyContent="space-between" alignItems="baseline">
             <Box>
-              <PageTitle textColor="neutral800">
-                Chatbot Configuration
-              </PageTitle>
+              <PageTitle textColor="neutral800">Chatbot Configuration</PageTitle>
               <Box paddingTop={1}>
                 <PageSubtitle textColor="neutral600">
                   Configure your AI chatbot's identity, data, and behaviour.
@@ -368,7 +347,7 @@ const HomePage = () => {
                   <SavedBadgeText textColor="success600">Saved!</SavedBadgeText>
                 </SavedBadge>
               ) : (
-                !isDirty && (
+                !isDirty && canEdit && (
                   <SaveButton
                     onClick={handleSubmit(onSubmit)}
                     startIcon={<Check width={14} height={14} />}
@@ -384,23 +363,16 @@ const HomePage = () => {
         </CenteredBox>
       </StickyHeader>
 
-      {/* MAIN CONTENT */}
-      <Box
-        background="neutral100"
-        paddingTop={6}
-        paddingBottom={8}
-        marginBottom={8}
-      >
+      <Box background="neutral100" paddingTop={6} paddingBottom={8} marginBottom={8}>
         <CenteredBox>
+
           <SetupProgress
             baseDomain={values.baseDomain}
             openaiKey={values.openaiKey}
             contactLink={values.contactLink}
             collections={values.activeCollections}
             questions={values.suggestedQuestions}
-            instructions={
-              !!values.systemInstructions && !!values.responseInstructions
-            }
+            instructions={!!values.systemInstructions && !!values.responseInstructions}
           />
 
           <BasicSettings
@@ -408,13 +380,11 @@ const HomePage = () => {
             openaiKey={values.openaiKey}
             savedOpenaiKey={savedOpenaiKey}
             contactLink={values.contactLink}
-            onManage={(type, value = "") => {
-              if (type === "key")
-                setValue("openaiKey", value, { shouldDirty: true });
-              if (type === "domain")
-                setValue("baseDomain", value, { shouldDirty: true });
-              if (type === "contact")
-                setValue("contactLink", value, { shouldDirty: true });
+            canEdit={canEdit}
+            onManage={(type, value = '') => {
+              if (type === 'key')     setValue('openaiKey',   value, { shouldDirty: true });
+              if (type === 'domain')  setValue('baseDomain',  value, { shouldDirty: true });
+              if (type === 'contact') setValue('contactLink', value, { shouldDirty: true });
             }}
           />
 
@@ -422,65 +392,65 @@ const HomePage = () => {
             title="Response Templates"
             description="Define which data fields and card layouts the AI can use in structured responses."
             isLocked={isLocked}
+            isReadOnly={!canEdit}
           >
             <ResponseTemplates
               collections={values.activeCollections}
               availableCollections={allContentTypes.filter(
                 (c) =>
-                  c.uid !== "plugin::faq-ai-bot.faqqa" &&
-                  !values.activeCollections.some(
-                    (active) => active.uid === c.uid,
-                  ),
+                  c.uid !== 'plugin::faq-ai-bot.faqqa' &&
+                  !values.activeCollections.some((active) => active.uid === c.uid)
               )}
               cardOptions={cardOptions}
               onToggleField={(uid, fName) => {
-                const updated = values.activeCollections.map((c) =>
-                  c.uid !== uid
-                    ? c
-                    : {
-                        ...c,
-                        fields: c.fields.map((f) =>
-                          f.name === fName ? { ...f, enabled: !f.enabled } : f,
-                        ),
-                      },
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid !== uid ? c : {
+                    ...c,
+                    fields: c.fields.map((f) =>
+                      f.name === fName ? { ...f, enabled: !f.enabled } : f
+                    ),
+                  }
                 );
-                setValue("activeCollections", updated, { shouldDirty: true });
+                setValue('activeCollections', updated, { shouldDirty: true });
               }}
               onToggleAll={(uid, val) => {
-                const updated = values.activeCollections.map((c) =>
-                  c.uid !== uid
-                    ? c
-                    : {
-                        ...c,
-                        fields: c.fields.map((f) => ({ ...f, enabled: val })),
-                      },
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid !== uid ? c : {
+                    ...c,
+                    fields: c.fields.map((f) => ({ ...f, enabled: val })),
+                  }
                 );
-                setValue("activeCollections", updated, { shouldDirty: true });
+                setValue('activeCollections', updated, { shouldDirty: true });
               }}
               onRemoveCollection={(uid) => {
+                const current = getValues('activeCollections');
                 setValue(
-                  "activeCollections",
-                  values.activeCollections.filter((c) => c.uid !== uid),
-                  { shouldDirty: true },
+                  'activeCollections',
+                  current.filter((c) => c.uid !== uid),
+                  { shouldDirty: true }
                 );
               }}
               onUpdateCardStyle={(uid, style) => {
-                const updated = values.activeCollections.map((c) =>
-                  c.uid === uid ? { ...c, cardStyle: style } : c,
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid === uid ? { ...c, cardStyle: style } : c
                 );
-                setValue("activeCollections", updated, { shouldDirty: true });
+                setValue('activeCollections', updated, { shouldDirty: true });
               }}
               onAddCollection={(uid) => {
+                const current = getValues('activeCollections');
                 const newlyAdded = allContentTypes.find((ct) => ct.uid === uid);
                 if (newlyAdded) {
                   const formatted = {
                     ...JSON.parse(JSON.stringify(newlyAdded)),
-                    cardStyle: cardOptions[0]?.id || "",
+                    cardStyle: cardOptions[0]?.id || '',
                   };
                   setValue(
-                    "activeCollections",
-                    [...values.activeCollections, formatted],
-                    { shouldDirty: true },
+                    'activeCollections',
+                    [...current, formatted],
+                    { shouldDirty: true }
                   );
                 }
               }}
@@ -491,32 +461,30 @@ const HomePage = () => {
             title="Suggested Questions"
             description="Quick-tap prompts on the chatbot welcome screen to help users get started."
             isLocked={isLocked}
+            isReadOnly={!canEdit}
           >
             <SuggestedQuestions
               questions={values.suggestedQuestions}
-              onAdd={(val) =>
-                setValue(
-                  "suggestedQuestions",
-                  [...values.suggestedQuestions, val],
-                  { shouldDirty: true },
-                )
-              }
-              onEdit={(index, val) => {
-                const updated = [...values.suggestedQuestions];
-                updated[index] = val;
-                setValue("suggestedQuestions", updated, { shouldDirty: true });
+              onAdd={(val) => {
+                const current = getValues('suggestedQuestions');
+                setValue('suggestedQuestions', [...current, val], { shouldDirty: true });
               }}
-              onRemove={(index) =>
+              onEdit={(index, val) => {
+                const current = getValues('suggestedQuestions');
+                const updated = [...current];
+                updated[index] = val;
+                setValue('suggestedQuestions', updated, { shouldDirty: true });
+              }}
+              onRemove={(index) => {
+                const current = getValues('suggestedQuestions');
                 setValue(
-                  "suggestedQuestions",
-                  values.suggestedQuestions.filter((_, i) => i !== index),
-                  { shouldDirty: true },
-                )
-              }
+                  'suggestedQuestions',
+                  current.filter((_, i) => i !== index),
+                  { shouldDirty: true }
+                );
+              }}
               onReorder={(newQuestions) =>
-                setValue("suggestedQuestions", [...newQuestions], {
-                  shouldDirty: true,
-                })
+                setValue('suggestedQuestions', [...newQuestions], { shouldDirty: true })
               }
             />
           </LockedSection>
@@ -525,18 +493,16 @@ const HomePage = () => {
             title="AI Instructions"
             description="Rules and context the AI applies before every response. One instruction per line."
             isLocked={isLocked}
+            isReadOnly={!canEdit}
           >
             <AiInstructions
               systemInstructions={values.systemInstructions}
               responseInstructions={values.responseInstructions}
-              onUpdateSystem={(val) =>
-                setValue("systemInstructions", val, { shouldDirty: true })
-              }
-              onUpdateResponse={(val) =>
-                setValue("responseInstructions", val, { shouldDirty: true })
-              }
+              onUpdateSystem={(val) => setValue('systemInstructions', val, { shouldDirty: true })}
+              onUpdateResponse={(val) => setValue('responseInstructions', val, { shouldDirty: true })}
             />
           </LockedSection>
+
         </CenteredBox>
       </Box>
 

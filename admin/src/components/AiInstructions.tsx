@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Box } from "@strapi/design-system";
-import { Information } from "@strapi/icons";
-import styled, { useTheme } from "styled-components";
-import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from 'react';
+import { Box } from '@strapi/design-system';
+import { Information } from '@strapi/icons';
+import styled, { useTheme } from 'styled-components';
+import { useForm } from 'react-hook-form';
 
 interface AiInstructionsProps {
   systemInstructions: string;
@@ -16,29 +16,36 @@ type FormValues = {
   responseContent: string;
 };
 
-const tonePrompts: Record<string, string> = {
+type Tone = 'friendly' | 'professional' | 'concise';
+
+const tonePrompts: Record<Tone, string> = {
   friendly: `Response Tone: Respond in a friendly and warm tone. Be conversational and approachable.`,
   professional: `Response Tone: Respond in a professional and formal tone. Keep responses structured and respectful.`,
   concise: `Response Tone: Respond concisely and directly. Avoid unnecessary details.`,
 };
 
 const getCleanText = (text: string | undefined) => {
-  if (!text) return "";
+  if (!text) return '';
   let cleaned = text;
   Object.values(tonePrompts).forEach((prompt) => {
-    cleaned = cleaned.replace(prompt, "");
+    cleaned = cleaned.replace(prompt, '');
   });
   return cleaned.trim();
 };
 
-const detectTone = (
-  text: string,
-): "friendly" | "professional" | "concise" | null => {
+const detectTone = (text: string): Tone | null => {
   if (!text) return null;
-  if (text.includes(tonePrompts.friendly)) return "friendly";
-  if (text.includes(tonePrompts.professional)) return "professional";
-  if (text.includes(tonePrompts.concise)) return "concise";
-  return null;
+
+  switch (true) {
+    case text.includes(tonePrompts.friendly):
+      return 'friendly';
+    case text.includes(tonePrompts.professional):
+      return 'professional';
+    case text.includes(tonePrompts.concise):
+      return 'concise';
+    default:
+      return null;
+  }
 };
 
 const Container = styled(Box)`
@@ -124,12 +131,10 @@ const TonePill = styled.button<{ $active: boolean }>`
   transition: all 0.15s;
   cursor: pointer;
   border: 1.5px solid
-    ${({ $active, theme }) =>
-      $active ? theme.colors.primary600 : theme.colors.neutral200};
+    ${({ $active, theme }) => ($active ? theme.colors.primary600 : theme.colors.neutral200)};
   background: ${({ $active, theme }) =>
     $active ? theme.colors.primary100 : theme.colors.neutral0};
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.primary600 : theme.colors.neutral600};
+  color: ${({ $active, theme }) => ($active ? theme.colors.primary600 : theme.colors.neutral600)};
   font-weight: ${({ $active }) => ($active ? 600 : 400)};
 `;
 
@@ -141,9 +146,7 @@ const AiInstructions = ({
 }: AiInstructionsProps) => {
   const theme = useTheme();
 
-  const [tone, setTone] = useState<
-    "friendly" | "professional" | "concise" | null
-  >(() => detectTone(responseInstructions));
+  const [tone, setTone] = useState<Tone | null>(() => detectTone(responseInstructions));
 
   const { register, setValue, watch, reset } = useForm<FormValues>({
     defaultValues: {
@@ -152,7 +155,7 @@ const AiInstructions = ({
     },
   });
 
-  const responseContent = watch("responseContent");
+  const responseContent = watch('responseContent');
 
   useEffect(() => {
     reset({
@@ -162,18 +165,20 @@ const AiInstructions = ({
     setTone(detectTone(responseInstructions));
   }, [systemInstructions, responseInstructions, reset]);
 
-  const selectTone = (t: "friendly" | "professional" | "concise") => {
-    const nextTone = tone === t ? null : t;
+  const selectTone = (toneType: Tone) => {
+    const nextTone = tone === toneType ? null : toneType;
     setTone(nextTone);
 
     const currentContent = responseContent.trim();
-    const toneText = nextTone ? tonePrompts[nextTone] : "";
-    const combined = toneText
-      ? `${toneText}\n\n${currentContent}`
-      : currentContent;
+    const toneText = nextTone ? tonePrompts[nextTone] : '';
+    const combined = toneText ? `${toneText}\n\n${currentContent}` : currentContent;
 
     onUpdateResponse(combined);
   };
+
+  const handleFriendly = () => selectTone('friendly');
+  const handleProfessional = () => selectTone('professional');
+  const handleConcise = () => selectTone('concise');
 
   return (
     <Container>
@@ -184,13 +189,12 @@ const AiInstructions = ({
           <Information width={13} height={13} fill={theme.colors.neutral500} />
         </LabelRow>
         <HelpText>
-          Each line is a separate instruction. Changes auto-save when you click
-          elsewhere.
+          Each line is a separate instruction. Changes auto-save when you click elsewhere.
         </HelpText>
         <TextAreaWrapper>
           <StyledTextarea
             placeholder={`Replace Madras with Chennai\nAlways respond in English\nDon't mention competitor airlines`}
-            {...register("systemInstructions", {
+            {...register('systemInstructions', {
               onChange: (e) => onUpdateSystem(e.target.value),
             })}
           />
@@ -202,40 +206,37 @@ const AiInstructions = ({
         <ToneSectionTitle>Response Tone</ToneSectionTitle>
         <PillRow>
           <TonePill
-            $active={tone === "friendly"}
+            $active={tone === 'friendly'}
             type="button"
-            onClick={() => selectTone("friendly")}
+            onClick={handleFriendly}
           >
             Friendly & Warm
           </TonePill>
           <TonePill
-            $active={tone === "professional"}
+            $active={tone === 'professional'}
             type="button"
-            onClick={() => selectTone("professional")}
+            onClick={handleProfessional}
           >
             Professional
           </TonePill>
           <TonePill
-            $active={tone === "concise"}
+            $active={tone === 'concise'}
             type="button"
-            onClick={() => selectTone("concise")}
+            onClick={handleConcise}
           >
             Concise
           </TonePill>
         </PillRow>
         <HelpText>
-          Customize the AI response message. Changes auto-save when you click
-          elsewhere.
+          Customize the AI response message. Changes auto-save when you click elsewhere.
         </HelpText>
         <TextAreaWrapper>
           <StyledTextarea
             placeholder={`Reply in proper formatted way.\nAlways keep in mind that you are working for ABC company.`}
-            {...register("responseContent", {
+            {...register('responseContent', {
               onChange: (e) => {
-                const toneText = tone ? tonePrompts[tone] : "";
-                const combined = toneText
-                  ? `${toneText}\n\n${e.target.value}`
-                  : e.target.value;
+                const toneText = tone ? tonePrompts[tone] : '';
+                const combined = toneText ? `${toneText}\n\n${e.target.value}` : e.target.value;
                 onUpdateResponse(combined);
               },
             })}
