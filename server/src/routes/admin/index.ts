@@ -6,7 +6,11 @@ export default {
       path: '/collections',
       handler: 'config.index',
       config: {
-        auth: false,
+        auth: { scope: ['admin'] },
+        policies: [
+          'admin::isAuthenticatedAdmin',
+          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'read' } },
+        ],
       },
     },
     {
@@ -14,7 +18,35 @@ export default {
       path: '/collections',
       handler: 'config.update',
       config: {
-        auth: false,
+        auth: { scope: ['admin'] },
+        policies: [
+          'admin::isAuthenticatedAdmin',
+          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'update' } },
+        ],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/usage',
+      handler: 'ask.getUsage',
+      config: {
+        auth: { scope: ['admin'] },
+        policies: [
+          'admin::isAuthenticatedAdmin',
+          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'read' } },
+        ],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/validate-key',
+      handler: 'ask.validateKey',
+      config: {
+        auth: { scope: ['admin'] },
+        policies: [
+          'admin::isAuthenticatedAdmin',
+          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'update' } },
+        ],
       },
     },
   ],

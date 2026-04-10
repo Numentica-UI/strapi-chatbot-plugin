@@ -4,61 +4,55 @@ import { PluginIcon } from './components/PluginIcon';
 import '@fontsource-variable/inter';
 
 export default {
-  register(app: any) {
-    app.addMenuLink({
-      to: `plugins/${PLUGIN_ID}`,
-      icon: PluginIcon,
-      intlLabel: {
-        id: `${PLUGIN_ID}.plugin.name`,
-        defaultMessage: PLUGIN_ID,
-      },
-      Component: async () => {
-        const { App } = await import('./pages/App');
-        return App;
-      },
-    });
+  register(app: any) {
+    app.addMenuLink({
+      to: `plugins/${PLUGIN_ID}`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: `${PLUGIN_ID}.plugin.name`,
+        defaultMessage: PLUGIN_ID,
+      },
+      Component: async () => {
+        const { App } = await import('./pages/App');
+        return App;
+      },
+    });
 
-    app.registerPlugin({
-      id: PLUGIN_ID,
-      initializer: Initializer,
-      isReady: false,
-      name: PLUGIN_ID,
-    });
-  },
+    app.registerPlugin({
+      id: PLUGIN_ID,
+      initializer: Initializer,
+      isReady: false,
+      name: PLUGIN_ID,
+    });
+  },
 
-  bootstrap() {
-  const style = document.createElement('style');
+  bootstrap() {
+    const style = document.createElement('style');
+    style.setAttribute('data-plugin', PLUGIN_ID);
 
-  style.innerHTML = `
-    html, body,
-    #main-content,
-    .strapi-helper-plugin,
-    body * {
-      font-family: 'Inter', sans-serif !important;
+    style.innerHTML = `
+      #${PLUGIN_ID}-root,
+      #${PLUGIN_ID}-root * {
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+    `;
 
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-    }
+    document.head.appendChild(style);
+  },
 
-    [class*="Typography"] {
-      font-family: 'Inter', sans-serif !important;
-    }
-  `;
-
-  document.head.appendChild(style);
-},
-
-  async registerTrads({ locales }: { locales: string[] }) {
-    return Promise.all(
-      locales.map(async (locale) => {
-        try {
-          const { default: data } = await import(`./translations/${locale}.json`);
-          return { data, locale };
-        } catch {
-          return { data: {}, locale };
-        }
-      })
-    );
-  },
+  async registerTrads({ locales }: { locales: string[] }) {
+    return Promise.all(
+      locales.map(async (locale) => {
+        try {
+          const { default: data } = await import(`./translations/${locale}.json`);
+          return { data, locale };
+        } catch {
+          return { data: {}, locale };
+        }
+      })
+    );
+  },
 };

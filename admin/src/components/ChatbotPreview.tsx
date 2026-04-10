@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Box, Typography, Flex, Button, TextInput } from '@strapi/design-system';
 import { Message, Cross, PaperPlane, ArrowClockwise, ChevronDown } from '@strapi/icons';
+import { useForm } from 'react-hook-form';
+
+type ChatMessage = { text: string; isUser: boolean };
+type ChatFormValues = { message: string };
 
 const ChatWindowWrapper = styled(Box)<{ $isOpen: boolean }>`
   position: fixed;
@@ -84,28 +88,30 @@ const SendButton = styled(Button)`
 
 const ChatbotPreview = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [chatInput, setChatInput] = useState('');
-  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { text: 'Hello! You can test the chatbot preview here.', isUser: false },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { register, handleSubmit, reset } = useForm<ChatFormValues>({
+    defaultValues: { message: '' },
+  });
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isOpen]);
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
+  const onSend = async ({ message }: ChatFormValues) => {
+    if (!message.trim()) return;
 
-    const userText = chatInput;
-    setMessages((prev) => [...prev, { text: userText, isUser: true }]);
-    setChatInput('');
+    setMessages((prev) => [...prev, { text: message, isUser: true }]);
+    reset();
 
     try {
       const res = await fetch('/api/faq-ai-bot/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userText }),
+        body: JSON.stringify({ question: message }),
       });
 
       if (!res.ok) throw new Error('Request failed');
@@ -164,9 +170,23 @@ const ChatbotPreview = () => {
     setMessages([{ text: 'Hello! You can test the chatbot preview here.', isUser: false }]);
   };
 
+  const handleToggle = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSubmit(onSend)();
+    }
+  };
+
   return (
     <>
-      <FloatingButton onClick={() => setIsOpen(!isOpen)} title="Toggle Chatbot Preview">
+      <FloatingButton onClick={handleToggle} title="Toggle Chatbot Preview">
         {isOpen ? <ChevronDown width={24} height={24} /> : <Message width={28} height={28} />}
       </FloatingButton>
 
@@ -185,7 +205,7 @@ const ChatbotPreview = () => {
                 </IconButton>
               </Flex>
 
-              <IconButton onClick={() => setIsOpen(false)} title="Close Chat">
+              <IconButton onClick={handleClose} title="Close Chat">
                 <Cross color="neutral0" width={14} />
               </IconButton>
             </Flex>
@@ -217,12 +237,11 @@ const ChatbotPreview = () => {
               <InputGrow>
                 <TextInput
                   placeholder="Type a message..."
-                  value={chatInput}
-                  onChange={(e: any) => setChatInput(e.target.value)}
-                  onKeyDown={(e: any) => e.key === 'Enter' && handleSendMessage()}
+                  {...register('message')}
+                  onKeyDown={handleKeyDown}
                 />
               </InputGrow>
-              <SendButton onClick={handleSendMessage} startIcon={<PaperPlane />}>
+              <SendButton onClick={handleSubmit(onSend)} startIcon={<PaperPlane />}>
                 Send
               </SendButton>
             </Flex>

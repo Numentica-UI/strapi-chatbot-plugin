@@ -15,6 +15,8 @@ export default () => ({
       handler: 'ask.ask',
       config: {
         auth: false,
+        // NOTE: plug in your Strapi rate-limit middleware here, e.g.:
+        // middlewares: ['plugin::faq-ai-bot.rateLimit'],
       },
     },
     {
@@ -24,21 +26,6 @@ export default () => ({
       config: {
         auth: false,
       },
-    },
-    {
-      method: 'GET',
-      path: '/usage',
-      handler: 'ask.getUsage',
-      config: {
-        auth: false,
-        policies: [],
-      },
-    },
-    {
-      method: 'POST',
-      path: '/validate-key',
-      handler: 'ask.validateKey',
-      config: { auth: false },
     },
   ],
 });

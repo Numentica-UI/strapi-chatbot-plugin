@@ -1,6 +1,11 @@
 # FAQ AI Bot - Strapi Plugin
 <br>
-   
+  
+> **Compatibility:** Strapi **v5 only** (requires `@strapi/strapi ^5.0.0`).
+> Node.js **>=18** is required.
+> This plugin is **not compatible with Strapi v4**
+<br>
+
 ## 📦 Setup Instructions (Developer Setup)
      
 ### 1. Create a Strapi Project
@@ -20,7 +25,7 @@ cd (my-strapi-project)
   
 ### 2. Create the Plugin
 
-Initialize the plugin using the Strapi SDK:
+Initialize the plugin using the Strapi SDK:       
 ⚠️ Note : Don't change the plugin name.
 
 ```bash
@@ -32,10 +37,10 @@ This will generate the plugin inside:
 ```
 src/plugins/faq-ai-bot
 ```
-⚠️ Note : If version mismatch occurs while installing node_modules, run :
-```
-npm install --legacy-peer-deps
-```
+> ⚠️ If a version mismatch occurs while installing node_modules, run:
+> ```bash
+> npm install --legacy-peer-deps
+> ```
 
 #### 2.1. Additional Configuration
 
@@ -73,7 +78,7 @@ npm install
   
 ### 5. Build the Plugin
 
-Inside the plugin directory(need not run if no changes made):
+Inside the plugin directory (need not run if no changes made):
 
 ```bash
 npm run build
@@ -106,7 +111,7 @@ src/plugins/faq-ai-bot/
 └── package.json
 
 config/plugin.ts
-└── plugin.ts     # Plugin entry point
+└── plugin.ts     # Plugin entry point (in your Strapi project root)
 ```
 
 ---
@@ -115,9 +120,17 @@ config/plugin.ts
 
 1. Start your Strapi app.
 2. Open the admin panel.
-3. Enable/configure the `faq-ai-bot` plugin.
-4. Add your FAQ AI logic inside services/controllers.
+3. Navigate to the **FAQ AI Bot** plugin and configure it (admin login required).
+4. Enter your OpenAI API key and configure collections for the chatbot.
 
+---
+
+## 🔒 Security Notes
+ 
+- Admin configuration endpoints (`/collections`, `/usage`, `/validate-key`) require Strapi admin authentication and are not publicly accessible.
+- Your OpenAI API key is stored in the Strapi plugin store and is never returned to the browser in plaintext.
+- The `/ask` endpoint is public (needed by the frontend widget). Apply rate limiting at your reverse-proxy or CDN in production.
+ 
 ---
 
 ## 📚 Helpful Links

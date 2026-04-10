@@ -21,7 +21,8 @@ const EmptyState = styled(Box)`
 
 const QuestionRow = styled(Flex)<{ $isDragging: boolean }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
-  background: ${({ $isDragging, theme }) => ($isDragging ? theme.colors.neutral100 : 'transparent')};
+  background: ${({ $isDragging, theme }) =>
+    $isDragging ? theme.colors.neutral100 : 'transparent'};
 `;
 
 const DragHandle = styled(Box)`
@@ -172,21 +173,46 @@ const SuggestedQuestions = ({
   onReorder,
 }: SuggestedQuestionsProps) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-  const [tempValue, setTempValue] = useState('');
+  const [addValue, setAddValue] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleStartEdit = (index: number, q: string) => {
     setIsAdding(false);
+    setAddValue('');
     setEditingIndex(index);
-    setTempValue(q);
+    setEditValue(q);
   };
 
   const handleStartAdd = () => {
     setEditingIndex(null);
+    setEditValue('');
     setIsAdding(true);
-    setTempValue('');
+    setAddValue('');
+  };
+
+  const handleSaveAdd = () => {
+    if (addValue.trim()) onAdd(addValue.trim());
+    setIsAdding(false);
+    setAddValue('');
+  };
+
+  const handleSaveEdit = (index: number) => {
+    if (editValue.trim()) onEdit(index, editValue.trim());
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const handleCancelAdd = () => {
+    setIsAdding(false);
+    setAddValue('');
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -197,7 +223,6 @@ const SuggestedQuestions = ({
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
-
     const newItems = [...questions];
     const draggedItem = newItems[draggedIndex];
     newItems.splice(draggedIndex, 1);
@@ -206,16 +231,8 @@ const SuggestedQuestions = ({
     onReorder(newItems);
   };
 
-  const handleAddSubmit = () => {
-    if (tempValue.trim()) onAdd(tempValue);
-    setIsAdding(false);
-    setTempValue('');
-  };
-
-  const handleSaveEdit = (index: number) => {
-    onEdit(index, tempValue);
-    setEditingIndex(null);
-    setTempValue('');
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   return (
@@ -237,7 +254,7 @@ const SuggestedQuestions = ({
           onMouseLeave={() => setHoveredIndex(null)}
           onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, index)}
           onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, index)}
-          onDragEnd={() => setDraggedIndex(null)}
+          onDragEnd={handleDragEnd}
           paddingLeft={6}
           paddingRight={6}
           paddingBottom={4}
@@ -255,12 +272,12 @@ const SuggestedQuestions = ({
             <EditFlex gap={2}>
               <EditInput
                 autoFocus
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(index)}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(index); }}
               />
               <SaveEditButton onClick={() => handleSaveEdit(index)}>Save</SaveEditButton>
-              <CancelEditButton onClick={() => setEditingIndex(null)}>Cancel</CancelEditButton>
+              <CancelEditButton onClick={handleCancelEdit}>Cancel</CancelEditButton>
             </EditFlex>
           ) : (
             <>
@@ -271,10 +288,10 @@ const SuggestedQuestions = ({
               </QuestionText>
 
               <ActionIcons gap={1} $visible={hoveredIndex === index}>
-                <EditIconBtn onClick={() => handleStartEdit(index, q)}>
+                <EditIconBtn type="button" onClick={() => handleStartEdit(index, q)}>
                   <Pencil width="13" height="13" />
                 </EditIconBtn>
-                <TrashIconBtn onClick={() => onRemove(index)}>
+                <TrashIconBtn type="button" onClick={() => onRemove(index)}>
                   <Trash width="13" height="13" />
                 </TrashIconBtn>
               </ActionIcons>
@@ -288,12 +305,12 @@ const SuggestedQuestions = ({
           <AddInput
             autoFocus
             placeholder="Type a question and press Enter..."
-            value={tempValue}
-            onChange={(e) => setTempValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddSubmit()}
+            value={addValue}
+            onChange={(e) => setAddValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAdd(); }}
           />
-          <SaveEditButton onClick={handleAddSubmit}>Add</SaveEditButton>
-          <CancelEditButton onClick={() => setIsAdding(false)}>Cancel</CancelEditButton>
+          <SaveEditButton onClick={handleSaveAdd}>Add</SaveEditButton>
+          <CancelEditButton onClick={handleCancelAdd}>Cancel</CancelEditButton>
         </AddInputRow>
       ) : (
         <AddButtonRow>

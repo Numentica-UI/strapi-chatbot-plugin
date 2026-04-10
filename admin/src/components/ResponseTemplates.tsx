@@ -3,6 +3,17 @@ import styled from 'styled-components';
 import { Box, Typography, Flex, Checkbox, Accordion } from '@strapi/design-system';
 import { Plus, Trash, Information } from '@strapi/icons';
 
+interface ResponseTemplatesProps {
+  collections: any[];
+  availableCollections: any[];
+  onToggleField: (uid: string, fieldName: string) => void;
+  onToggleAll: (uid: string, value: boolean) => void;
+  cardOptions: { id: string; label: string }[];
+  onRemoveCollection: (uid: string) => void;
+  onUpdateCardStyle: (uid: string, style: string) => void;
+  onAddCollection: (uid: string) => void;
+}
+
 const CustomText = styled.span<{ weight?: number; size?: string; lh?: string; color?: string }>`
   font-weight: ${({ weight }) => weight || 400};
   font-size: ${({ size }) => size || '13px'};
@@ -255,17 +266,6 @@ const CardStyleRow = styled(Flex)`
   gap: 8px;
 `;
 
-interface ResponseTemplatesProps {
-  collections: any[];
-  availableCollections: any[];
-  onToggleField: (uid: string, fieldName: string) => void;
-  onToggleAll: (uid: string, value: boolean) => void;
-  cardOptions: { id: string; label: string }[];
-  onRemoveCollection: (uid: string) => void;
-  onUpdateCardStyle: (uid: string, style: string) => void;
-  onAddCollection: (uid: string) => void;
-}
-
 const ResponseTemplates = ({
   collections,
   availableCollections,
@@ -287,6 +287,17 @@ const ResponseTemplates = ({
     }
     setIsAdding(false);
     setSelectedUid('');
+  };
+
+  const handleCancel = () => {
+    setIsAdding(false);
+    setSelectedUid('');
+  };
+
+  const handleStartAdd = () => {
+    setIsAdding(true);
+    setSelectedUid('');
+    setOpenItem(undefined);
   };
 
   return (
@@ -326,10 +337,7 @@ const ResponseTemplates = ({
                   <ActionsContainer>
                     <ActionButton
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveCollection(c.uid);
-                      }}
+                      onClick={(e) => { e.stopPropagation(); onRemoveCollection(c.uid); }}
                     >
                       <Trash width="13" height="13" />
                     </ActionButton>
@@ -400,7 +408,10 @@ const ResponseTemplates = ({
 
       {isAdding ? (
         <AddActionRow alignItems="center">
-          <InlineSelect value={selectedUid} onChange={(e) => setSelectedUid(e.target.value)}>
+          <InlineSelect
+            value={selectedUid}
+            onChange={(e) => setSelectedUid(e.target.value)}
+          >
             <option value="">Select a collection type...</option>
             {availableCollections.map((ac) => (
               <option key={ac.uid} value={ac.uid}>
@@ -411,20 +422,14 @@ const ResponseTemplates = ({
           <SubmitButton type="button" onClick={handleAdd}>
             Add
           </SubmitButton>
-          <CancelButton type="button" onClick={() => setIsAdding(false)}>
+          <CancelButton type="button" onClick={handleCancel}>
             Cancel
           </CancelButton>
         </AddActionRow>
       ) : (
         availableCollections.length > 0 && (
           <AddButtonWrapper>
-            <GhostAddButton
-              type="button"
-              onClick={() => {
-                setIsAdding(true);
-                setOpenItem(undefined);
-              }}
-            >
+            <GhostAddButton type="button" onClick={handleStartAdd}>
               <Plus width={12} /> Add collection
             </GhostAddButton>
           </AddButtonWrapper>

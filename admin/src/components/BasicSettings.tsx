@@ -2,6 +2,8 @@ import React from 'react';
 import { Box, Typography } from '@strapi/design-system';
 import { Pencil, Check, Eye, EyeStriked, WarningCircle, Paragraph } from '@strapi/icons';
 import styled from 'styled-components';
+import { useForm } from 'react-hook-form';
+import { useFetchClient } from '@strapi/admin/strapi-admin';
 
 type SettingType = 'key' | 'domain' | 'contact';
 
@@ -23,15 +25,7 @@ interface SettingRowProps {
   description: string;
   value: string;
   type: SettingType;
-  hovered: SettingType | null;
-  editing: SettingType | null;
-  saved: SettingType | null;
-  tempValue: string;
   tokenUsage?: TokenUsage;
-  setHovered: (v: SettingType | null) => void;
-  setEditing: (v: SettingType | null) => void;
-  setSaved: (v: SettingType | null) => void;
-  setTempValue: (v: string) => void;
   onManage: (type: SettingType, value?: string) => void;
   isLast?: boolean;
 }
@@ -66,8 +60,10 @@ const RowBox = styled(Box)<{ $isEditing: boolean; $isLast: boolean }>`
   display: flex;
   gap: 16px;
   padding: 16px 24px;
-  border-bottom: ${({ $isLast, theme }) => ($isLast ? 'none' : `1px solid ${theme.colors.neutral150}`)};
-  background: ${({ $isEditing, theme }) => ($isEditing ? theme.colors.primary100 : theme.colors.neutral0)};
+  border-bottom: ${({ $isLast, theme }) =>
+    $isLast ? 'none' : `1px solid ${theme.colors.neutral150}`};
+  background: ${({ $isEditing, theme }) =>
+    $isEditing ? theme.colors.primary100 : theme.colors.neutral0};
   transition: background 0.2s ease;
   align-items: flex-start;
 `;
@@ -110,7 +106,8 @@ const InputWrapper = styled(Box)<{ $hasError: boolean }>`
   width: 100%;
   max-width: 360px;
   border-radius: 8px;
-  border: 1.5px solid ${({ $hasError, theme }) => ($hasError ? theme.colors.danger600 : theme.colors.primary600)};
+  border: 1.5px solid
+    ${({ $hasError, theme }) => ($hasError ? theme.colors.danger600 : theme.colors.primary600)};
   background: ${({ theme }) => theme.colors.neutral0};
   overflow: hidden;
 `;
@@ -277,58 +274,83 @@ const SettingRow = ({
   description,
   value,
   type,
-  hovered,
-  editing,
-  saved,
   tokenUsage,
-  tempValue,
-  setHovered,
-  setEditing,
-  setSaved,
-  setTempValue,
   onManage,
   isLast = false,
 }: SettingRowProps) => {
+  const { post } = useFetchClient();
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSaved, setIsSaved] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
   const [showKey, setShowKey] = React.useState(false);
-  const [isValidating, setIsValidating] = React.useState(false);
-  const [keyError, setKeyError] = React.useState<string | null>(null);
 
-  const handleSave = async () => {
-    if (type === 'key' && tempValue.trim()) {
-      setIsValidating(true);
-      setKeyError(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<{ fieldValue: string }>({
+    defaultValues: { fieldValue: value },
+  });
+
+  React.useEffect(() => {
+    reset({ fieldValue: value });
+  }, [value, reset]);
+
+  const onSave = async ({ fieldValue }: { fieldValue: string }) => {
+    if (type === 'key' && fieldValue.trim()) {
       try {
-        const res = await fetch('/api/faq-ai-bot/validate-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: tempValue }),
-        });
-        const data = await res.json();
+        const { data } = await post('/faq-ai-bot/validate-key', { data: { key: fieldValue } });
         if (!data.valid) {
-          setKeyError(data.message);
-          setIsValidating(false);
+          setError('fieldValue', { message: data.message });
           return;
         }
       } catch {
-        setKeyError('Could not validate key. Check your connection.');
-        setIsValidating(false);
+        setError('fieldValue', { message: 'Could not validate key. Check your connection.' });
         return;
       }
-      setIsValidating(false);
     }
 
-    onManage(type, tempValue);
-    setEditing(null);
-    setSaved(type);
-    setKeyError(null);
-    setTimeout(() => setSaved(null), 2000);
+    onManage(type, fieldValue);
+    setIsEditing(false);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    reset({ fieldValue: value });
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    reset({ fieldValue: value });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  const handleShowKey = () => {
+    setShowKey((prev) => !prev);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSubmit(onSave)();
+    }
   };
 
   return (
     <RowBox
-      onMouseEnter={() => setHovered(type)}
-      onMouseLeave={() => setHovered(null)}
-      $isEditing={editing === type}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      $isEditing={isEditing}
       $isLast={isLast}
     >
       {/* LEFT */}
@@ -343,10 +365,10 @@ const SettingRow = ({
 
       {/* RIGHT */}
       <RightCol>
-        {editing === type ? (
+        {isEditing ? (
           <EditColumn>
             <InputRow>
-              <InputWrapper $hasError={!!keyError}>
+              <InputWrapper $hasError={!!errors.fieldValue}>
                 <StyledInput
                   autoFocus
                   type={type === 'key' && !showKey ? 'password' : 'text'}
@@ -357,15 +379,11 @@ const SettingRow = ({
                         ? 'https://your-domain.com/contact'
                         : 'sk-…'
                   }
-                  value={tempValue}
-                  onChange={(e) => {
-                    setTempValue(e.target.value);
-                    setKeyError(null);
-                  }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                  {...register('fieldValue')}
+                  onKeyDown={handleKeyDown}
                 />
                 {type === 'key' && (
-                  <EyeButton onClick={() => setShowKey(!showKey)}>
+                  <EyeButton type="button" onClick={handleShowKey}>
                     {showKey ? (
                       <Eye width={16} height={16} />
                     ) : (
@@ -375,25 +393,24 @@ const SettingRow = ({
                 )}
               </InputWrapper>
 
-              <SaveButton onClick={handleSave} disabled={isValidating} $loading={isValidating}>
-                {isValidating ? 'Validating...' : 'Save'}
+              <SaveButton
+                type="button"
+                onClick={handleSubmit(onSave)}
+                disabled={isSubmitting}
+                $loading={isSubmitting}
+              >
+                {isSubmitting ? 'Validating...' : 'Save'}
               </SaveButton>
 
-              <CancelButton
-                onClick={() => {
-                  setEditing(null);
-                  setKeyError(null);
-                }}
-              >
+              <CancelButton type="button" onClick={handleCancel}>
                 Cancel
               </CancelButton>
             </InputRow>
 
-            {/* Error message */}
-            {keyError && type === 'key' && (
+            {errors.fieldValue && type === 'key' && (
               <ErrorBox>
                 <ErrorText variant="pi" textColor="danger600">
-                  {keyError}
+                  {errors.fieldValue.message}
                 </ErrorText>
               </ErrorBox>
             )}
@@ -417,7 +434,7 @@ const SettingRow = ({
                 </NotConfiguredBadge>
               )}
 
-              {saved === type && (
+              {isSaved && (
                 <SavedIndicator>
                   <Check width={12} height={12} />
                   <SavedText variant="pi" textColor="success600">
@@ -426,13 +443,7 @@ const SettingRow = ({
                 </SavedIndicator>
               )}
 
-              <EditButton
-                $visible={hovered === type || saved === type || !value}
-                onClick={() => {
-                  setEditing(type);
-                  setTempValue(value);
-                }}
-              >
+              <EditButton $visible={isHovered || isSaved || !value} onClick={handleStartEdit}>
                 <Pencil width={11} height={11} />
                 {value ? 'Edit' : 'Add'}
               </EditButton>
@@ -481,17 +492,12 @@ const BasicSettings = ({
   contactLink,
   onManage,
 }: BasicSettingsProps) => {
-  const [hovered, setHovered] = React.useState<SettingType | null>(null);
-  const [editing, setEditing] = React.useState<SettingType | null>(null);
-  const [saved, setSaved] = React.useState<SettingType | null>(null);
-  const [tempValue, setTempValue] = React.useState('');
-
   const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(undefined);
+  const { get } = useFetchClient();
 
   React.useEffect(() => {
-    fetch('/api/faq-ai-bot/usage')
-      .then((r) => r.json())
-      .then((data) => {
+    get('/faq-ai-bot/usage')
+      .then(({ data }) => {
         if (typeof data?.tokensUsed === 'number') {
           setTokenUsage({
             tokensUsed: data.tokensUsed,
@@ -520,14 +526,6 @@ const BasicSettings = ({
         title="Base Domain"
         description="Root URL used to scope chatbot context"
         value={baseDomain}
-        hovered={hovered}
-        editing={editing}
-        saved={saved}
-        tempValue={tempValue}
-        setHovered={setHovered}
-        setEditing={setEditing}
-        setSaved={setSaved}
-        setTempValue={setTempValue}
         onManage={onManage}
       />
 
@@ -537,14 +535,6 @@ const BasicSettings = ({
         description="Stored encrypted — never exposed to users"
         value={openaiKey}
         tokenUsage={tokenUsage}
-        hovered={hovered}
-        editing={editing}
-        saved={saved}
-        tempValue={tempValue}
-        setHovered={setHovered}
-        setEditing={setEditing}
-        setSaved={setSaved}
-        setTempValue={setTempValue}
         onManage={onManage}
       />
 
@@ -553,14 +543,6 @@ const BasicSettings = ({
         title="Contact Link"
         description="Shown as 'Talk to Support' in the chatbot"
         value={contactLink}
-        hovered={hovered}
-        editing={editing}
-        saved={saved}
-        tempValue={tempValue}
-        setHovered={setHovered}
-        setEditing={setEditing}
-        setSaved={setSaved}
-        setTempValue={setTempValue}
         onManage={onManage}
         isLast
       />

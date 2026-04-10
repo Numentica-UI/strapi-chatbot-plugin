@@ -2,14 +2,12 @@
 
 An AI-powered FAQ chatbot plugin for Strapi. Drop it into any Strapi project and get an intelligent FAQ assistant in your admin panel.
 
-<br>
-
 ---
 
 ## Requirements
 
 - Node.js `>=18.0.0`
-- Strapi `>=4.x`
+- Strapi `^5.0.0` (**Strapi v5 only** — not compatible with Strapi v4)
 
 ---
 
@@ -83,12 +81,20 @@ npm run build && npm run develop
 ```
 
 ---
-
+### 🔒 Security Notes
+ 
+- **Admin endpoints** (`/collections`, `/usage`, `/validate-key`) require Strapi admin authentication and are not publicly accessible.
+- **Your OpenAI API key** is stored in the Strapi plugin store and is never returned to the browser in plaintext.
+- **The `/ask` endpoint** is public (required by your frontend chatbot widget). In production, apply rate limiting at your reverse-proxy or CDN to prevent billing abuse.
+ 
+---
+ 
 ### ⚠️ Troubleshooting
-
-- Make sure the base domain is proper.
+ 
+- Make sure the base domain is correct.
 - Only enter FAQs into the Chatbot-FAQ collection after providing the API key.
-
+- If you see a version mismatch during install, run: `npm install --legacy-peer-deps`
+ 
 ---
 
 ### 📚 Links

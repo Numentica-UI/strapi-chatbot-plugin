@@ -850,7 +850,7 @@ ${realtimeText}
 
 export default ({ strapi }: { strapi: any }) => ({
   async validateKey(ctx: any) {
-    const { key } = ctx.request.body;
+    const { key } = ctx.request.body?.data ?? ctx.request.body;
 
     try {
       const temp = new OpenAI({ apiKey: key });

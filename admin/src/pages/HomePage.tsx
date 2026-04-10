@@ -3,6 +3,7 @@ import { Main, Typography, Flex, Button, Box, Loader } from '@strapi/design-syst
 import { Check, Information } from '@strapi/icons';
 import { useFetchClient, useNotification } from '@strapi/admin/strapi-admin';
 import styled from 'styled-components';
+import { useForm } from 'react-hook-form';
 
 import ChatbotPreview from '../components/ChatbotPreview';
 import BasicSettings from '../components/BasicSettings';
@@ -22,6 +23,16 @@ type CollectionConfig = {
   name: string;
   fields: FieldConfig[];
   cardStyle?: string;
+};
+
+type FormValues = {
+  openaiKey: string;
+  baseDomain: string;
+  contactLink: string;
+  systemInstructions: string;
+  responseInstructions: string;
+  suggestedQuestions: string[];
+  activeCollections: CollectionConfig[];
 };
 
 function normalizeDomain(url: string): string {
@@ -136,46 +147,35 @@ const SaveButton = styled(Button)`
 
 const HomePage = () => {
   const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>([]);
-  const [activeCollections, setActiveCollections] = useState<CollectionConfig[]>([]);
-
-  const [openaiKey, setOpenaiKey] = useState('');
-  const [systemInstructions, setSystemInstructions] = useState('');
-  const [responseInstructions, setResponseInstructions] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [baseDomain, setBaseDomain] = useState('');
-  const [contactLink, setContactLink] = useState('');
-  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [cardOptions, setCardOptions] = useState<any[]>([]);
-
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [originalData, setOriginalData] = useState<string>('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [savedOpenaiKey, setSavedOpenaiKey] = useState('');
-  const isLocked = !baseDomain || !openaiKey || !contactLink;
 
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
 
-  useEffect(() => {
-    const currentData = JSON.stringify({
-      openaiKey,
-      systemInstructions,
-      responseInstructions,
-      logoUrl,
-      baseDomain,
-      contactLink,
-      suggestedQuestions,
-      activeCollections,
-    });
+  const {
+    watch,
+    reset,
+    setValue,
+    getValues,
+    handleSubmit,
+    formState: { isDirty, isSubmitting },
+  } = useForm<FormValues>({
+    defaultValues: {
+      openaiKey: '',
+      baseDomain: '',
+      contactLink: '',
+      systemInstructions: '',
+      responseInstructions: '',
+      suggestedQuestions: [],
+      activeCollections: [],
+    },
+  });
 
-    if (originalData && currentData !== originalData) {
-      setHasUnsavedChanges(true);
-    } else {
-      setHasUnsavedChanges(false);
-    }
-  }, [openaiKey, systemInstructions, responseInstructions, logoUrl, baseDomain, contactLink, suggestedQuestions, activeCollections, originalData]);
+  const values = watch();
+  const isLocked = !values.baseDomain || !values.openaiKey || !values.contactLink;
 
   const init = async () => {
     try {
@@ -184,14 +184,7 @@ const HomePage = () => {
       const savedConfig = settings.config || {};
       const savedStyles = settings.cardStyles || {};
 
-      setOpenaiKey(settings.openaiKey || '');
-      setSavedOpenaiKey(settings.openaiKey || '');
-      setSystemInstructions(settings.systemInstructions || '');
-      setResponseInstructions(settings.responseInstructions || '');
-      setLogoUrl(settings.logoUrl || '');
-
       const normalizedBase = normalizeDomain(settings.baseDomain || '');
-      setBaseDomain(normalizedBase);
 
       if (normalizedBase) {
         fetch(`${normalizedBase}/card-mapping.json`, { cache: 'no-store' })
@@ -202,9 +195,6 @@ const HomePage = () => {
           .then((data) => { if (data) setCardOptions(data); })
           .catch(() => setCardOptions([]));
       }
-
-      setContactLink(settings.contactLink || '');
-      setSuggestedQuestions(settings.suggestedQuestions || []);
 
       const SYSTEM_FIELDS = [
         'createdAt', 'updatedAt', 'publishedAt', 'createdBy', 'updatedBy',
@@ -228,18 +218,18 @@ const HomePage = () => {
       const initialActive = formattedAll.filter((ct: CollectionConfig) =>
         Object.keys(savedConfig).includes(ct.uid)
       );
-      setActiveCollections(initialActive);
 
-      setOriginalData(JSON.stringify({
+      setSavedOpenaiKey(settings.openaiKey || '');
+
+      reset({
         openaiKey: settings.openaiKey || '',
-        systemInstructions: settings.systemInstructions || '',
-        responseInstructions: settings.responseInstructions || '',
-        logoUrl: settings.logoUrl || '',
         baseDomain: normalizedBase,
         contactLink: settings.contactLink || '',
+        systemInstructions: settings.systemInstructions || '',
+        responseInstructions: settings.responseInstructions || '',
         suggestedQuestions: settings.suggestedQuestions || [],
         activeCollections: initialActive,
-      }));
+      });
 
     } catch (err: any) {
       const message = err?.response?.data?.error || err?.response?.data?.message || 'Error loading settings.';
@@ -253,54 +243,42 @@ const HomePage = () => {
     init();
   }, [get]);
 
-  const handleUpdateCardStyle = (uid: string, style: string) => {
-    setActiveCollections((prev) =>
-      prev.map((c) => (c.uid === uid ? { ...c, cardStyle: style } : c))
-    );
-  };
-
-  const handleRemoveCollection = (uid: string) => {
-    setActiveCollections((prev) => prev.filter((c) => c.uid !== uid));
-  };
-
-  const save = async () => {
-    setIsSaving(true);
+  const onSubmit = async (data: FormValues) => {
     try {
-      const normalizedDomain = normalizeDomain(baseDomain);
-      setBaseDomain(normalizedDomain);
+      const normalizedDomain = normalizeDomain(data.baseDomain);
 
       const configToSave: Record<string, string[]> = {};
       const stylesToSave: Record<string, string> = {};
 
-      activeCollections.forEach((item) => {
+      data.activeCollections.forEach((item) => {
         const enabled = item.fields.filter((f) => f.enabled).map((f) => f.name);
         if (enabled.length > 0) configToSave[item.uid] = enabled;
         if (item.cardStyle) stylesToSave[item.uid] = item.cardStyle;
       });
 
       await post('/faq-ai-bot/collections', {
-        config: configToSave,
-        cardStyles: stylesToSave,
-        openaiKey,
-        systemInstructions,
-        responseInstructions,
-        logoUrl,
-        baseDomain: normalizedDomain,
-        contactLink,
-        suggestedQuestions,
+        data: {
+          config: configToSave,
+          cardStyles: stylesToSave,
+          openaiKey: data.openaiKey,
+          systemInstructions: data.systemInstructions,
+          responseInstructions: data.responseInstructions,
+          baseDomain: normalizedDomain,
+          contactLink: data.contactLink,
+          suggestedQuestions: data.suggestedQuestions,
+        },
       });
 
+      setSavedOpenaiKey(data.openaiKey);
       setIsSaved(true);
-      setSavedOpenaiKey(openaiKey);
-      setHasUnsavedChanges(false);
       setTimeout(() => setIsSaved(false), 3000);
 
       toggleNotification({ type: 'success', message: 'Settings saved successfully!' });
+
       await init();
+
     } catch {
       toggleNotification({ type: 'warning', message: 'Error saving settings.' });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -313,31 +291,32 @@ const HomePage = () => {
 
   return (
     <Main>
-      {/* UNSAVED CHANGES BAR */}
-      {hasUnsavedChanges && (
+      {isDirty && (
         <UnsavedBar background="warning100" borderColor="warning200">
           <Flex alignItems="center" gap={2}>
             <Information color="warning600" width={18} height={18} />
             <UnsavedText textColor="warning600">You have unsaved changes</UnsavedText>
           </Flex>
-
           <Flex gap={4}>
-            <DiscardButton onClick={() => init()}>Discard</DiscardButton>
-            <SaveAllButton onClick={save} background="primary600">
-              Save All
+            <DiscardButton onClick={init}>Discard</DiscardButton>
+            <SaveAllButton
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              background="primary600"
+            >
+              {isSubmitting ? 'Saving...' : 'Save All'}
             </SaveAllButton>
           </Flex>
         </UnsavedBar>
       )}
 
-      {/* HEADER SECTION */}
       <StickyHeader
         background="neutral100"
         position="sticky"
         zIndex={6}
         paddingTop={8}
         paddingBottom={4}
-        $hasUnsaved={hasUnsavedChanges}
+        $hasUnsaved={isDirty}
       >
         <CenteredBox>
           <Flex justifyContent="space-between" alignItems="baseline">
@@ -357,11 +336,12 @@ const HomePage = () => {
                   <SavedBadgeText textColor="success600">Saved!</SavedBadgeText>
                 </SavedBadge>
               ) : (
-                !hasUnsavedChanges && (
+                !isDirty && (
                   <SaveButton
-                    onClick={save}
+                    onClick={handleSubmit(onSubmit)}
                     startIcon={<Check width={14} height={14} />}
                     background="primary600"
+                    disabled={isSubmitting}
                   >
                     Save Settings
                   </SaveButton>
@@ -372,30 +352,27 @@ const HomePage = () => {
         </CenteredBox>
       </StickyHeader>
 
-      {/* MAIN CONTENT */}
       <Box background="neutral100" paddingTop={6} paddingBottom={8} marginBottom={8}>
         <CenteredBox>
 
           <SetupProgress
-            baseDomain={baseDomain}
-            openaiKey={openaiKey}
-            contactLink={contactLink}
-            collections={activeCollections}
-            questions={suggestedQuestions}
-            instructions={!!systemInstructions && !!responseInstructions}
+            baseDomain={values.baseDomain}
+            openaiKey={values.openaiKey}
+            contactLink={values.contactLink}
+            collections={values.activeCollections}
+            questions={values.suggestedQuestions}
+            instructions={!!values.systemInstructions && !!values.responseInstructions}
           />
 
           <BasicSettings
-            baseDomain={baseDomain}
-            openaiKey={openaiKey}
+            baseDomain={values.baseDomain}
+            openaiKey={values.openaiKey}
             savedOpenaiKey={savedOpenaiKey}
-            contactLink={contactLink}
-            onManage={(type: any, value?: string) => {
-              if (value !== undefined) {
-                if (type === 'key') setOpenaiKey(value);
-                if (type === 'domain') setBaseDomain(value);
-                if (type === 'contact') setContactLink(value);
-              }
+            contactLink={values.contactLink}
+            onManage={(type, value = '') => {
+              if (type === 'key')     setValue('openaiKey',   value, { shouldDirty: true });
+              if (type === 'domain')  setValue('baseDomain',  value, { shouldDirty: true });
+              if (type === 'contact') setValue('contactLink', value, { shouldDirty: true });
             }}
           />
 
@@ -405,49 +382,63 @@ const HomePage = () => {
             isLocked={isLocked}
           >
             <ResponseTemplates
-              collections={activeCollections}
+              collections={values.activeCollections}
               availableCollections={allContentTypes.filter(
                 (c) =>
                   c.uid !== 'plugin::faq-ai-bot.faqqa' &&
-                  !activeCollections.some((active) => active.uid === c.uid)
+                  !values.activeCollections.some((active) => active.uid === c.uid)
               )}
               cardOptions={cardOptions}
               onToggleField={(uid, fName) => {
-                setActiveCollections((prev) =>
-                  prev.map((c) =>
-                    c.uid !== uid
-                      ? c
-                      : {
-                          ...c,
-                          fields: c.fields.map((f: any) =>
-                            f.name === fName ? { ...f, enabled: !f.enabled } : f
-                          ),
-                        }
-                  )
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid !== uid ? c : {
+                    ...c,
+                    fields: c.fields.map((f) =>
+                      f.name === fName ? { ...f, enabled: !f.enabled } : f
+                    ),
+                  }
                 );
+                setValue('activeCollections', updated, { shouldDirty: true });
               }}
               onToggleAll={(uid, val) => {
-                setActiveCollections((prev) =>
-                  prev.map((c) =>
-                    c.uid !== uid
-                      ? c
-                      : {
-                          ...c,
-                          fields: c.fields.map((f: any) => ({ ...f, enabled: val })),
-                        }
-                  )
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid !== uid ? c : {
+                    ...c,
+                    fields: c.fields.map((f) => ({ ...f, enabled: val })),
+                  }
+                );
+                setValue('activeCollections', updated, { shouldDirty: true });
+              }}
+              onRemoveCollection={(uid) => {
+                const current = getValues('activeCollections');
+                setValue(
+                  'activeCollections',
+                  current.filter((c) => c.uid !== uid),
+                  { shouldDirty: true }
                 );
               }}
-              onRemoveCollection={handleRemoveCollection}
-              onUpdateCardStyle={handleUpdateCardStyle}
+              onUpdateCardStyle={(uid, style) => {
+                const current = getValues('activeCollections');
+                const updated = current.map((c) =>
+                  c.uid === uid ? { ...c, cardStyle: style } : c
+                );
+                setValue('activeCollections', updated, { shouldDirty: true });
+              }}
               onAddCollection={(uid) => {
+                const current = getValues('activeCollections');
                 const newlyAdded = allContentTypes.find((ct) => ct.uid === uid);
                 if (newlyAdded) {
                   const formatted = {
                     ...JSON.parse(JSON.stringify(newlyAdded)),
                     cardStyle: cardOptions[0]?.id || '',
                   };
-                  setActiveCollections((prev) => [...prev, formatted]);
+                  setValue(
+                    'activeCollections',
+                    [...current, formatted],
+                    { shouldDirty: true }
+                  );
                 }
               }}
             />
@@ -459,19 +450,28 @@ const HomePage = () => {
             isLocked={isLocked}
           >
             <SuggestedQuestions
-              questions={suggestedQuestions}
-              onAdd={(val: string) => setSuggestedQuestions((prev) => [...prev, val])}
-              onEdit={(index: number, val: string) =>
-                setSuggestedQuestions((prev) => {
-                  const updated = [...prev];
-                  updated[index] = val;
-                  return updated;
-                })
+              questions={values.suggestedQuestions}
+              onAdd={(val) => {
+                const current = getValues('suggestedQuestions');
+                setValue('suggestedQuestions', [...current, val], { shouldDirty: true });
+              }}
+              onEdit={(index, val) => {
+                const current = getValues('suggestedQuestions');
+                const updated = [...current];
+                updated[index] = val;
+                setValue('suggestedQuestions', updated, { shouldDirty: true });
+              }}
+              onRemove={(index) => {
+                const current = getValues('suggestedQuestions');
+                setValue(
+                  'suggestedQuestions',
+                  current.filter((_, i) => i !== index),
+                  { shouldDirty: true }
+                );
+              }}
+              onReorder={(newQuestions) =>
+                setValue('suggestedQuestions', [...newQuestions], { shouldDirty: true })
               }
-              onRemove={(index: number) =>
-                setSuggestedQuestions((prev) => prev.filter((_, i) => i !== index))
-              }
-              onReorder={(newQuestions: string[]) => setSuggestedQuestions([...newQuestions])}
             />
           </LockedSection>
 
@@ -481,12 +481,13 @@ const HomePage = () => {
             isLocked={isLocked}
           >
             <AiInstructions
-              systemInstructions={systemInstructions}
-              responseInstructions={responseInstructions}
-              onUpdateSystem={setSystemInstructions}
-              onUpdateResponse={setResponseInstructions}
+              systemInstructions={values.systemInstructions}
+              responseInstructions={values.responseInstructions}
+              onUpdateSystem={(val) => setValue('systemInstructions', val, { shouldDirty: true })}
+              onUpdateResponse={(val) => setValue('responseInstructions', val, { shouldDirty: true })}
             />
           </LockedSection>
+
         </CenteredBox>
       </Box>
 
