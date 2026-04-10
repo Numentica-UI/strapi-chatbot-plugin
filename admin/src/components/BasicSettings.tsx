@@ -12,7 +12,6 @@ interface BasicSettingsProps {
   savedOpenaiKey: string;
   baseDomain: string;
   contactLink: string;
-  canEdit: boolean;
   onManage: (type: SettingType, value?: string) => void;
 }
 
@@ -27,7 +26,6 @@ interface SettingRowProps {
   value: string;
   type: SettingType;
   tokenUsage?: TokenUsage;
-  canEdit: boolean;
   onManage: (type: SettingType, value?: string) => void;
   isLast?: boolean;
 }
@@ -277,7 +275,6 @@ const SettingRow = ({
   value,
   type,
   tokenUsage,
-  canEdit,
   onManage,
   isLast = false,
 }: SettingRowProps) => {
@@ -327,9 +324,20 @@ const SettingRow = ({
   };
 
   const handleStartEdit = () => {
-    if (!canEdit) return;
     setIsEditing(true);
     reset({ fieldValue: value });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  const handleShowKey = () => {
+    setShowKey((prev) => !prev);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -340,8 +348,8 @@ const SettingRow = ({
 
   return (
     <RowBox
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       $isEditing={isEditing}
       $isLast={isLast}
     >
@@ -375,7 +383,7 @@ const SettingRow = ({
                   onKeyDown={handleKeyDown}
                 />
                 {type === 'key' && (
-                  <EyeButton type="button" onClick={() => setShowKey((prev) => !prev)}>
+                  <EyeButton type="button" onClick={handleShowKey}>
                     {showKey ? (
                       <Eye width={16} height={16} />
                     ) : (
@@ -435,16 +443,10 @@ const SettingRow = ({
                 </SavedIndicator>
               )}
 
-              {/* Only show Edit button if user has edit permission */}
-              {canEdit && (
-                <EditButton
-                  $visible={isHovered || isSaved || !value}
-                  onClick={handleStartEdit}
-                >
-                  <Pencil width={11} height={11} />
-                  {value ? 'Edit' : 'Add'}
-                </EditButton>
-              )}
+              <EditButton $visible={isHovered || isSaved || !value} onClick={handleStartEdit}>
+                <Pencil width={11} height={11} />
+                {value ? 'Edit' : 'Add'}
+              </EditButton>
             </ViewRow>
 
             {type === 'key' && value && tokenUsage && (
@@ -488,7 +490,6 @@ const BasicSettings = ({
   savedOpenaiKey,
   baseDomain,
   contactLink,
-  canEdit,
   onManage,
 }: BasicSettingsProps) => {
   const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(undefined);
@@ -525,7 +526,6 @@ const BasicSettings = ({
         title="Base Domain"
         description="Root URL used to scope chatbot context"
         value={baseDomain}
-        canEdit={canEdit}
         onManage={onManage}
       />
 
@@ -535,7 +535,6 @@ const BasicSettings = ({
         description="Stored encrypted — never exposed to users"
         value={openaiKey}
         tokenUsage={tokenUsage}
-        canEdit={canEdit}
         onManage={onManage}
       />
 
@@ -544,7 +543,6 @@ const BasicSettings = ({
         title="Contact Link"
         description="Shown as 'Talk to Support' in the chatbot"
         value={contactLink}
-        canEdit={canEdit}
         onManage={onManage}
         isLast
       />

@@ -90,7 +90,7 @@ function maskSettings(settings: any): any {
   if (!settings) return settings;
   const masked = { ...settings };
   if (masked.openaiKey) {
-    masked.openaiKey = '********';
+    masked.openaiKey = '********' + settings.openaiKey.slice(-4);
   }
   return masked;
 }

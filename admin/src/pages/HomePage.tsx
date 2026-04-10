@@ -151,7 +151,6 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savedOpenaiKey, setSavedOpenaiKey] = useState('');
-  const [canEdit, setCanEdit] = useState(false);
 
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
@@ -181,16 +180,6 @@ const HomePage = () => {
   const init = async () => {
     try {
       const { data } = await get('/faq-ai-bot/collections');
-
-      // Check if this user has edit permission
-      try {
-        const { data: permData } = await get('/admin/permissions/check', {
-          params: { permissions: [{ action: 'plugin::faq-ai-bot.update' }] },
-        });
-        setCanEdit(permData?.data?.[0]?.hasPermission ?? false);
-      } catch {
-        setCanEdit(false);
-      }
       const settings = data.settings || {};
       const savedConfig = settings.config || {};
       const savedStyles = settings.cardStyles || {};
@@ -302,7 +291,7 @@ const HomePage = () => {
 
   return (
     <Main>
-      {isDirty && canEdit && (
+      {isDirty && (
         <UnsavedBar background="warning100" borderColor="warning200">
           <Flex alignItems="center" gap={2}>
             <Information color="warning600" width={18} height={18} />
@@ -347,7 +336,7 @@ const HomePage = () => {
                   <SavedBadgeText textColor="success600">Saved!</SavedBadgeText>
                 </SavedBadge>
               ) : (
-                !isDirty && canEdit && (
+                !isDirty && (
                   <SaveButton
                     onClick={handleSubmit(onSubmit)}
                     startIcon={<Check width={14} height={14} />}
@@ -380,7 +369,6 @@ const HomePage = () => {
             openaiKey={values.openaiKey}
             savedOpenaiKey={savedOpenaiKey}
             contactLink={values.contactLink}
-            canEdit={canEdit}
             onManage={(type, value = '') => {
               if (type === 'key')     setValue('openaiKey',   value, { shouldDirty: true });
               if (type === 'domain')  setValue('baseDomain',  value, { shouldDirty: true });
@@ -392,7 +380,6 @@ const HomePage = () => {
             title="Response Templates"
             description="Define which data fields and card layouts the AI can use in structured responses."
             isLocked={isLocked}
-            isReadOnly={!canEdit}
           >
             <ResponseTemplates
               collections={values.activeCollections}
@@ -461,7 +448,6 @@ const HomePage = () => {
             title="Suggested Questions"
             description="Quick-tap prompts on the chatbot welcome screen to help users get started."
             isLocked={isLocked}
-            isReadOnly={!canEdit}
           >
             <SuggestedQuestions
               questions={values.suggestedQuestions}
@@ -493,7 +479,6 @@ const HomePage = () => {
             title="AI Instructions"
             description="Rules and context the AI applies before every response. One instruction per line."
             isLocked={isLocked}
-            isReadOnly={!canEdit}
           >
             <AiInstructions
               systemInstructions={values.systemInstructions}
