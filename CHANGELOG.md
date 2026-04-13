@@ -1,5 +1,11 @@
 # strapi-plugin-faq-ai-bot
 
+## 1.0.1
+
+### Patch Changes
+
+- update name
+
 ## 1.1.0
 
 ### Minor Changes

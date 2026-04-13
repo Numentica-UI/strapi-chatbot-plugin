@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": [],
   "type": "commonjs",
   "main": "dist/server/index.js",
@@ -29,7 +29,10 @@
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "test:ts:front": "run -T tsc -p admin/tsconfig.json",
-    "test:ts:back": "run -T tsc -p server/tsconfig.json"
+    "test:ts:back": "run -T tsc -p server/tsconfig.json",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -61,11 +64,11 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "faq-ai-bot",
-    "displayName": "faq-ai-bot Configuration",
-    "description": "A plugin for integrating ai chatbot"
+    "name": "nui-strapi-chatbot-plugin",
+    "displayName": "NUI Chatbot Configuration",
+    "description": "An AI-powered FAQ chatbot plugin for Strapi v5. Integrates an intelligent assistant into your admin panel — backed by OpenAI GPT-4o mini and semantic embeddings — so users can get instant answers from your FAQ content. Includes a built-in admin UI for configuration, suggested questions, response templates, and a live chatbot preview."
   },
-  "name": "strapi-chatbot-plugin",
+  "name": "nui-strapi-chatbot-plugin",
   "description": "An AI-powered FAQ chatbot plugin for Strapi v5. Integrates an intelligent assistant into your admin panel — backed by OpenAI GPT-4o mini and semantic embeddings — so users can get instant answers from your FAQ content. Includes a built-in admin UI for configuration, suggested questions, response templates, and a live chatbot preview.",
   "repository": {
     "type": "git",
