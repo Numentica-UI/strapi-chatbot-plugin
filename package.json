@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.0.0",
   "keywords": [],
   "type": "commonjs",
   "main": "dist/server/index.js",
@@ -65,16 +65,16 @@
     "displayName": "faq-ai-bot Configuration",
     "description": "A plugin for integrating ai chatbot"
   },
-  "name": "strapi-plugin-faq-ai-bot",
-  "description": "A plugin for integrating ai chatbot",
-  "license": "MIT",
+  "name": "strapi-chatbot-plugin",
+  "description": "An AI-powered FAQ chatbot plugin for Strapi v5. Integrates an intelligent assistant into your admin panel — backed by OpenAI GPT-4o mini and semantic embeddings — so users can get instant answers from your FAQ content. Includes a built-in admin UI for configuration, suggested questions, response templates, and a live chatbot preview.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sruthialex12345/strapi-plugin-faq-ai-bot.git"
+    "url": "git+https://github.com/Numentica-UI/strapi-chatbot-plugin.git"
   },
+  "author": "app-release-admin@numentica-ui.com",
+  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sruthialex12345/strapi-plugin-faq-ai-bot/issues"
+    "url": "https://github.com/Numentica-UI/strapi-chatbot-plugin/issues"
   },
-  "homepage": "https://github.com/sruthialex12345/strapi-plugin-faq-ai-bot#readme",
-  "author": "Sruthi Alex <sruthi.alex@nustartz.in>"
+  "homepage": "https://github.com/Numentica-UI/strapi-chatbot-plugin#readme"
 }
