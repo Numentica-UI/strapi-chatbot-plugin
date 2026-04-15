@@ -15,8 +15,6 @@ export default () => ({
       handler: 'ask.ask',
       config: {
         auth: false,
-        // NOTE: plug in your Strapi rate-limit middleware here, e.g.:
-        // middlewares: ['plugin::faq-ai-bot.rateLimit'],
       },
     },
     {

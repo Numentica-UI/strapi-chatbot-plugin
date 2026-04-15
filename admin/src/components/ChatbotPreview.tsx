@@ -108,7 +108,7 @@ const ChatbotPreview = () => {
     reset();
 
     try {
-      const res = await fetch('/api/faq-ai-bot/ask', {
+      const res = await fetch('/api/nui-strapi-chatbot-plugin/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: message }),
