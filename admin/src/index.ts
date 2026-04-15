@@ -1,4 +1,4 @@
-import { PLUGIN_ID } from './pluginId';
+import { PLUGIN_ID, PLUGIN_NAME } from './pluginId';
 import { Initializer } from './components/Initializer';
 import { PluginIcon } from './components/PluginIcon';
 import '@fontsource-variable/inter';
@@ -10,7 +10,7 @@ export default {
       icon: PluginIcon,
       intlLabel: {
         id: `${PLUGIN_ID}.plugin.name`,
-        defaultMessage: PLUGIN_ID,
+        defaultMessage: `${PLUGIN_NAME}`,
       },
       Component: async () => {
         const { App } = await import('./pages/App');
