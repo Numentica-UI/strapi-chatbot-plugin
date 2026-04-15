@@ -301,7 +301,7 @@ const SettingRow = ({
   const onSave = async ({ fieldValue }: { fieldValue: string }) => {
     if (type === 'key' && fieldValue.trim()) {
       try {
-        const { data } = await post('/faq-ai-bot/validate-key', { data: { key: fieldValue } });
+        const { data } = await post('/nui-strapi-chatbot-plugin/validate-key', { data: { key: fieldValue } });
         if (!data.valid) {
           setError('fieldValue', { message: data.message });
           return;
@@ -496,7 +496,7 @@ const BasicSettings = ({
   const { get } = useFetchClient();
 
   React.useEffect(() => {
-    get('/faq-ai-bot/usage')
+    get('/nui-strapi-chatbot-plugin/usage')
       .then(({ data }) => {
         if (typeof data?.tokensUsed === 'number') {
           setTokenUsage({

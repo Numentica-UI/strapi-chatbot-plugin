@@ -179,7 +179,7 @@ const HomePage = () => {
 
   const init = async () => {
     try {
-      const { data } = await get('/faq-ai-bot/collections');
+      const { data } = await get('/nui-strapi-chatbot-plugin/collections');
       const settings = data.settings || {};
       const savedConfig = settings.config || {};
       const savedStyles = settings.cardStyles || {};
@@ -256,7 +256,7 @@ const HomePage = () => {
         if (item.cardStyle) stylesToSave[item.uid] = item.cardStyle;
       });
 
-      await post('/faq-ai-bot/collections', {
+      await post('/nui-strapi-chatbot-plugin/collections', {
         data: {
           config: configToSave,
           cardStyles: stylesToSave,
@@ -385,7 +385,7 @@ const HomePage = () => {
               collections={values.activeCollections}
               availableCollections={allContentTypes.filter(
                 (c) =>
-                  c.uid !== 'plugin::faq-ai-bot.faqqa' &&
+                  c.uid !== 'plugin::nui-strapi-chatbot-plugin.faqqa' &&
                   !values.activeCollections.some((active) => active.uid === c.uid)
               )}
               cardOptions={cardOptions}

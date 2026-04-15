@@ -6,13 +6,13 @@ const register = ({ strapi }: { strapi: Core.Strapi }) => {
       section: 'plugins',
       displayName: 'Read Settings',
       uid: 'read',
-      pluginName: 'faq-ai-bot',
+      pluginName: 'nui-strapi-chatbot-plugin',
     },
     {
       section: 'plugins',
       displayName: 'Update Settings',
       uid: 'update',
-      pluginName: 'faq-ai-bot',
+      pluginName: 'nui-strapi-chatbot-plugin',
     },
   ]);
 };

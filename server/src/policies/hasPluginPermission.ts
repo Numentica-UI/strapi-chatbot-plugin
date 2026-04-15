@@ -2,5 +2,5 @@ export default (policyContext: any, config: { action: string }, { strapi }: { st
   const { action } = config;
   const { userAbility } = policyContext.state;
 
-  return userAbility.can(`plugin::faq-ai-bot.${action}`);
+  return userAbility.can(`plugin::nui-strapi-chatbot-plugin.${action}`);
 };

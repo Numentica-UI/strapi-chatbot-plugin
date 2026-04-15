@@ -1,1 +1,1 @@
-export const PLUGIN_ID = 'faq-ai-bot';
+export const PLUGIN_ID = 'nui-strapi-chatbot-plugin';

@@ -1,7 +1,7 @@
 import { Core } from '@strapi/strapi';
 
 export default ({ strapi }: { strapi: Core.Strapi }) => {
-  const UID = 'plugin::faq-ai-bot.faqqa';
+  const UID = 'plugin::nui-strapi-chatbot-plugin.faqqa';
 
   const updateEmbedding = async (params: any, existingEntry?: any) => {
     const { data } = params;
@@ -13,7 +13,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     const textToEmbed = `Q: ${question}\nA: ${answer}`;
 
     const result = await strapi
-      .plugin('faq-ai-bot')
+      .plugin('nui-strapi-chatbot-plugin')
       .service('embed')
       .generateEmbedding(textToEmbed);
 
@@ -24,7 +24,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
         const pluginStore = strapi.store({
           environment: null,
           type: 'plugin',
-          name: 'faq-ai-bot',
+          name: 'nui-strapi-chatbot-plugin',
         });
         const existing = ((await pluginStore.get({ key: 'token_usage' })) as {
           totalTokens: number;

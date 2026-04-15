@@ -9,7 +9,7 @@ export default {
         auth: { scope: ['admin'] },
         policies: [
           'admin::isAuthenticatedAdmin',
-          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'read' } },
+          { name: 'plugin::nui-strapi-chatbot-plugin.hasPluginPermission', config: { action: 'read' } },
         ],
       },
     },
@@ -21,7 +21,7 @@ export default {
         auth: { scope: ['admin'] },
         policies: [
           'admin::isAuthenticatedAdmin',
-          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'update' } },
+          { name: 'plugin::nui-strapi-chatbot-plugin.hasPluginPermission', config: { action: 'update' } },
         ],
       },
     },
@@ -33,7 +33,7 @@ export default {
         auth: { scope: ['admin'] },
         policies: [
           'admin::isAuthenticatedAdmin',
-          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'read' } },
+          { name: 'plugin::nui-strapi-chatbot-plugin.hasPluginPermission', config: { action: 'read' } },
         ],
       },
     },
@@ -45,7 +45,7 @@ export default {
         auth: { scope: ['admin'] },
         policies: [
           'admin::isAuthenticatedAdmin',
-          { name: 'plugin::faq-ai-bot.hasPluginPermission', config: { action: 'update' } },
+          { name: 'plugin::nui-strapi-chatbot-plugin.hasPluginPermission', config: { action: 'update' } },
         ],
       },
     },

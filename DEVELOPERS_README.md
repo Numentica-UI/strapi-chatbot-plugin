@@ -29,13 +29,13 @@ Initialize the plugin using the Strapi SDK:
 ⚠️ Note : Don't change the plugin name.
 
 ```bash
-npx @strapi/sdk-plugin init src/plugins/faq-ai-bot
+npx @strapi/sdk-plugin init src/plugins/nui-strapi-chatbot-plugin
 ```
 
 This will generate the plugin inside:
 
 ```
-src/plugins/faq-ai-bot
+src/plugins/nui-strapi-chatbot-plugin
 ```
 > ⚠️ If a version mismatch occurs while installing node_modules, run:
 > ```bash
@@ -47,9 +47,9 @@ src/plugins/faq-ai-bot
 - Add the following code to your config/plugins.ts file:
   ```bash
   export default {
-     'faq-ai-bot': {
+     'nui-strapi-chatbot-plugin': {
        enabled: true,
-       resolve: 'src/plugins/faq-ai-bot'
+       resolve: 'src/plugins/nui-strapi-chatbot-plugin'
      },
    }
   ```
@@ -60,7 +60,7 @@ src/plugins/faq-ai-bot
 Navigate to the plugin folder:
 
 ```bash
-cd src/plugins/faq-ai-bot
+cd src/plugins/nui-strapi-chatbot-plugin
 ```
 
 Replace the plugin folder files with this repo's files(all of them).
@@ -105,7 +105,7 @@ npm run develop
 ## 📁 Plugin Structure
 
 ```
-src/plugins/faq-ai-bot/
+src/plugins/nui-strapi-chatbot-plugin/
 ├── admin/        # Admin panel UI
 ├── server/       # Backend logic (controllers, services)
 └── package.json

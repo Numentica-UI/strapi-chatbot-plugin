@@ -4,7 +4,7 @@ async function getOpenAI(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
     type: 'plugin',
-    name: 'faq-ai-bot',
+    name: 'nui-strapi-chatbot-plugin',
   });
 
   const settings = await pluginStore.get({ key: 'settings' });
@@ -22,7 +22,7 @@ async function getContactLink(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
     type: 'plugin',
-    name: 'faq-ai-bot',
+    name: 'nui-strapi-chatbot-plugin',
   });
 
   const settings = await pluginStore.get({ key: 'settings' });
@@ -33,7 +33,7 @@ async function getInstructions(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
     type: 'plugin',
-    name: 'faq-ai-bot',
+    name: 'nui-strapi-chatbot-plugin',
   });
 
   const settings = await pluginStore.get({ key: 'settings' });
@@ -48,7 +48,7 @@ async function getCardStyles(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
     type: 'plugin',
-    name: 'faq-ai-bot',
+    name: 'nui-strapi-chatbot-plugin',
   });
 
   const settings = await pluginStore.get({ key: 'settings' });
@@ -61,7 +61,7 @@ async function getActiveCollections(strapi: any) {
     const pluginStore = strapi.store({
       environment: null,
       type: 'plugin',
-      name: 'faq-ai-bot',
+      name: 'nui-strapi-chatbot-plugin',
     });
 
     const settings = await pluginStore.get({ key: 'collections' });
@@ -818,7 +818,7 @@ ${realtimeText}
     const pluginStore = strapi.store({
       environment: null,
       type: 'plugin',
-      name: 'faq-ai-bot',
+      name: 'nui-strapi-chatbot-plugin',
     });
     const existing = ((await pluginStore.get({ key: 'token_usage' })) as {
       totalTokens: number;
@@ -958,7 +958,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const pluginStore = strapi.store({
       environment: null,
       type: 'plugin',
-      name: 'faq-ai-bot',
+      name: 'nui-strapi-chatbot-plugin',
     });
     const usage = ((await pluginStore.get({ key: 'token_usage' })) as {
       totalTokens: number;
