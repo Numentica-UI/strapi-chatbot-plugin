@@ -5,13 +5,14 @@ import styled from 'styled-components';
 import { useForm } from 'react-hook-form';
 import { useFetchClient } from '@strapi/admin/strapi-admin';
 
-type SettingType = 'key' | 'domain' | 'contact';
+type SettingType = 'key' | 'domain' | 'contact' | 'rateLimit';
 
 interface BasicSettingsProps {
   openaiKey: string;
   savedOpenaiKey: string;
   baseDomain: string;
   contactLink: string;
+  callsPerMinute: number;
   onManage: (type: SettingType, value?: string) => void;
 }
 
@@ -28,6 +29,10 @@ interface SettingRowProps {
   tokenUsage?: TokenUsage;
   onManage: (type: SettingType, value?: string) => void;
   isLast?: boolean;
+  inputType?: 'text' | 'number';
+  min?: number;
+  max?: number;
+  placeholder?: string;
 }
 
 const Wrapper = styled(Box)`
@@ -277,6 +282,10 @@ const SettingRow = ({
   tokenUsage,
   onManage,
   isLast = false,
+  inputType,
+  min,
+  max,
+  placeholder,
 }: SettingRowProps) => {
   const { post } = useFetchClient();
   const [isEditing, setIsEditing] = React.useState(false);
@@ -371,15 +380,29 @@ const SettingRow = ({
               <InputWrapper $hasError={!!errors.fieldValue}>
                 <StyledInput
                   autoFocus
-                  type={type === 'key' && !showKey ? 'password' : 'text'}
+                  type={type === 'key' && !showKey ? 'password' : (inputType ?? 'text')}
+                  min={min}
+                  max={max}
                   placeholder={
-                    type === 'domain'
+                    placeholder ??
+                    (type === 'domain'
                       ? 'https://your-domain.com'
                       : type === 'contact'
                         ? 'https://your-domain.com/contact'
-                        : 'sk-…'
+                        : type === 'rateLimit'
+                          ? '10'
+                          : 'sk-…')
                   }
-                  {...register('fieldValue')}
+                  {...register('fieldValue', {
+                    validate: (v) => {
+                      if (type === 'rateLimit') {
+                        const n = Number(v);
+                        if (!Number.isInteger(n) || n < 1 || n > 300)
+                          return 'Enter a number between 1 and 300';
+                      }
+                      return true;
+                    },
+                  })}
                   onKeyDown={handleKeyDown}
                 />
                 {type === 'key' && (
@@ -407,7 +430,7 @@ const SettingRow = ({
               </CancelButton>
             </InputRow>
 
-            {errors.fieldValue && type === 'key' && (
+            {errors.fieldValue && (type === 'key' || type === 'rateLimit') && (
               <ErrorBox>
                 <ErrorText variant="pi" textColor="danger600">
                   {errors.fieldValue.message}
@@ -490,6 +513,7 @@ const BasicSettings = ({
   savedOpenaiKey,
   baseDomain,
   contactLink,
+  callsPerMinute,
   onManage,
 }: BasicSettingsProps) => {
   const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(undefined);
@@ -535,6 +559,18 @@ const BasicSettings = ({
         description="Stored encrypted — never exposed to users"
         value={openaiKey}
         tokenUsage={tokenUsage}
+        onManage={onManage}
+      />
+
+      <SettingRow
+        type="rateLimit"
+        title="Calls Per Minute"
+        description="Max AI requests per user per minute"
+        value={String(callsPerMinute)}
+        inputType="number"
+        min={1}
+        max={300}
+        placeholder="10"
         onManage={onManage}
       />
 

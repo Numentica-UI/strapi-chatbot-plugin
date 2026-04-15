@@ -7,6 +7,7 @@ const ALLOWED_SETTINGS_KEYS: Record<string, { type: string; maxLength?: number }
   systemInstructions: { type: 'string', maxLength: 4000 },
   responseInstructions: { type: 'string', maxLength: 4000 },
   contactLink: { type: 'string', maxLength: 500 },
+  callsPerMinute: { type: 'number' },
   cardStyles: { type: 'object' },
   config: { type: 'object' },
   suggestedQuestions: { type: 'array' },
@@ -26,6 +27,10 @@ function sanitizeSettings(raw: any): Record<string, any> {
     } else if (rules.type === 'object') {
       if (typeof value !== 'object' || Array.isArray(value) || value === null) continue;
       sanitized[key] = value;
+    } else if (rules.type === 'number') {
+      const n = Number(value);
+      if (!Number.isFinite(n)) continue;
+      sanitized[key] = Math.min(300, Math.max(1, Math.floor(n)));
     }
   }
   return sanitized;
@@ -143,9 +148,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         value: { totalTokens: 0, promptTokens: 0, completionTokens: 0 },
       });
     }
+    
+    if (settings.openaiKey && settings.openaiKey.startsWith('********')) {
+      delete settings.openaiKey;
+    }
 
     const data = await strapi.plugin('faq-ai-bot').service('config').setConfig(settings);
-
     ctx.body = maskSettings(data);
   },
 });

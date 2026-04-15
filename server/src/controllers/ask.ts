@@ -73,7 +73,6 @@ async function getActiveCollections(strapi: any) {
       const hasEnabledFields = item.fields?.some((f: any) => f.enabled);
 
       if (!hasEnabledFields) {
-        console.log(`   - Skipping '${item.name}' (no enabled fields)`);
         continue;
       }
 
@@ -334,7 +333,6 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
 
         // If it's a populated media object
         if (value && typeof value === 'object' && value.url) {
-          console.log(`🖼 Extracted image for field '${f}':`, value.url);
           clean[f] = value.url;
         } else {
           clean[f] = value;
@@ -891,6 +889,9 @@ export default ({ strapi }: { strapi: any }) => ({
   },
   async ask(ctx: any) {
     const { question, history = [] } = ctx.request.body;
+    if (ctx.res.writableEnded) {
+      return;
+    }
 
     const usage = {
       prompt_tokens: 0,

@@ -114,7 +114,25 @@ const ChatbotPreview = () => {
         body: JSON.stringify({ question: message }),
       });
 
-      if (!res.ok) throw new Error('Request failed');
+      if (!res.ok) {
+        let errorMessage = 'Something went wrong. Please try again.';
+
+        try {
+          const data = await res.json();
+          const strapiMessage = data?.error?.message;
+          const retryAfter = data?.error?.details?.retryAfter;
+
+          if (strapiMessage) {
+            errorMessage = strapiMessage;
+          } else if (res.status === 429) {
+            errorMessage = retryAfter
+              ? `Rate limit reached. Please wait ${retryAfter}s and try again.`
+              : 'Too many requests. Try again later.';
+          }
+        } catch {}
+
+        throw new Error(errorMessage);
+      }
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error('No stream');
@@ -151,6 +169,8 @@ const ChatbotPreview = () => {
 
           if (line.startsWith('data: ')) {
             const token = line.replace('data: ', '');
+            const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
             botMessage += token;
 
             setMessages((prev) => {
@@ -158,11 +178,15 @@ const ChatbotPreview = () => {
               updated[updated.length - 1] = { text: botMessage, isUser: false };
               return updated;
             });
+
+            await delay(30);
           }
         }
       }
     } catch (err) {
-      setMessages((prev) => [...prev, { text: 'Error contacting chatbot', isUser: false }]);
+      const errorMessage = (err as any)?.message || 'Something went wrong. Please try again.';
+
+      setMessages((prev) => [...prev, { text: errorMessage, isUser: false }]);
     }
   };
 

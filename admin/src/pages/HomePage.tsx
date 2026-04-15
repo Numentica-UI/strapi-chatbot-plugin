@@ -32,6 +32,7 @@ type FormValues = {
   systemInstructions: string;
   responseInstructions: string;
   suggestedQuestions: string[];
+  callsPerMinute: number;
   activeCollections: CollectionConfig[];
 };
 
@@ -170,6 +171,7 @@ const HomePage = () => {
       systemInstructions: '',
       responseInstructions: '',
       suggestedQuestions: [],
+      callsPerMinute: 10,
       activeCollections: [],
     },
   });
@@ -192,13 +194,22 @@ const HomePage = () => {
             if (!res.ok && res.status !== 304) throw new Error('Failed to load card mapping');
             return res.status === 304 ? null : res.json();
           })
-          .then((data) => { if (data) setCardOptions(data); })
+          .then((data) => {
+            if (data) setCardOptions(data);
+          })
           .catch(() => setCardOptions([]));
       }
 
       const SYSTEM_FIELDS = [
-        'createdAt', 'updatedAt', 'publishedAt', 'createdBy', 'updatedBy',
-        'locale', 'localizations', '__component', 'id',
+        'createdAt',
+        'updatedAt',
+        'publishedAt',
+        'createdBy',
+        'updatedBy',
+        'locale',
+        'localizations',
+        '__component',
+        'id',
       ];
 
       const formattedAll: CollectionConfig[] = (data.contentTypes || []).map((ct: any) => ({
@@ -228,11 +239,12 @@ const HomePage = () => {
         systemInstructions: settings.systemInstructions || '',
         responseInstructions: settings.responseInstructions || '',
         suggestedQuestions: settings.suggestedQuestions || [],
+        callsPerMinute: settings.callsPerMinute ?? 10,
         activeCollections: initialActive,
       });
-
     } catch (err: any) {
-      const message = err?.response?.data?.error || err?.response?.data?.message || 'Error loading settings.';
+      const message =
+        err?.response?.data?.error || err?.response?.data?.message || 'Error loading settings.';
       toggleNotification({ type: 'warning', message });
     } finally {
       setIsLoading(false);
@@ -266,6 +278,7 @@ const HomePage = () => {
           baseDomain: normalizedDomain,
           contactLink: data.contactLink,
           suggestedQuestions: data.suggestedQuestions,
+          callsPerMinute: data.callsPerMinute,
         },
       });
 
@@ -276,7 +289,6 @@ const HomePage = () => {
       toggleNotification({ type: 'success', message: 'Settings saved successfully!' });
 
       await init();
-
     } catch {
       toggleNotification({ type: 'warning', message: 'Error saving settings.' });
     }
@@ -354,7 +366,6 @@ const HomePage = () => {
 
       <Box background="neutral100" paddingTop={6} paddingBottom={8} marginBottom={8}>
         <CenteredBox>
-
           <SetupProgress
             baseDomain={values.baseDomain}
             openaiKey={values.openaiKey}
@@ -369,10 +380,13 @@ const HomePage = () => {
             openaiKey={values.openaiKey}
             savedOpenaiKey={savedOpenaiKey}
             contactLink={values.contactLink}
+            callsPerMinute={values.callsPerMinute}
             onManage={(type, value = '') => {
-              if (type === 'key')     setValue('openaiKey',   value, { shouldDirty: true });
-              if (type === 'domain')  setValue('baseDomain',  value, { shouldDirty: true });
+              if (type === 'key') setValue('openaiKey', value, { shouldDirty: true });
+              if (type === 'domain') setValue('baseDomain', value, { shouldDirty: true });
               if (type === 'contact') setValue('contactLink', value, { shouldDirty: true });
+              if (type === 'rateLimit')
+                setValue('callsPerMinute', Number(value), { shouldDirty: true });
             }}
           />
 
@@ -392,22 +406,26 @@ const HomePage = () => {
               onToggleField={(uid, fName) => {
                 const current = getValues('activeCollections');
                 const updated = current.map((c) =>
-                  c.uid !== uid ? c : {
-                    ...c,
-                    fields: c.fields.map((f) =>
-                      f.name === fName ? { ...f, enabled: !f.enabled } : f
-                    ),
-                  }
+                  c.uid !== uid
+                    ? c
+                    : {
+                        ...c,
+                        fields: c.fields.map((f) =>
+                          f.name === fName ? { ...f, enabled: !f.enabled } : f
+                        ),
+                      }
                 );
                 setValue('activeCollections', updated, { shouldDirty: true });
               }}
               onToggleAll={(uid, val) => {
                 const current = getValues('activeCollections');
                 const updated = current.map((c) =>
-                  c.uid !== uid ? c : {
-                    ...c,
-                    fields: c.fields.map((f) => ({ ...f, enabled: val })),
-                  }
+                  c.uid !== uid
+                    ? c
+                    : {
+                        ...c,
+                        fields: c.fields.map((f) => ({ ...f, enabled: val })),
+                      }
                 );
                 setValue('activeCollections', updated, { shouldDirty: true });
               }}
@@ -434,11 +452,7 @@ const HomePage = () => {
                     ...JSON.parse(JSON.stringify(newlyAdded)),
                     cardStyle: cardOptions[0]?.id || '',
                   };
-                  setValue(
-                    'activeCollections',
-                    [...current, formatted],
-                    { shouldDirty: true }
-                  );
+                  setValue('activeCollections', [...current, formatted], { shouldDirty: true });
                 }
               }}
             />
@@ -484,10 +498,11 @@ const HomePage = () => {
               systemInstructions={values.systemInstructions}
               responseInstructions={values.responseInstructions}
               onUpdateSystem={(val) => setValue('systemInstructions', val, { shouldDirty: true })}
-              onUpdateResponse={(val) => setValue('responseInstructions', val, { shouldDirty: true })}
+              onUpdateResponse={(val) =>
+                setValue('responseInstructions', val, { shouldDirty: true })
+              }
             />
           </LockedSection>
-
         </CenteredBox>
       </Box>
 
