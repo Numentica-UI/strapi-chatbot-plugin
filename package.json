@@ -32,7 +32,8 @@
     "test:ts:back": "run -T tsc -p server/tsconfig.json",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "changeset:publish": "changeset publish",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -46,18 +47,27 @@
     "@strapi/typescript-utils": "^5.33.3",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "eslint": "^9.39.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@strapi/sdk-plugin": "^5.4.0",
-    "@strapi/strapi": "^5.0.0",
     "@strapi/design-system": "^2.0.0-rc.30",
     "@strapi/icons": "^2.0.0-rc.30",
+    "@strapi/sdk-plugin": "^5.4.0",
+    "@strapi/strapi": "^5.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.3",
     "styled-components": "^6.3.8"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "eslint --fix",
+    "*.{js,ts,json,md}": "prettier --write"
   },
   "engines": {
     "node": ">=18.0.0"
