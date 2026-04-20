@@ -121,8 +121,8 @@ config/plugin.ts
 1. Start your Strapi app.
 2. Open the admin panel.
 3. Navigate to the **NUI Chatbot Configuration** plugin and configure it (admin login required).
-4. Enter your OpenAI API key and configure collections for the chatbot.
-((Click)for detailed usage[./README.md] )
+4. Enter your OpenAI API key and configure collections for the chatbot.    
+👉 [Click for detailed usage](./README.md)
 
 ---
 
