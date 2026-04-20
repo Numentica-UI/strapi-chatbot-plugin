@@ -1,4 +1,4 @@
-# strapi-plugin-nui-strapi-chatbot-plugin
+# nui-strapi-chatbot-plugin
 
 ## 1.0.2
 
