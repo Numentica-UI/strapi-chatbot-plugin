@@ -63,7 +63,7 @@ Navigate to the plugin folder:
 cd src/plugins/nui-strapi-chatbot-plugin
 ```
 
-Replace the plugin folder files with this repo's files(all of them).
+Replace the plugin folder files with this repo's files(all of them except *screenshots* folder, it is alone optional).
 
 <br>  
   
