@@ -1,10 +1,10 @@
-# FAQ AI Bot - Strapi Plugin
-<br>
-  
-> **Compatibility:** Strapi **v5 only** (requires `@strapi/strapi ^5.0.0`).
-> Node.js **>=18** is required.
-> This plugin is **not compatible with Strapi v4**
-<br>
+# Strapi Chatbot Plugin
+
+> ⚠️ **Note:** To test the chatbot API, you can use the [***nui-strapi-chatbot-react***](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
+
+[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
+[![npm version](https://img.shields.io/npm/v/nui-strapi-chatbot-plugin)](https://www.npmjs.com/package/nui-strapi-chatbot-plugin)
+![Strapi v5](https://img.shields.io/badge/Strapi-%5E5.0.0-blueviolet)
 
 ## 📦 Setup Instructions (Developer Setup)
      
