@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { Box, Typography, Flex, Checkbox, Accordion } from '@strapi/design-system';
-import { Plus, Trash, Information } from '@strapi/icons';
+import React, { useState } from "react";
+import styled from "styled-components";
+import {
+  Box,
+  Typography,
+  Flex,
+  Checkbox,
+  Accordion,
+} from "@strapi/design-system";
+import { Plus, Trash, Information } from "@strapi/icons";
 
 interface ResponseTemplatesProps {
   collections: any[];
@@ -14,12 +20,19 @@ interface ResponseTemplatesProps {
   onAddCollection: (uid: string) => void;
 }
 
-const CustomText = styled.span<{ weight?: number; size?: string; lh?: string; color?: string }>`
+const CustomText = styled.span<{
+  weight?: number;
+  size?: string;
+  lh?: string;
+  color?: string;
+}>`
   font-weight: ${({ weight }) => weight || 400};
-  font-size: ${({ size }) => size || '13px'};
-  line-height: ${({ lh }) => lh || 'normal'};
+  font-size: ${({ size }) => size || "13px"};
+  line-height: ${({ lh }) => lh || "normal"};
   color: ${({ color, theme }) =>
-    color ? theme.colors[color as keyof typeof theme.colors] || color : theme.colors.neutral800};
+    color
+      ? theme.colors[color as keyof typeof theme.colors] || color
+      : theme.colors.neutral800};
 `;
 
 const ActionsContainer = styled(Flex)`
@@ -37,7 +50,7 @@ const StyledAccordionItem = styled(Accordion.Item)`
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral200} !important;
   transition: background 0.2s ease;
 
-  &[data-state='open'] {
+  &[data-state="open"] {
     background: ${({ theme }) => theme.colors.primary100} !important;
   }
 
@@ -46,7 +59,7 @@ const StyledAccordionItem = styled(Accordion.Item)`
   &:focus,
   &:active,
   &:focus-within,
-  &[data-state='open'] {
+  &[data-state="open"] {
     border-top: none !important;
     outline: none !important;
     box-shadow: none !important;
@@ -116,9 +129,12 @@ const CardStyleButton = styled.button<{ active?: boolean }>`
   padding: 4px 16px;
   border-radius: 8px;
   border: 1px solid
-    ${({ active, theme }) => (active ? theme.colors.primary600 : theme.colors.neutral200)};
-  background: ${({ active, theme }) => (active ? theme.colors.neutral100 : theme.colors.neutral0)};
-  color: ${({ active, theme }) => (active ? theme.colors.primary600 : theme.colors.neutral700)};
+    ${({ active, theme }) =>
+      active ? theme.colors.primary600 : theme.colors.neutral200};
+  background: ${({ active, theme }) =>
+    active ? theme.colors.neutral100 : theme.colors.neutral0};
+  color: ${({ active, theme }) =>
+    active ? theme.colors.primary600 : theme.colors.neutral700};
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -218,7 +234,7 @@ const SubmitButton = styled.button`
   border: none;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 13px;
   &:hover {
     opacity: 0.9;
@@ -233,7 +249,7 @@ const CancelButton = styled.button`
   color: ${({ theme }) => theme.colors.neutral700};
   font-weight: 500;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 13px;
   &:hover {
     background: ${({ theme }) => theme.colors.neutral100};
@@ -277,7 +293,7 @@ const ResponseTemplates = ({
   onAddCollection,
 }: ResponseTemplatesProps) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [selectedUid, setSelectedUid] = useState('');
+  const [selectedUid, setSelectedUid] = useState("");
   const [openItem, setOpenItem] = useState<string | undefined>();
 
   const handleAdd = () => {
@@ -286,17 +302,17 @@ const ResponseTemplates = ({
       setOpenItem(selectedUid);
     }
     setIsAdding(false);
-    setSelectedUid('');
+    setSelectedUid("");
   };
 
   const handleCancel = () => {
     setIsAdding(false);
-    setSelectedUid('');
+    setSelectedUid("");
   };
 
   const handleStartAdd = () => {
     setIsAdding(true);
-    setSelectedUid('');
+    setSelectedUid("");
     setOpenItem(undefined);
   };
 
@@ -306,18 +322,20 @@ const ResponseTemplates = ({
         {collections.map((c) => {
           const enabledCount = c.fields.filter((f: any) => f.enabled).length;
           const totalCount = c.fields.length;
-          const cardLabel = cardOptions.find((opt) => opt.id === c.cardStyle)?.label || 'None';
+          const cardLabel = Array.isArray(cardOptions)
+            ? cardOptions.find((opt) => opt.id === c.cardStyle)?.label || "None"
+            : "None";
           const isOpen = openItem === c.uid;
 
           return (
             <StyledAccordionItem key={c.uid} value={c.uid}>
-              <StyledHeader $isOpen={isOpen} style={{ border: 'none' }}>
+              <StyledHeader $isOpen={isOpen} style={{ border: "none" }}>
                 <HeaderRow alignItems="center">
                   <StyledTrigger>
                     <Box>
                       <CustomText
                         weight={600}
-                        color={isOpen ? 'primary600' : 'neutral800'}
+                        color={isOpen ? "primary600" : "neutral800"}
                         size="13px"
                         lh="19.5px"
                       >
@@ -328,16 +346,20 @@ const ResponseTemplates = ({
                         size="11px"
                         lh="16.5px"
                         color="neutral500"
-                        style={{ display: 'block' }}
+                        style={{ display: "block" }}
                       >
-                        {enabledCount} of {totalCount} fields active · {cardLabel}
+                        {enabledCount} of {totalCount} fields active ·{" "}
+                        {cardLabel}
                       </CustomText>
                     </Box>
                   </StyledTrigger>
                   <ActionsContainer>
                     <ActionButton
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onRemoveCollection(c.uid); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveCollection(c.uid);
+                      }}
                     >
                       <Trash width="13" height="13" />
                     </ActionButton>
@@ -351,7 +373,9 @@ const ResponseTemplates = ({
                     <Flex gap={2} alignItems="center">
                       <Checkbox
                         checked={enabledCount === totalCount}
-                        onCheckedChange={(val: boolean) => onToggleAll(c.uid, val)}
+                        onCheckedChange={(val: boolean) =>
+                          onToggleAll(c.uid, val)
+                        }
                       />
                       <CustomText size="13px" weight={500}>
                         All
@@ -373,20 +397,22 @@ const ResponseTemplates = ({
                     <CardStyleButton
                       type="button"
                       active={!c.cardStyle}
-                      onClick={() => onUpdateCardStyle(c.uid, '')}
+                      onClick={() => onUpdateCardStyle(c.uid, "")}
                     >
                       None
                     </CardStyleButton>
-                    {cardOptions.map((opt) => (
-                      <CardStyleButton
-                        key={opt.id}
-                        type="button"
-                        active={c.cardStyle === opt.id}
-                        onClick={() => onUpdateCardStyle(c.uid, opt.id)}
-                      >
-                        {opt.label}
-                      </CardStyleButton>
-                    ))}
+                    {(Array.isArray(cardOptions) ? cardOptions : []).map(
+                      (opt) => (
+                        <CardStyleButton
+                          key={opt.id}
+                          type="button"
+                          active={c.cardStyle === opt.id}
+                          onClick={() => onUpdateCardStyle(c.uid, opt.id)}
+                        >
+                          {opt.label}
+                        </CardStyleButton>
+                      ),
+                    )}
                   </CardStyleRow>
                 </Box>
               </AccordionContent>
