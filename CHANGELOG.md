@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.4
+
+### Patch Changes
+
+- Added commit message and branch name validation for husky
+
 ## 1.0.3
 
 ### Patch Changes
