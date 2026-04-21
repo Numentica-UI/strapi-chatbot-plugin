@@ -1,4 +1,16 @@
-# strapi-plugin-nui-strapi-chatbot-plugin
+# nui-strapi-chatbot-plugin
+
+## 1.0.4
+
+### Patch Changes
+
+- Added commit message and branch name validation for husky
+
+## 1.0.3
+
+### Patch Changes
+
+- 6cbfa57: Remove unused variable in ask.ts and add husky pre-commit hook with lint-staged and ESLint
 
 ## 1.0.2
 
@@ -11,15 +23,3 @@
 ### Patch Changes
 
 - update name
-
-## 1.1.0
-
-### Minor Changes
-
-- Fixed review changes - removal of inline functions, any. Added type and switch case for tone. Added dist in gitignore. Fixed P0 and P1 issues like securing the API and others.
-
-## 1.0.20
-
-### Patch Changes
-
-- Added changeset
