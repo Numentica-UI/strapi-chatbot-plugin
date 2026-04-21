@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.5
+
+### Patch Changes
+
+- Made changes to handle errors if anything other than array is returned.
+
 ## 1.0.4
 
 ### Patch Changes
