@@ -319,16 +319,25 @@ const ResponseTemplates = ({
   return (
     <>
       <AccordionRoot value={openItem} onValueChange={setOpenItem}>
-        {collections.map((c) => {
-          const enabledCount = c.fields.filter((f: any) => f.enabled).length;
-          const totalCount = c.fields.length;
+        {collections.map((collection) => {
+          const { uid, name, fields, cardStyle } = collection;
+          const enabledCount = fields.filter((f: any) => f.enabled).length;
+          const totalCount = fields.length;
           const cardLabel = Array.isArray(cardOptions)
-            ? cardOptions.find((opt) => opt.id === c.cardStyle)?.label || "None"
+            ? cardOptions.find((opt) => opt.id === cardStyle)?.label || "None"
             : "None";
-          const isOpen = openItem === c.uid;
+          const isOpen = openItem === uid;
+
+          const handleRemoveCollection = () => onRemoveCollection(uid);
+          const handleClearCardStyle = () => onUpdateCardStyle(uid, "");
+          const handleUpdateCardStyle = (optId: string) => () =>
+            onUpdateCardStyle(uid, optId);
+          const handleToggleAll = (val: boolean) => onToggleAll(uid, val);
+          const handleToggleField = (fieldName: string) => () =>
+            onToggleField(uid, fieldName);
 
           return (
-            <StyledAccordionItem key={c.uid} value={c.uid}>
+            <StyledAccordionItem key={uid} value={uid}>
               <StyledHeader $isOpen={isOpen} style={{ border: "none" }}>
                 <HeaderRow alignItems="center">
                   <StyledTrigger>
@@ -339,7 +348,7 @@ const ResponseTemplates = ({
                         size="13px"
                         lh="19.5px"
                       >
-                        {c.name}
+                        {name}
                       </CustomText>
                       <CustomText
                         weight={400}
@@ -356,10 +365,7 @@ const ResponseTemplates = ({
                   <ActionsContainer>
                     <ActionButton
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveCollection(c.uid);
-                      }}
+                      onClick={handleRemoveCollection}
                     >
                       <Trash width="13" height="13" />
                     </ActionButton>
@@ -373,22 +379,20 @@ const ResponseTemplates = ({
                     <Flex gap={2} alignItems="center">
                       <Checkbox
                         checked={enabledCount === totalCount}
-                        onCheckedChange={(val: boolean) =>
-                          onToggleAll(c.uid, val)
-                        }
+                        onCheckedChange={handleToggleAll}
                       />
                       <CustomText size="13px" weight={500}>
                         All
                       </CustomText>
                     </Flex>
                     <VerticalDivider />
-                    {c.fields.map((f: any) => (
-                      <FieldItem key={f.name}>
+                    {fields.map((field: any) => (
+                      <FieldItem key={field.name}>
                         <Checkbox
-                          checked={f.enabled}
-                          onCheckedChange={() => onToggleField(c.uid, f.name)}
+                          checked={field.enabled}
+                          onCheckedChange={handleToggleField(field.name)}
                         />
-                        <CustomText size="13px">{f.name}</CustomText>
+                        <CustomText size="13px">{field.name}</CustomText>
                       </FieldItem>
                     ))}
                   </FieldsRow>
@@ -396,20 +400,20 @@ const ResponseTemplates = ({
                   <CardStyleRow>
                     <CardStyleButton
                       type="button"
-                      active={!c.cardStyle}
-                      onClick={() => onUpdateCardStyle(c.uid, "")}
+                      active={!cardStyle}
+                      onClick={handleClearCardStyle}
                     >
                       None
                     </CardStyleButton>
                     {(Array.isArray(cardOptions) ? cardOptions : []).map(
-                      (opt) => (
+                      (option) => (
                         <CardStyleButton
-                          key={opt.id}
+                          key={option.id}
                           type="button"
-                          active={c.cardStyle === opt.id}
-                          onClick={() => onUpdateCardStyle(c.uid, opt.id)}
+                          active={cardStyle === option.id}
+                          onClick={handleUpdateCardStyle(option.id)}
                         >
-                          {opt.label}
+                          {option.label}
                         </CardStyleButton>
                       ),
                     )}
@@ -439,9 +443,12 @@ const ResponseTemplates = ({
             onChange={(e) => setSelectedUid(e.target.value)}
           >
             <option value="">Select a collection type...</option>
-            {availableCollections.map((ac) => (
-              <option key={ac.uid} value={ac.uid}>
-                {ac.name}
+            {availableCollections.map((availableCollection) => (
+              <option
+                key={availableCollection.uid}
+                value={availableCollection.uid}
+              >
+                {availableCollection.name}
               </option>
             ))}
           </InlineSelect>
