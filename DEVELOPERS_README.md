@@ -1,13 +1,13 @@
 # Strapi Chatbot Plugin
 
-> ⚠️ **Note:** To test the chatbot API, you can use the [***nui-strapi-chatbot-react***](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
+> ⚠️ **Note:** To test the chatbot API, you can use the [**_nui-strapi-chatbot-react_**](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
 
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
 [![npm version](https://img.shields.io/npm/v/nui-strapi-chatbot-plugin)](https://www.npmjs.com/package/nui-strapi-chatbot-plugin)
 ![Strapi v5](https://img.shields.io/badge/Strapi-%5E5.0.0-blueviolet)
 
 ## 📦 Setup Instructions (Developer Setup)
-     
+
 ### 1. Create a Strapi Project
 
 Run the following command to create a new Strapi app:
@@ -21,11 +21,12 @@ Then navigate into the project:
 ```bash
 cd (my-strapi-project)
 ```
+
 <br>  
   
 ### 2. Create the Plugin
 
-Initialize the plugin using the Strapi SDK:       
+Initialize the plugin using the Strapi SDK:  
 ⚠️ Note : Don't change the plugin name.
 
 ```bash
@@ -37,7 +38,9 @@ This will generate the plugin inside:
 ```
 src/plugins/nui-strapi-chatbot-plugin
 ```
+
 > ⚠️ If a version mismatch occurs while installing node_modules, run:
+>
 > ```bash
 > npm install --legacy-peer-deps
 > ```
@@ -53,8 +56,8 @@ src/plugins/nui-strapi-chatbot-plugin
      },
    }
   ```
-<br>  
-  
+  <br>
+
 ### 3. Add Plugin Code
 
 Navigate to the plugin folder:
@@ -63,7 +66,7 @@ Navigate to the plugin folder:
 cd src/plugins/nui-strapi-chatbot-plugin
 ```
 
-Replace the plugin folder files with this repo's files (all of them except *screenshots* folder, it is alone optional).
+Replace the plugin folder files with this repo's files (all of them except _screenshots_ folder, it is alone optional).
 
 <br>  
   
@@ -74,6 +77,7 @@ From the root of your project, run:
 ```bash
 npm install
 ```
+
 <br>
   
 ### 5. Build the Plugin
@@ -83,6 +87,7 @@ Inside the plugin directory (need not run if no changes made):
 ```bash
 npm run build
 ```
+
 <br>  
   
 ### 6. Start the Strapi App
@@ -98,10 +103,11 @@ Run Strapi in development mode:
 ```bash
 npm run develop
 ```
+
 <br>
 
 ---
-    
+
 ## 📁 Plugin Structure
 
 ```
@@ -121,17 +127,17 @@ config/plugin.ts
 1. Start your Strapi app.
 2. Open the admin panel.
 3. Navigate to the **NUI Chatbot Configuration** plugin and configure it (admin login required).
-4. Enter your OpenAI API key and configure collections for the chatbot.    
-👉[Click for detailed usage](./README.md)
+4. Enter your OpenAI API key and configure collections for the chatbot.  
+   👉[Click for detailed usage](./README.md)
 
 ---
 
 ## 🔒 Security Notes
- 
+
 - Admin configuration endpoints (`/collections`, `/usage`, `/validate-key`) require Strapi admin authentication and are not publicly accessible.
 - Your OpenAI API key is stored in the Strapi plugin store and is never returned to the browser in plaintext.
 - The `/ask` endpoint is public (needed by the frontend widget). Apply rate limiting at your reverse-proxy or CDN in production.
- 
+
 ---
 
 ## 📚 Helpful Links

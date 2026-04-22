@@ -2,7 +2,7 @@
 
 An AI-powered FAQ chatbot plugin for Strapi. Drop it into any Strapi project and get an intelligent FAQ assistant in your admin panel.
 
-> ⚠️ **Note:** To test the chatbot API, you can use the [***nui-strapi-chatbot-react***](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
+> ⚠️ **Note:** To test the chatbot API, you can use the [**_nui-strapi-chatbot-react_**](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
 
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
 [![npm version](https://img.shields.io/npm/v/nui-strapi-chatbot-plugin)](https://www.npmjs.com/package/nui-strapi-chatbot-plugin)
@@ -44,7 +44,7 @@ npm run develop
 3. Set up your [OpenAI API key](https://platform.openai.com/settings/organization/api-keys). Make sure **`gpt-4o-mini`** and **`text-embedding-3-small`** models are available on your account.
 <p align="center"><img src="./screenshots/Add_API_Key.png" width="90%"/></p>
 
-4. Clicking ***Save*** will validate the API key and save it.
+4. Clicking **_Save_** will validate the API key and save it.
 <p align="center"><img src="./screenshots/API_Key_Validation.png" width="90%"/></p>
 
 5. Add your frontend base domain (used to resolve card assets from its public folder).
@@ -103,16 +103,16 @@ npm run build && npm run develop
 
 - **Response Template**
   - Add collections for AI to query realtime data
-   <img src="./screenshots/Response_Template.png" width="50%"/>
+    <img src="./screenshots/Response_Template.png" width="50%"/>
 
 - **Suggested Questions**
   - Add questions so that it can be fetched in frontend as suggestions
-  <img src="./screenshots/Suggested_Questions.png" width="50%"/>
+    <img src="./screenshots/Suggested_Questions.png" width="50%"/>
 
 - **AI Instructions**
   - System Instrcutions : Used in realtime querying. Sent while AI creates DB query
   - Response Tone : Used in the final response sent by AI.
-  
+
     <img src="./screenshots/AI_Instructions.png" width="50%"/>
 
 ## 📚 Links

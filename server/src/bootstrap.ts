@@ -1,7 +1,7 @@
-import { Core } from '@strapi/strapi';
+import { Core } from "@strapi/strapi";
 
 export default ({ strapi }: { strapi: Core.Strapi }) => {
-  const UID = 'plugin::nui-strapi-chatbot-plugin.faqqa';
+  const UID = "plugin::nui-strapi-chatbot-plugin.faqqa";
 
   const updateEmbedding = async (params: any, existingEntry?: any) => {
     const { data } = params;
@@ -13,8 +13,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     const textToEmbed = `Q: ${question}\nA: ${answer}`;
 
     const result = await strapi
-      .plugin('nui-strapi-chatbot-plugin')
-      .service('embed')
+      .plugin("nui-strapi-chatbot-plugin")
+      .service("embed")
       .generateEmbedding(textToEmbed);
 
     if (result) {
@@ -23,10 +23,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       try {
         const pluginStore = strapi.store({
           environment: null,
-          type: 'plugin',
-          name: 'nui-strapi-chatbot-plugin',
+          type: "plugin",
+          name: "nui-strapi-chatbot-plugin",
         });
-        const existing = ((await pluginStore.get({ key: 'token_usage' })) as {
+        const existing = ((await pluginStore.get({ key: "token_usage" })) as {
           totalTokens: number;
           promptTokens: number;
           completionTokens: number;
@@ -38,16 +38,17 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
           embeddingTokens: 0,
         };
         await pluginStore.set({
-          key: 'token_usage',
+          key: "token_usage",
           value: {
             totalTokens: existing.totalTokens + result.tokensUsed,
             promptTokens: existing.promptTokens + result.tokensUsed,
             completionTokens: existing.completionTokens,
-            embeddingTokens: (existing.embeddingTokens || 0) + result.tokensUsed,
+            embeddingTokens:
+              (existing.embeddingTokens || 0) + result.tokensUsed,
           },
         });
       } catch (e) {
-        strapi.log.error('Failed to save embedding token usage:', e);
+        strapi.log.error("Failed to save embedding token usage:", e);
       }
     }
   };
