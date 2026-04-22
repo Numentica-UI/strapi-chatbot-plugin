@@ -1,7 +1,7 @@
-import { PLUGIN_ID, PLUGIN_NAME } from './pluginId';
-import { Initializer } from './components/Initializer';
-import { PluginIcon } from './components/PluginIcon';
-import '@fontsource-variable/inter';
+import { PLUGIN_ID, PLUGIN_NAME } from "./pluginId";
+import { Initializer } from "./components/Initializer";
+import { PluginIcon } from "./components/PluginIcon";
+import "@fontsource-variable/inter";
 
 export default {
   register(app: any) {
@@ -13,7 +13,7 @@ export default {
         defaultMessage: `${PLUGIN_NAME}`,
       },
       Component: async () => {
-        const { App } = await import('./pages/App');
+        const { App } = await import("./pages/App");
         return App;
       },
     });
@@ -27,8 +27,8 @@ export default {
   },
 
   bootstrap() {
-    const style = document.createElement('style');
-    style.setAttribute('data-plugin', PLUGIN_ID);
+    const style = document.createElement("style");
+    style.setAttribute("data-plugin", PLUGIN_ID);
 
     style.innerHTML = `
       #${PLUGIN_ID}-root,
@@ -47,12 +47,14 @@ export default {
     return Promise.all(
       locales.map(async (locale) => {
         try {
-          const { default: data } = await import(`./translations/${locale}.json`);
+          const { default: data } = await import(
+            `./translations/${locale}.json`
+          );
           return { data, locale };
         } catch {
           return { data: {}, locale };
         }
-      })
+      }),
     );
   },
 };

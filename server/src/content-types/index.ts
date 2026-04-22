@@ -1,4 +1,4 @@
-import faqqa from './faqqa';
+import faqqa from "./faqqa";
 
 export default {
   faqqa,

@@ -1,18 +1,18 @@
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 async function getOpenAI(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
-    type: 'plugin',
-    name: 'nui-strapi-chatbot-plugin',
+    type: "plugin",
+    name: "nui-strapi-chatbot-plugin",
   });
 
-  const settings = await pluginStore.get({ key: 'settings' });
+  const settings = await pluginStore.get({ key: "settings" });
 
   const key = settings?.openaiKey;
 
   if (!key) {
-    throw new Error('OpenAI key not configured in plugin settings');
+    throw new Error("OpenAI key not configured in plugin settings");
   }
 
   return new OpenAI({ apiKey: key });
@@ -21,37 +21,37 @@ async function getOpenAI(strapi: any) {
 async function getContactLink(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
-    type: 'plugin',
-    name: 'nui-strapi-chatbot-plugin',
+    type: "plugin",
+    name: "nui-strapi-chatbot-plugin",
   });
 
-  const settings = await pluginStore.get({ key: 'settings' });
+  const settings = await pluginStore.get({ key: "settings" });
   return settings?.contactLink || null;
 }
 
 async function getInstructions(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
-    type: 'plugin',
-    name: 'nui-strapi-chatbot-plugin',
+    type: "plugin",
+    name: "nui-strapi-chatbot-plugin",
   });
 
-  const settings = await pluginStore.get({ key: 'settings' });
+  const settings = await pluginStore.get({ key: "settings" });
 
   return {
-    system: settings?.systemInstructions || '',
-    response: settings?.responseInstructions || '',
+    system: settings?.systemInstructions || "",
+    response: settings?.responseInstructions || "",
   };
 }
 
 async function getCardStyles(strapi: any) {
   const pluginStore = strapi.store({
     environment: null,
-    type: 'plugin',
-    name: 'nui-strapi-chatbot-plugin',
+    type: "plugin",
+    name: "nui-strapi-chatbot-plugin",
   });
 
-  const settings = await pluginStore.get({ key: 'settings' });
+  const settings = await pluginStore.get({ key: "settings" });
 
   return settings?.cardStyles || {};
 }
@@ -60,11 +60,11 @@ async function getActiveCollections(strapi: any) {
   try {
     const pluginStore = strapi.store({
       environment: null,
-      type: 'plugin',
-      name: 'nui-strapi-chatbot-plugin',
+      type: "plugin",
+      name: "nui-strapi-chatbot-plugin",
     });
 
-    const settings = await pluginStore.get({ key: 'collections' });
+    const settings = await pluginStore.get({ key: "collections" });
     if (!settings) return [];
 
     const activeList = [];
@@ -93,21 +93,21 @@ async function getActiveCollections(strapi: any) {
           return (
             attr &&
             [
-              'string',
-              'text',
-              'email',
-              'uid',
-              'richtext',
-              'enumeration',
-              'integer',
-              'biginteger',
-              'decimal',
-              'float',
-              'date',
-              'datetime',
-              'time',
-              'relation',
-              'media',
+              "string",
+              "text",
+              "email",
+              "uid",
+              "richtext",
+              "enumeration",
+              "integer",
+              "biginteger",
+              "decimal",
+              "float",
+              "date",
+              "datetime",
+              "time",
+              "relation",
+              "media",
             ].includes(attr.type)
           );
         });
@@ -126,7 +126,12 @@ async function getActiveCollections(strapi: any) {
   }
 }
 
-async function rephraseQuestion(strapi: any, history: any[], question: string, usage: any) {
+async function rephraseQuestion(
+  strapi: any,
+  history: any[],
+  question: string,
+  usage: any,
+) {
   if (!history || !Array.isArray(history) || history.length === 0) {
     return question;
   }
@@ -135,11 +140,11 @@ async function rephraseQuestion(strapi: any, history: any[], question: string, u
     const openai = await getOpenAI(strapi);
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: "gpt-4o-mini",
       temperature: 0,
       messages: [
         {
-          role: 'system',
+          role: "system",
           content: `You are a Search Query Optimizer.
         Your task is to determine if the user's new message is a **Follow-up** or a **New Topic** and if a follow-up just rewrite the question .
         Do NOT return any explanations, only the optimized search string.
@@ -158,7 +163,7 @@ async function rephraseQuestion(strapi: any, history: any[], question: string, u
            - Return ONLY the optimized search string.`,
         },
         ...history.slice(-4),
-        { role: 'user', content: question },
+        { role: "user", content: question },
       ],
     });
     usage.prompt_tokens += response.usage?.prompt_tokens || 0;
@@ -170,10 +175,10 @@ async function rephraseQuestion(strapi: any, history: any[], question: string, u
 
     const lower = rewritten.toLowerCase();
     if (
-      lower.includes('unavailable') ||
-      lower.includes('sorry') ||
-      lower.includes('i am') ||
-      lower.includes('cannot') ||
+      lower.includes("unavailable") ||
+      lower.includes("sorry") ||
+      lower.includes("i am") ||
+      lower.includes("cannot") ||
       rewritten.length > 120
     ) {
       return question;
@@ -181,46 +186,46 @@ async function rephraseQuestion(strapi: any, history: any[], question: string, u
 
     return rewritten;
   } catch (err) {
-    console.error('Error in rephraseQuestion:', err);
+    console.error("Error in rephraseQuestion:", err);
     return question;
   }
 }
 
 function sanitizeFilters(filters: any): any {
-  if (!filters || typeof filters !== 'object') return filters;
+  if (!filters || typeof filters !== "object") return filters;
 
   if (Array.isArray(filters)) {
     return filters.map(sanitizeFilters);
   }
 
   const operators = [
-    'eq',
-    'ne',
-    'lt',
-    'gt',
-    'lte',
-    'gte',
-    'in',
-    'notIn',
-    'contains',
-    'notContains',
-    'containsi',
-    'notContainsi',
-    'null',
-    'notNull',
-    'between',
-    'startsWith',
-    'endsWith',
-    'or',
-    'and',
-    'not',
+    "eq",
+    "ne",
+    "lt",
+    "gt",
+    "lte",
+    "gte",
+    "in",
+    "notIn",
+    "contains",
+    "notContains",
+    "containsi",
+    "notContainsi",
+    "null",
+    "notNull",
+    "between",
+    "startsWith",
+    "endsWith",
+    "or",
+    "and",
+    "not",
   ];
 
   const newFilters: any = {};
 
   for (const key in filters) {
     let newKey = key;
-    if (operators.includes(key) && !key.startsWith('$')) {
+    if (operators.includes(key) && !key.startsWith("$")) {
       newKey = `$${key}`;
     }
 
@@ -243,8 +248,8 @@ function updateJsonContext(prevContext: any, question: string) {
   // Simple keyword extraction
   const words = question
     .toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(' ')
+    .replace(/[^\w\s]/g, "")
+    .split(" ")
     .filter((w) => w.length > 3);
 
   ctx.keywords = [...new Set([...(ctx.keywords || []), ...words])];
@@ -255,10 +260,10 @@ function updateJsonContext(prevContext: any, question: string) {
 }
 
 function extractFilterFields(filters: any, collected: Set<string> = new Set()) {
-  if (!filters || typeof filters !== 'object') return [];
+  if (!filters || typeof filters !== "object") return [];
 
   for (const key in filters) {
-    if (key.startsWith('$')) {
+    if (key.startsWith("$")) {
       extractFilterFields(filters[key], collected);
     } else {
       collected.add(key);
@@ -291,13 +296,13 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
 
   try {
     // COUNT OPERATION
-    if (plan.operation === 'count') {
+    if (plan.operation === "count") {
       const count = await strapi.entityService.count(uid, {
         filters: sanitizedFilters,
       });
 
       return {
-        type: 'count',
+        type: "count",
         collection: plan.collection,
         value: count,
       };
@@ -309,7 +314,7 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
 
     const mediaFields = config.fields.filter((field: string) => {
       const attr = contentType.attributes[field];
-      return attr?.type === 'media';
+      return attr?.type === "media";
     });
 
     let populateObj: any = undefined;
@@ -333,7 +338,7 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
         const value = row[f];
 
         // If it's a populated media object
-        if (value && typeof value === 'object' && value.url) {
+        if (value && typeof value === "object" && value.url) {
           console.log(`🖼 Extracted image for field '${f}':`, value.url);
           clean[f] = value.url;
         } else {
@@ -344,13 +349,13 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
     });
 
     return {
-      type: 'list',
+      type: "list",
       collection: plan.collection,
       schema: config.fields,
       items: cleaned,
     };
   } catch (err) {
-    console.error('Realtime search error:', err);
+    console.error("Realtime search error:", err);
     return null;
   }
 }
@@ -376,7 +381,7 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
   const openai = await getOpenAI(strapi);
 
   const embedding = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input: question,
   });
 
@@ -391,10 +396,10 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
 
   // 2. Fetch all FAQ embeddings
   const faqs = await strapi.db
-    .connection('chatbot_config_faqqas')
-    .select('answer', 'embedding')
-    .whereNotNull('embedding')
-    .whereNotNull('published_at');
+    .connection("chatbot_config_faqqas")
+    .select("answer", "embedding")
+    .whereNotNull("embedding")
+    .whereNotNull("published_at");
 
   if (!faqs.length) return [];
 
@@ -404,12 +409,14 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
 
     try {
       // If stored as string JSON → parse
-      if (typeof dbVector === 'string') {
+      if (typeof dbVector === "string") {
         dbVector = JSON.parse(dbVector);
       }
 
       // Force all values to numbers
-      dbVector = Array.isArray(dbVector) ? dbVector.map((n: any) => Number(n)) : [];
+      dbVector = Array.isArray(dbVector)
+        ? dbVector.map((n: any) => Number(n))
+        : [];
 
       // Length mismatch guard
       if (!Array.isArray(dbVector) || dbVector.length !== queryVector.length) {
@@ -442,18 +449,18 @@ async function simplePlanner(
   question: string,
   activeCollections: any[],
   instructions: { system: string },
-  usage: any
+  usage: any,
 ) {
   const openai = await getOpenAI(strapi);
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: "gpt-4o-mini",
     temperature: 0,
     messages: [
       {
-        role: 'system',
+        role: "system",
         content: `
-        ${instructions.system || ''}
+        ${instructions.system || ""}
 You are a STRICT database query planner that converts user questions into Strapi query JSON.
 
 --------------------------------
@@ -603,7 +610,7 @@ ${JSON.stringify(activeCollections, null, 2)}
 `,
       },
       {
-        role: 'user',
+        role: "user",
         content: question,
       },
     ],
@@ -614,12 +621,12 @@ ${JSON.stringify(activeCollections, null, 2)}
   usage.total_tokens += response.usage?.total_tokens || 0;
 
   try {
-    const raw = response.choices[0].message.content || '{}';
+    const raw = response.choices[0].message.content || "{}";
 
     // Safety cleanup in case model adds ```json
     const cleaned = raw
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
       .trim();
 
     const plan = JSON.parse(cleaned);
@@ -630,16 +637,21 @@ ${JSON.stringify(activeCollections, null, 2)}
   }
 }
 
-async function realtimeInterpreterAI(strapi: any, question: string, realtimeData: any, usage: any) {
+async function realtimeInterpreterAI(
+  strapi: any,
+  question: string,
+  realtimeData: any,
+  usage: any,
+) {
   if (!realtimeData) return null;
   const openai = await getOpenAI(strapi);
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: "gpt-4o-mini",
     temperature: 0.2,
     messages: [
       {
-        role: 'system',
+        role: "system",
         content: `
 You are a realtime data interpreter.
 
@@ -654,7 +666,7 @@ Rules:
 `,
       },
       {
-        role: 'user',
+        role: "user",
         content: `
 QUESTION: ${question}
 
@@ -684,25 +696,25 @@ async function finalAggregator(
   contactLink: string | null,
   instructions: { response: string },
   cardStyles: any,
-  usage: any
+  usage: any,
 ) {
-  ctx.set('Content-Type', 'text/event-stream');
-  ctx.set('Cache-Control', 'no-cache');
-  ctx.set('Connection', 'keep-alive');
+  ctx.set("Content-Type", "text/event-stream");
+  ctx.set("Cache-Control", "no-cache");
+  ctx.set("Connection", "keep-alive");
   ctx.status = 200;
   ctx.res.flushHeaders?.();
   const openai = await getOpenAI(strapi);
 
   const stream = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: "gpt-4o-mini",
     temperature: 0.3,
     stream: true,
     messages: [
       {
-        role: 'system',
+        role: "system",
         content: `
 
-        ${instructions.response || ''}
+        ${instructions.response || ""}
 You are an intelligent AI Assistant for a website chatbot.
 
 INPUTS:
@@ -765,12 +777,12 @@ Max 5 lines.
 `,
       },
       {
-        role: 'user',
+        role: "user",
         content: `
 QUESTION: ${question}
 
 CONTACT_LINK:
-${contactLink || 'NOT_AVAILABLE'}
+${contactLink || "NOT_AVAILABLE"}
 
 FAQ:
 ${JSON.stringify(faq)}
@@ -785,7 +797,7 @@ ${realtimeText}
     ],
   });
 
-  let fullText = '';
+  let fullText = "";
 
   for await (const chunk of stream) {
     const token = chunk.choices?.[0]?.delta?.content;
@@ -800,7 +812,7 @@ ${realtimeText}
   usage.completion_tokens += estimatedTokens;
   usage.total_tokens += estimatedTokens;
 
-  if (realtimeMeta && realtimeMeta.type === 'list') {
+  if (realtimeMeta && realtimeMeta.type === "list") {
     const collectionUid = `api::${realtimeMeta.collection}.${realtimeMeta.collection}`;
     const cardsPayload = {
       title: realtimeMeta.collection,
@@ -812,15 +824,15 @@ ${realtimeText}
     ctx.res.write(`data: ${JSON.stringify(cardsPayload)}\n\n`);
   }
 
-  ctx.res.write('data: [DONE]\n\n');
+  ctx.res.write("data: [DONE]\n\n");
 
   try {
     const pluginStore = strapi.store({
       environment: null,
-      type: 'plugin',
-      name: 'nui-strapi-chatbot-plugin',
+      type: "plugin",
+      name: "nui-strapi-chatbot-plugin",
     });
-    const existing = ((await pluginStore.get({ key: 'token_usage' })) as {
+    const existing = ((await pluginStore.get({ key: "token_usage" })) as {
       totalTokens: number;
       promptTokens: number;
       completionTokens: number;
@@ -833,7 +845,7 @@ ${realtimeText}
     };
 
     await pluginStore.set({
-      key: 'token_usage',
+      key: "token_usage",
       value: {
         totalTokens: existing.totalTokens + usage.total_tokens,
         promptTokens: existing.promptTokens + usage.prompt_tokens,
@@ -842,7 +854,7 @@ ${realtimeText}
       },
     });
   } catch (e) {
-    console.error('[token_usage save error]', e);
+    console.error("[token_usage save error]", e);
   }
 
   ctx.res.end();
@@ -856,34 +868,38 @@ export default ({ strapi }: { strapi: any }) => ({
       const temp = new OpenAI({ apiKey: key });
 
       const response = await temp.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         max_tokens: 5,
-        messages: [{ role: 'user', content: '2+2' }],
+        messages: [{ role: "user", content: "2+2" }],
       });
 
       const answer = response.choices?.[0]?.message?.content?.trim();
-      ctx.body = { valid: true, message: 'Key is valid and gpt-4o-mini is accessible.' };
+      ctx.body = {
+        valid: true,
+        message: "Key is valid and gpt-4o-mini is accessible.",
+      };
     } catch (err: any) {
       const status = err?.status || err?.response?.status;
-      const code = err?.code || err?.error?.code || '';
-      const message = err?.message || '';
+      const code = err?.code || err?.error?.code || "";
+      const message = err?.message || "";
 
-      let reason = 'Unknown error. Please try again.';
+      let reason = "Unknown error. Please try again.";
 
       if (status === 401) {
-        reason = 'Invalid API key. Please check and try again.';
+        reason = "Invalid API key. Please check and try again.";
       } else if (status === 403) {
-        reason = 'API key does not have permission to use gpt-4o-mini.';
+        reason = "API key does not have permission to use gpt-4o-mini.";
       } else if (status === 429) {
-        if (message.includes('quota') || code === 'insufficient_quota') {
-          reason = 'Quota exceeded. Your OpenAI account has run out of credits.';
+        if (message.includes("quota") || code === "insufficient_quota") {
+          reason =
+            "Quota exceeded. Your OpenAI account has run out of credits.";
         } else {
-          reason = 'Rate limit exceeded. Please wait a moment and try again.';
+          reason = "Rate limit exceeded. Please wait a moment and try again.";
         }
-      } else if (status === 404 || message.includes('model')) {
-        reason = 'gpt-4o-mini model is not available for this API key.';
-      } else if (code === 'invalid_api_key') {
-        reason = 'Invalid API key format.';
+      } else if (status === 404 || message.includes("model")) {
+        reason = "gpt-4o-mini model is not available for this API key.";
+      } else if (code === "invalid_api_key") {
+        reason = "Invalid API key format.";
       }
 
       ctx.body = { valid: false, message: reason };
@@ -903,7 +919,7 @@ export default ({ strapi }: { strapi: any }) => ({
     let jsonContext = ctx.request.body.context || {};
     jsonContext = updateJsonContext(jsonContext, question);
 
-    ctx.set('X-User-Context', JSON.stringify(jsonContext));
+    ctx.set("X-User-Context", JSON.stringify(jsonContext));
 
     try {
       const activeCollections = await getActiveCollections(strapi);
@@ -911,7 +927,12 @@ export default ({ strapi }: { strapi: any }) => ({
       if (!activeCollections || activeCollections.length === 0) {
       }
 
-      const rewritten = await rephraseQuestion(strapi, history, question, usage);
+      const rewritten = await rephraseQuestion(
+        strapi,
+        history,
+        question,
+        usage,
+      );
 
       const contactLink = await getContactLink(strapi);
       const cardStyles = await getCardStyles(strapi);
@@ -920,7 +941,13 @@ export default ({ strapi }: { strapi: any }) => ({
       const faqResults = await searchFAQ(rewritten, strapi, usage);
 
       // PLAN
-      const plan = await simplePlanner(strapi, rewritten, activeCollections, instructions, usage);
+      const plan = await simplePlanner(
+        strapi,
+        rewritten,
+        activeCollections,
+        instructions,
+        usage,
+      );
 
       // REALTIME
 
@@ -930,7 +957,12 @@ export default ({ strapi }: { strapi: any }) => ({
       if (plan && plan.collection) {
         realtimeResults = await searchRealtime(strapi, plan, activeCollections);
 
-        realtimeAIText = await realtimeInterpreterAI(strapi, rewritten, realtimeResults, usage);
+        realtimeAIText = await realtimeInterpreterAI(
+          strapi,
+          rewritten,
+          realtimeResults,
+          usage,
+        );
       } else {
       }
 
@@ -944,23 +976,23 @@ export default ({ strapi }: { strapi: any }) => ({
         contactLink,
         instructions,
         cardStyles,
-        usage
+        usage,
       );
 
       return;
     } catch (err) {
-      console.error('[ERROR]', err);
-      ctx.body = { type: 'text', content: 'Error occurred.' };
+      console.error("[ERROR]", err);
+      ctx.body = { type: "text", content: "Error occurred." };
     }
   },
 
   async getUsage(ctx: any) {
     const pluginStore = strapi.store({
       environment: null,
-      type: 'plugin',
-      name: 'nui-strapi-chatbot-plugin',
+      type: "plugin",
+      name: "nui-strapi-chatbot-plugin",
     });
-    const usage = ((await pluginStore.get({ key: 'token_usage' })) as {
+    const usage = ((await pluginStore.get({ key: "token_usage" })) as {
       totalTokens: number;
       promptTokens: number;
       completionTokens: number;
@@ -982,7 +1014,8 @@ export default ({ strapi }: { strapi: any }) => ({
 
     ctx.body = {
       tokensUsed: usage.totalTokens || 0,
-      estimatedCost: parseFloat((inputCost + outputCost + embeddingCost).toFixed(4)) || 0,
+      estimatedCost:
+        parseFloat((inputCost + outputCost + embeddingCost).toFixed(4)) || 0,
     };
   },
 });

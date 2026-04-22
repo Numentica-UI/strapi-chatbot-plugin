@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Box, Flex, Typography, Button } from '@strapi/design-system';
-import { Plus, Pencil, Trash, Drag } from '@strapi/icons';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { Box, Flex, Typography, Button } from "@strapi/design-system";
+import { Plus, Pencil, Trash, Drag } from "@strapi/icons";
+import styled from "styled-components";
 
 interface SuggestedQuestionsProps {
   questions: string[];
@@ -22,7 +22,7 @@ const EmptyState = styled(Box)`
 const QuestionRow = styled(Flex)<{ $isDragging: boolean }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
   background: ${({ $isDragging, theme }) =>
-    $isDragging ? theme.colors.neutral100 : 'transparent'};
+    $isDragging ? theme.colors.neutral100 : "transparent"};
 `;
 
 const DragHandle = styled(Box)`
@@ -95,7 +95,7 @@ const QuestionText = styled(Box)`
 
 const ActionIcons = styled(Flex)<{ $visible: boolean }>`
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-  pointer-events: ${({ $visible }) => ($visible ? 'auto' : 'none')};
+  pointer-events: ${({ $visible }) => ($visible ? "auto" : "none")};
   transition: opacity 0.2s;
 `;
 
@@ -173,51 +173,51 @@ const SuggestedQuestions = ({
   onReorder,
 }: SuggestedQuestionsProps) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const [editValue, setEditValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-  const [addValue, setAddValue] = useState('');
+  const [addValue, setAddValue] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleStartEdit = (index: number, q: string) => {
     setIsAdding(false);
-    setAddValue('');
+    setAddValue("");
     setEditingIndex(index);
     setEditValue(q);
   };
 
   const handleStartAdd = () => {
     setEditingIndex(null);
-    setEditValue('');
+    setEditValue("");
     setIsAdding(true);
-    setAddValue('');
+    setAddValue("");
   };
 
   const handleSaveAdd = () => {
     if (addValue.trim()) onAdd(addValue.trim());
     setIsAdding(false);
-    setAddValue('');
+    setAddValue("");
   };
 
   const handleSaveEdit = (index: number) => {
     if (editValue.trim()) onEdit(index, editValue.trim());
     setEditingIndex(null);
-    setEditValue('');
+    setEditValue("");
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
-    setEditValue('');
+    setEditValue("");
   };
 
   const handleCancelAdd = () => {
     setIsAdding(false);
-    setAddValue('');
+    setAddValue("");
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -239,7 +239,7 @@ const SuggestedQuestions = ({
     <Box>
       {questions.length === 0 && !isAdding && (
         <EmptyState textAlign="center">
-          <Typography textColor="neutral600" style={{ fontSize: '13px' }}>
+          <Typography textColor="neutral600" style={{ fontSize: "13px" }}>
             No suggested questions yet.
           </Typography>
         </EmptyState>
@@ -252,8 +252,12 @@ const SuggestedQuestions = ({
           draggable={editingIndex === null && !isAdding}
           onMouseEnter={() => setHoveredIndex(index)}
           onMouseLeave={() => setHoveredIndex(null)}
-          onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, index)}
-          onDragOver={(e: React.DragEvent<HTMLDivElement>) => handleDragOver(e, index)}
+          onDragStart={(e: React.DragEvent<HTMLDivElement>) =>
+            handleDragStart(e, index)
+          }
+          onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
+            handleDragOver(e, index)
+          }
           onDragEnd={handleDragEnd}
           paddingLeft={6}
           paddingRight={6}
@@ -274,21 +278,30 @@ const SuggestedQuestions = ({
                 autoFocus
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(index); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveEdit(index);
+                }}
               />
-              <SaveEditButton onClick={() => handleSaveEdit(index)}>Save</SaveEditButton>
-              <CancelEditButton onClick={handleCancelEdit}>Cancel</CancelEditButton>
+              <SaveEditButton onClick={() => handleSaveEdit(index)}>
+                Save
+              </SaveEditButton>
+              <CancelEditButton onClick={handleCancelEdit}>
+                Cancel
+              </CancelEditButton>
             </EditFlex>
           ) : (
             <>
               <QuestionText>
-                <Typography textColor="neutral800" style={{ fontSize: '13px' }}>
+                <Typography textColor="neutral800" style={{ fontSize: "13px" }}>
                   {q}
                 </Typography>
               </QuestionText>
 
               <ActionIcons gap={1} $visible={hoveredIndex === index}>
-                <EditIconBtn type="button" onClick={() => handleStartEdit(index, q)}>
+                <EditIconBtn
+                  type="button"
+                  onClick={() => handleStartEdit(index, q)}
+                >
                   <Pencil width="13" height="13" />
                 </EditIconBtn>
                 <TrashIconBtn type="button" onClick={() => onRemove(index)}>
@@ -301,13 +314,21 @@ const SuggestedQuestions = ({
       ))}
 
       {isAdding ? (
-        <AddInputRow paddingLeft={6} paddingRight={6} paddingTop={4} paddingBottom={4} gap={3}>
+        <AddInputRow
+          paddingLeft={6}
+          paddingRight={6}
+          paddingTop={4}
+          paddingBottom={4}
+          gap={3}
+        >
           <AddInput
             autoFocus
             placeholder="Type a question and press Enter..."
             value={addValue}
             onChange={(e) => setAddValue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAdd(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSaveAdd();
+            }}
           />
           <SaveEditButton onClick={handleSaveAdd}>Add</SaveEditButton>
           <CancelEditButton onClick={handleCancelAdd}>Cancel</CancelEditButton>

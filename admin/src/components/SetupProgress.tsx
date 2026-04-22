@@ -1,9 +1,17 @@
-import React from 'react';
-import styled, { useTheme } from 'styled-components';
-import { Box, Flex, Typography } from '@strapi/design-system';
-import { CheckCircle, CrossCircle } from '@strapi/icons';
+import React from "react";
+import styled, { useTheme } from "styled-components";
+import { Box, Flex, Typography } from "@strapi/design-system";
+import { CheckCircle, CrossCircle } from "@strapi/icons";
 
-const ZapIcon = ({ width = 15, height = 15, color }: { width?: number; height?: number; color?: string }) => {
+const ZapIcon = ({
+  width = 15,
+  height = 15,
+  color,
+}: {
+  width?: number;
+  height?: number;
+  color?: string;
+}) => {
   const theme = useTheme();
   return (
     <svg
@@ -57,11 +65,14 @@ const StatusTag = styled.div<{ active: boolean }>`
   border-radius: 999px;
   font-size: 11px;
   font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  background: ${({ active, theme }) => (active ? theme.colors.success100 : theme.colors.neutral100)};
+  font-family: "Inter", sans-serif;
+  background: ${({ active, theme }) =>
+    active ? theme.colors.success100 : theme.colors.neutral100};
   border: 1px solid
-    ${({ active, theme }) => (active ? theme.colors.success200 : theme.colors.neutral150)};
-  color: ${({ active, theme }) => (active ? theme.colors.success600 : theme.colors.neutral500)};
+    ${({ active, theme }) =>
+      active ? theme.colors.success200 : theme.colors.neutral150};
+  color: ${({ active, theme }) =>
+    active ? theme.colors.success600 : theme.colors.neutral500};
 
   svg {
     width: 11px;
@@ -70,8 +81,10 @@ const StatusTag = styled.div<{ active: boolean }>`
 `;
 
 const CountBadge = styled.span<{ isFull: boolean }>`
-  background: ${({ isFull, theme }) => (isFull ? theme.colors.success100 : theme.colors.primary100)};
-  color: ${({ isFull, theme }) => (isFull ? theme.colors.success600 : theme.colors.primary600)};
+  background: ${({ isFull, theme }) =>
+    isFull ? theme.colors.success100 : theme.colors.primary100};
+  color: ${({ isFull, theme }) =>
+    isFull ? theme.colors.success600 : theme.colors.primary600};
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 13px;
@@ -117,12 +130,12 @@ const SetupProgress = ({
   instructions,
 }: SetupProgressProps) => {
   const tasks = [
-    { label: 'Base Domain', done: !!baseDomain && baseDomain !== '' },
-    { label: 'OpenAI API Key', done: !!openaiKey && openaiKey !== '' },
-    { label: 'Contact Link', done: !!contactLink && contactLink !== '' },
-    { label: 'Collections', done: collections.length > 0 },
-    { label: 'Suggested Questions', done: questions.length > 0 },
-    { label: 'AI Instructions', done: instructions },
+    { label: "Base Domain", done: !!baseDomain && baseDomain !== "" },
+    { label: "OpenAI API Key", done: !!openaiKey && openaiKey !== "" },
+    { label: "Contact Link", done: !!contactLink && contactLink !== "" },
+    { label: "Collections", done: collections.length > 0 },
+    { label: "Suggested Questions", done: questions.length > 0 },
+    { label: "AI Instructions", done: instructions },
   ];
 
   const completedCount = tasks.filter((t) => t.done).length;
@@ -132,17 +145,25 @@ const SetupProgress = ({
   return (
     <ProgressContainer>
       <Box padding={6}>
-        <Flex justifyContent="space-between" alignItems="flex-start" marginBottom={3}>
+        <Flex
+          justifyContent="space-between"
+          alignItems="flex-start"
+          marginBottom={3}
+        >
           <Box>
             <TitleRow>
               <ZapIcon />
-              <TitleText variant="delta" fontWeight="bold" textColor="neutral800">
+              <TitleText
+                variant="delta"
+                fontWeight="bold"
+                textColor="neutral800"
+              >
                 Setup Progress
               </TitleText>
             </TitleRow>
             <SubText variant="pi" textColor="neutral600">
               {isFull
-                ? '🎉 Your chatbot is fully configured and ready to go!'
+                ? "🎉 Your chatbot is fully configured and ready to go!"
                 : "Configure your AI chatbot's identity, data, and behaviour."}
             </SubText>
           </Box>

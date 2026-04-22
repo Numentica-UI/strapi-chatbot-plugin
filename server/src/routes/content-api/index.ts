@@ -1,26 +1,26 @@
 export default () => ({
-  type: 'content-api',
+  type: "content-api",
   routes: [
     {
-      method: 'GET',
-      path: '/',
-      handler: 'controller.index',
+      method: "GET",
+      path: "/",
+      handler: "controller.index",
       config: {
         auth: false,
       },
     },
     {
-      method: 'POST',
-      path: '/ask',
-      handler: 'ask.ask',
+      method: "POST",
+      path: "/ask",
+      handler: "ask.ask",
       config: {
         auth: false,
       },
     },
     {
-      method: 'GET',
-      path: '/suggestion-and-logo',
-      handler: 'suggestQuestionsAndLogo.getSuggestionAndLogo',
+      method: "GET",
+      path: "/suggestion-and-logo",
+      handler: "suggestQuestionsAndLogo.getSuggestionAndLogo",
       config: {
         auth: false,
       },

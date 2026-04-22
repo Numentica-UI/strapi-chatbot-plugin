@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Box, Flex, Typography } from '@strapi/design-system';
-import { Lock } from '@strapi/icons';
+import React from "react";
+import styled from "styled-components";
+import { Box, Flex, Typography } from "@strapi/design-system";
+import { Lock } from "@strapi/icons";
 
 const Container = styled(Box)`
   border-radius: 14px;
@@ -76,7 +76,7 @@ const SectionDesc = styled(Typography)<{ $isLocked: boolean }>`
 
 const ContentArea = styled(Box)<{ $isLocked: boolean }>`
   opacity: ${({ $isLocked }) => ($isLocked ? 0.35 : 1)};
-  pointer-events: ${({ $isLocked }) => ($isLocked ? 'none' : 'auto')};
+  pointer-events: ${({ $isLocked }) => ($isLocked ? "none" : "auto")};
 `;
 
 const OverlayText = styled(Typography)`
@@ -95,7 +95,12 @@ interface LockedSectionProps {
   children: React.ReactNode;
 }
 
-const LockedSection = ({ title, description, isLocked, children }: LockedSectionProps) => {
+const LockedSection = ({
+  title,
+  description,
+  isLocked,
+  children,
+}: LockedSectionProps) => {
   return (
     <Container marginBottom={6}>
       {/* HEADER */}
@@ -105,14 +110,14 @@ const LockedSection = ({ title, description, isLocked, children }: LockedSection
             <SectionTitle
               variant="delta"
               fontWeight="bold"
-              textColor={isLocked ? 'neutral500' : 'neutral800'}
+              textColor={isLocked ? "neutral500" : "neutral800"}
               $isLocked={isLocked}
             >
               {title}
             </SectionTitle>
             <SectionDesc
               variant="pi"
-              textColor={isLocked ? 'neutral500' : 'neutral600'}
+              textColor={isLocked ? "neutral500" : "neutral600"}
               $isLocked={isLocked}
             >
               {description}
@@ -137,18 +142,18 @@ const LockedSection = ({ title, description, isLocked, children }: LockedSection
                 <Lock width={16} />
               </LockCircle>
               <OverlayText variant="omega" textColor="neutral600">
-                Fill in{' '}
+                Fill in{" "}
                 <BoldInline fontWeight="bold" textColor="neutral800">
                   Base Domain
                 </BoldInline>
-                ,{' '}
+                ,{" "}
                 <BoldInline fontWeight="bold" textColor="neutral800">
                   OpenAI API Key
-                </BoldInline>{' '}
-                and{' '}
+                </BoldInline>{" "}
+                and{" "}
                 <BoldInline fontWeight="bold" textColor="neutral800">
                   Contact Link
-                </BoldInline>{' '}
+                </BoldInline>{" "}
                 first.
               </OverlayText>
             </Flex>

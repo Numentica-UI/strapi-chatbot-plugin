@@ -1,8 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-import { Box, Typography, Flex, Button, TextInput } from '@strapi/design-system';
-import { Message, Cross, PaperPlane, ArrowClockwise, ChevronDown } from '@strapi/icons';
-import { useForm } from 'react-hook-form';
+import React, { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
+import {
+  Box,
+  Typography,
+  Flex,
+  Button,
+  TextInput,
+} from "@strapi/design-system";
+import {
+  Message,
+  Cross,
+  PaperPlane,
+  ArrowClockwise,
+  ChevronDown,
+} from "@strapi/icons";
+import { useForm } from "react-hook-form";
 
 type ChatMessage = { text: string; isUser: boolean };
 type ChatFormValues = { message: string };
@@ -20,10 +32,10 @@ const ChatWindowWrapper = styled(Box)<{ $isOpen: boolean }>`
   transform-origin: bottom right;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $isOpen }) =>
-    $isOpen ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(20px)'};
-  opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
-  pointer-events: ${({ $isOpen }) => ($isOpen ? 'auto' : 'none')};
-  visibility: ${({ $isOpen }) => ($isOpen ? 'visible' : 'hidden')};
+    $isOpen ? "scale(1) translateY(0)" : "scale(0.8) translateY(20px)"};
+  opacity: ${({ $isOpen }) => ($isOpen ? "1" : "0")};
+  pointer-events: ${({ $isOpen }) => ($isOpen ? "auto" : "none")};
+  visibility: ${({ $isOpen }) => ($isOpen ? "visible" : "hidden")};
 `;
 
 const FloatingButton = styled.button`
@@ -54,7 +66,7 @@ const ChatLayout = styled(Flex)`
   height: 100%;
 `;
 
-const IconButton = styled(Box).attrs({ as: 'button' })`
+const IconButton = styled(Box).attrs({ as: "button" })`
   background: none;
   border: none;
   cursor: pointer;
@@ -67,7 +79,7 @@ const MessagesArea = styled(Box)`
 `;
 
 const MessageBubble = styled(Box)<{ $isUser: boolean }>`
-  align-self: ${({ $isUser }) => ($isUser ? 'flex-end' : 'flex-start')};
+  align-self: ${({ $isUser }) => ($isUser ? "flex-end" : "flex-start")};
   max-width: 85%;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -89,16 +101,17 @@ const SendButton = styled(Button)`
 const ChatbotPreview = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { text: 'Hello! You can test the chatbot preview here.', isUser: false },
+    { text: "Hello! You can test the chatbot preview here.", isUser: false },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { register, handleSubmit, reset } = useForm<ChatFormValues>({
-    defaultValues: { message: '' },
+    defaultValues: { message: "" },
   });
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current)
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isOpen]);
 
   const onSend = async ({ message }: ChatFormValues) => {
@@ -108,21 +121,21 @@ const ChatbotPreview = () => {
     reset();
 
     try {
-      const res = await fetch('/api/nui-strapi-chatbot-plugin/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/nui-strapi-chatbot-plugin/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: message }),
       });
 
-      if (!res.ok) throw new Error('Request failed');
+      if (!res.ok) throw new Error("Request failed");
 
       const reader = res.body?.getReader();
-      if (!reader) throw new Error('No stream');
+      if (!reader) throw new Error("No stream");
 
       const decoder = new TextDecoder();
-      let botMessage = '';
+      let botMessage = "";
 
-      setMessages((prev) => [...prev, { text: '', isUser: false }]);
+      setMessages((prev) => [...prev, { text: "", isUser: false }]);
 
       let isCardsEvent = false;
 
@@ -131,26 +144,26 @@ const ChatbotPreview = () => {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        const lines = chunk.split("\n");
 
         for (let rawLine of lines) {
-          const line = rawLine.replace(/\r/g, '');
+          const line = rawLine.replace(/\r/g, "");
           if (!line) continue;
 
-          if (line.startsWith('event: cards')) {
+          if (line.startsWith("event: cards")) {
             isCardsEvent = true;
             continue;
           }
 
-          if (isCardsEvent && line.startsWith('data: ')) {
+          if (isCardsEvent && line.startsWith("data: ")) {
             isCardsEvent = false;
             continue;
           }
 
-          if (line.includes('[DONE]')) return;
+          if (line.includes("[DONE]")) return;
 
-          if (line.startsWith('data: ')) {
-            const token = line.replace('data: ', '');
+          if (line.startsWith("data: ")) {
+            const token = line.replace("data: ", "");
             botMessage += token;
 
             setMessages((prev) => {
@@ -162,12 +175,17 @@ const ChatbotPreview = () => {
         }
       }
     } catch (err) {
-      setMessages((prev) => [...prev, { text: 'Error contacting chatbot', isUser: false }]);
+      setMessages((prev) => [
+        ...prev,
+        { text: "Error contacting chatbot", isUser: false },
+      ]);
     }
   };
 
   const handleClearHistory = () => {
-    setMessages([{ text: 'Hello! You can test the chatbot preview here.', isUser: false }]);
+    setMessages([
+      { text: "Hello! You can test the chatbot preview here.", isUser: false },
+    ]);
   };
 
   const handleToggle = () => {
@@ -179,7 +197,7 @@ const ChatbotPreview = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSubmit(onSend)();
     }
   };
@@ -187,7 +205,11 @@ const ChatbotPreview = () => {
   return (
     <>
       <FloatingButton onClick={handleToggle} title="Toggle Chatbot Preview">
-        {isOpen ? <ChevronDown width={24} height={24} /> : <Message width={28} height={28} />}
+        {isOpen ? (
+          <ChevronDown width={24} height={24} />
+        ) : (
+          <Message width={28} height={28} />
+        )}
       </FloatingButton>
 
       <ChatWindowWrapper $isOpen={isOpen} background="neutral0" hasRadius>
@@ -219,11 +241,13 @@ const ChatbotPreview = () => {
                   key={idx}
                   padding={3}
                   hasRadius
-                  background={msg.isUser ? 'primary600' : 'neutral0'}
+                  background={msg.isUser ? "primary600" : "neutral0"}
                   shadow="filterShadow"
                   $isUser={msg.isUser}
                 >
-                  <Typography textColor={msg.isUser ? 'neutral0' : 'neutral800'}>
+                  <Typography
+                    textColor={msg.isUser ? "neutral0" : "neutral800"}
+                  >
                     {msg.text}
                   </Typography>
                 </MessageBubble>
@@ -237,11 +261,14 @@ const ChatbotPreview = () => {
               <InputGrow>
                 <TextInput
                   placeholder="Type a message..."
-                  {...register('message')}
+                  {...register("message")}
                   onKeyDown={handleKeyDown}
                 />
               </InputGrow>
-              <SendButton onClick={handleSubmit(onSend)} startIcon={<PaperPlane />}>
+              <SendButton
+                onClick={handleSubmit(onSend)}
+                startIcon={<PaperPlane />}
+              >
                 Send
               </SendButton>
             </Flex>

@@ -1,27 +1,28 @@
-import type { Core } from '@strapi/strapi';
+import type { Core } from "@strapi/strapi";
 
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async getConfig() {
     const pluginStore = strapi.store({
       environment: null,
-      type: 'plugin',
-      name: 'nui-strapi-chatbot-plugin',
+      type: "plugin",
+      name: "nui-strapi-chatbot-plugin",
     });
 
-    const settings = await pluginStore.get({ key: 'settings' });
+    const settings = await pluginStore.get({ key: "settings" });
 
-    return settings && typeof settings === 'object' ? settings : {};
+    return settings && typeof settings === "object" ? settings : {};
   },
 
   async setConfig(newSettings: any) {
     const pluginStore = strapi.store({
       environment: null,
-      type: 'plugin',
-      name: 'nui-strapi-chatbot-plugin',
+      type: "plugin",
+      name: "nui-strapi-chatbot-plugin",
     });
-    const existingRaw = await pluginStore.get({ key: 'settings' });
+    const existingRaw = await pluginStore.get({ key: "settings" });
 
-    const existingSettings = existingRaw && typeof existingRaw === 'object' ? existingRaw : {};
+    const existingSettings =
+      existingRaw && typeof existingRaw === "object" ? existingRaw : {};
 
     let rebuiltCollections: any[] = [];
 
@@ -34,7 +35,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
           const allFields = Object.keys(contentType.attributes);
 
           return {
-            name: uid.split('.')[1],
+            name: uid.split(".")[1],
             fields: allFields.map((field) => ({
               name: field,
               enabled: selectedFields.includes(field),
@@ -51,13 +52,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
     if (rebuiltCollections.length > 0) {
       await pluginStore.set({
-        key: 'collections',
+        key: "collections",
         value: rebuiltCollections,
       });
     }
 
     await pluginStore.set({
-      key: 'settings',
+      key: "settings",
       value: mergedSettings,
     });
 
