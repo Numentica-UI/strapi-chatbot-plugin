@@ -152,7 +152,7 @@ const AiInstructions = ({
     detectTone(responseInstructions),
   );
 
-  const { register, setValue, watch, reset } = useForm<FormValues>({
+  const { register, watch, reset } = useForm<FormValues>({
     defaultValues: {
       systemInstructions,
       responseContent: getCleanText(responseInstructions),
