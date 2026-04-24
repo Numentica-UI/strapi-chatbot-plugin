@@ -41,14 +41,14 @@ npm run develop
 2. Open the admin panel and navigate to **NUI Chatbot Configuration** in the sidebar.
 <p align="center"><img src="./screenshots/Plugin_Homepage.png" width="90%"/></p>
 
-3. Set up your [OpenAI API key](https://platform.openai.com/settings/organization/api-keys). Make sure **`gpt-4o-mini`** and **`text-embedding-3-small`** models are available on your account.
+3. Add your frontend base domain (used to resolve card assets from its public folder).
+<p align="center"><img src="./screenshots/Add_Base_Domain.png" width="90%"/></p>
+
+4. Set up your [OpenAI API key](https://platform.openai.com/settings/organization/api-keys). Make sure **`gpt-4o-mini`** and **`text-embedding-3-small`** models are available on your account.
 <p align="center"><img src="./screenshots/Add_API_Key.png" width="90%"/></p>
 
-4. Clicking **_Save_** will validate the API key and save it.
+5. Clicking **_Save_** will validate the API key and save it.
 <p align="center"><img src="./screenshots/API_Key_Validation.png" width="90%"/></p>
-
-5. Add your frontend base domain (used to resolve card assets from its public folder).
-<p align="center"><img src="./screenshots/Add_Base_Domain.png" width="90%"/></p>
 
 6. Add a contact link so the AI can provide it to users on request.
 <p align="center"><img src="./screenshots/Add_Contact_Link.png" width="90%"/></p>
