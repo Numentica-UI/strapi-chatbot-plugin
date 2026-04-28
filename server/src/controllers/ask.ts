@@ -769,7 +769,10 @@ CASE 4 — BOTH EXIST
 Use REALTIME_TEXT as main + FAQ as support.
 
 CASE 5 — NOTHING
-Say information unavailable.
+Use the system instructions context to answer general questions about the business.
+If the question is about what the business does, offers, or provides → answer using the system instructions.
+If it's a follow-up about previous results with no data → ask user to be more specific.
+Never hallucinate information not present in system instructions or FAQ.
 
 Never show JSON.
 Never hallucinate.
