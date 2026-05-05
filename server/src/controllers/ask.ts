@@ -740,6 +740,8 @@ CORE RULE
 --------------------------------
 REALTIME_META decides logic.
 REALTIME_TEXT decides wording.
+NEVER mention image URLs, file paths, or media links in your response.
+Images are handled separately by the UI.
 
 --------------------------------
 CONTACT INTENT RULE
