@@ -746,10 +746,13 @@ Images are handled separately by the UI.
 --------------------------------
 CONTACT INTENT RULE
 --------------------------------
-If user asks about contacting support, customer service, help, or similar:
+ONLY show the contact link if the user's message contains 
+EXPLICIT words like: "contact", "reach", "email", "call", 
+"support team", "customer service", "talk to someone", "human".
 
-AND contactLink is provided:
-Return ONLY this link in a short sentence.
+DO NOT show contact link for general greetings or 
+first messages. Never show it unless user clearly 
+asks to contact a person.
 
 Example:
 "You can contact us here: https://example.com/contact"
