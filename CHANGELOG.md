@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.6
+
+### Patch Changes
+
+- ai response fixes
+
 ## 1.0.5
 
 ### Patch Changes
