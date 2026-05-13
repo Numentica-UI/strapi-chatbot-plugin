@@ -73,7 +73,6 @@ async function getActiveCollections(strapi: any) {
       const hasEnabledFields = item.fields?.some((f: any) => f.enabled);
 
       if (!hasEnabledFields) {
-        console.log(`   - Skipping '${item.name}' (no enabled fields)`);
         continue;
       }
 
@@ -150,14 +149,25 @@ async function rephraseQuestion(
         Do NOT return any explanations, only the optimized search string.
 
         ### RULES
-        1. **Dependency Check (The "Pronoun" Rule):**
-           - ONLY combine with history if the new question contains **Pronouns** ("it", "that", "they") or is **Grammatically Incomplete** ("How much?", "Where do I buy?", "Is it refundable?").
+        1. **Dependency Check:**
+           ONLY combine with history if the new question meets ANY of these:
+
+           A) Contains a PRONOUN that refers back to previous results:
+              → "it", "that", "they", "these", "those", "them", "this one", "that one"
+
+           B) Is GRAMMATICALLY INCOMPLETE without prior context:
+              → Missing a subject (e.g. "Which is best?", "How much?", "Where to buy?")
+              → Cannot be understood as a standalone question
+
+           C) Is a COMPARATIVE or RANKING question about previous results:
+              → "which is better", "which one should I pick", "what's the difference"
+              → "rank them", "compare them", "which is cheapest among these"
+
+           If NONE of the above → treat as NEW TOPIC, ignore history.
 
         2. **Independence Check (The "Specifics" Rule):**
            - If the user asks a complete question containing a **New Specific Noun** or **Scenario** (e.g., "Group of 7 people", "Booking for pets"), treat it as a **Standalone Query**.
            - **Do NOT** attach the previous topic to it.
-           - *Example:* History="Commuter Pass", Input="Can I book for a group of 7?" -> Output="Group booking for 7 people" (Correct).
-           - *Bad Output:* "Group booking for Commuter Pass" (Incorrect).
 
         3. **Output:**
            - Return ONLY the optimized search string.`,
@@ -339,7 +349,6 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
 
         // If it's a populated media object
         if (value && typeof value === "object" && value.url) {
-          console.log(`🖼 Extracted image for field '${f}':`, value.url);
           clean[f] = value.url;
         } else {
           clean[f] = value;
@@ -641,38 +650,48 @@ async function realtimeInterpreterAI(
   strapi: any,
   question: string,
   realtimeData: any,
+  cardStyles: any,
   usage: any,
 ) {
   if (!realtimeData) return null;
   const openai = await getOpenAI(strapi);
 
+  const collectionUid = `api::${realtimeData.collection}.${realtimeData.collection}`;
+
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    temperature: 0.2,
+    temperature: 0,
     messages: [
       {
         role: "system",
         content: `
-You are a realtime data interpreter.
+You are a data filter. 
+You receive a question and a list of items from a database.
+Your job is to return ONLY the items that are relevant to the question as JSON.
 
-Convert database JSON into a SHORT natural language summary.
+RULES:
+- Return ONLY valid JSON, no text, no explanation
+- Only include items that directly answer the question
+- If question asks for cheapest → return only the cheapest item
+- If question asks for all → return all items
+- If question asks for specific author/title → return only matching items
+- Never hallucinate or modify item data
+- Keep all original fields exactly as they are
 
-Rules:
-- Do NOT output JSON
-- Do NOT hallucinate
-- If count → say number
-- If list → summarize important fields only
-- Max 3–4 lines
-`,
+OUTPUT FORMAT:
+{
+  "items": [ ...relevant items only... ]
+}
+        `,
       },
       {
         role: "user",
         content: `
 QUESTION: ${question}
 
-REALTIME DATA:
-${JSON.stringify(realtimeData)}
-`,
+ALL ITEMS:
+${JSON.stringify(realtimeData.items, null, 2)}
+        `,
       },
     ],
   });
@@ -681,9 +700,33 @@ ${JSON.stringify(realtimeData)}
   usage.completion_tokens += response.usage?.completion_tokens || 0;
   usage.total_tokens += response.usage?.total_tokens || 0;
 
-  const text = response.choices[0].message.content;
+  try {
+    const raw = response.choices[0].message.content || "{}";
+    const cleaned = raw
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+    const parsed = JSON.parse(cleaned);
 
-  return text;
+    // build final cards payload
+    const filteredItems =
+      parsed.items?.length > 0 ? parsed.items : realtimeData.items; // fallback to all items if filter fails
+
+    return {
+      title: realtimeData.collection,
+      schema: realtimeData.schema,
+      items: filteredItems,
+      cardStyle: cardStyles?.[collectionUid] || null,
+    };
+  } catch (err) {
+    // fallback to full data if JSON parse fails
+    return {
+      title: realtimeData.collection,
+      schema: realtimeData.schema,
+      items: realtimeData.items,
+      cardStyle: cardStyles?.[collectionUid] || null,
+    };
+  }
 }
 
 async function finalAggregator(
@@ -790,7 +833,7 @@ Max 5 lines.
 QUESTION: ${question}
 
 CONTACT_LINK:
-${contactLink || "NOT_AVAILABLE"}
+${contactLink || "NOT AVAILABLE"}
 
 FAQ:
 ${JSON.stringify(faq)}
@@ -820,16 +863,9 @@ ${realtimeText}
   usage.completion_tokens += estimatedTokens;
   usage.total_tokens += estimatedTokens;
 
-  if (realtimeMeta && realtimeMeta.type === "list") {
-    const collectionUid = `api::${realtimeMeta.collection}.${realtimeMeta.collection}`;
-    const cardsPayload = {
-      title: realtimeMeta.collection,
-      schema: realtimeMeta.schema,
-      items: realtimeMeta.items,
-      cardStyle: cardStyles?.[collectionUid] || null,
-    };
+  if (realtimeMeta && realtimeMeta.type === "list" && realtimeText) {
     ctx.res.write(`event: cards\n`);
-    ctx.res.write(`data: ${JSON.stringify(cardsPayload)}\n\n`);
+    ctx.res.write(`data: ${JSON.stringify(realtimeText)}\n\n`);
   }
 
   ctx.res.write("data: [DONE]\n\n");
@@ -969,6 +1005,7 @@ export default ({ strapi }: { strapi: any }) => ({
           strapi,
           rewritten,
           realtimeResults,
+          cardStyles,
           usage,
         );
       } else {
