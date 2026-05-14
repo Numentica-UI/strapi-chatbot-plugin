@@ -35,7 +35,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json pnpm-lock.yaml CHANGELOG.md .changeset
           git commit -m "chore(release): v$(node -p "require('./package.json').version")" --no-verify
-          git push origin HEAD:main
+          git push origin HEAD:main --no-verify
       - name: Build
         run: pnpm build
       - name: Publish to npm
