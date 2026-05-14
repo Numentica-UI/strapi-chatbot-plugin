@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- 3dead13: Added changeset to be committed into the MAIN during version bump
+
+## 1.0.11
+
+### Patch Changes
+
 - 45bc000: Added changeset to be committed into the MAIN during version bump
 
 ## 1.0.10
