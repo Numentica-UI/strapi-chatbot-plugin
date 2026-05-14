@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.11
+
+### Patch Changes
+
+- c73d166: Added changeset to be committed into the MAIN during version bump
+
 ## 1.0.10
 
 ### Patch Changes
