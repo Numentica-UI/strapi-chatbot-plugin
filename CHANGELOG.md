@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.9
+
+### Patch Changes
+
+- 2a5092f: Added CI/CD for npm publishing
+
 ## 1.0.6
 
 ### Patch Changes
