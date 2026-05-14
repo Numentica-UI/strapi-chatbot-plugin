@@ -51,6 +51,9 @@ importers:
       '@strapi/strapi':
         specifier: ^5.33.3
         version: 5.43.0(@babel/runtime@7.29.2)(@codemirror/autocomplete@6.20.1)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/theme-one-dark@6.1.3)(@codemirror/view@6.41.1)(@emotion/is-prop-valid@1.4.0)(@swc/helpers@0.5.21)(@types/hoist-non-react-statics@3.3.7(@types/react@18.3.28))(@types/node@25.6.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(codemirror@5.65.21)(esbuild@0.25.12)(koa@2.16.4)(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(redux@4.2.1)(styled-components@6.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(terser@5.46.2)(type-fest@4.41.0)
+      '@strapi/types':
+        specifier: ^5.46.0
+        version: 5.46.0(@types/node@25.6.0)(typescript@5.9.3)
       '@strapi/typescript-utils':
         specifier: ^5.33.3
         version: 5.43.0
@@ -8518,8 +8521,8 @@ snapshots:
 
   '@koa/router@12.0.2':
     dependencies:
-      debug: 4.3.4
-      http-errors: 2.0.0
+      debug: 4.4.3(supports-color@5.5.0)
+      http-errors: 2.0.1
       koa-compose: 4.1.0
       methods: 1.1.2
       path-to-regexp: 6.3.0
@@ -10598,6 +10601,36 @@ snapshots:
       - tedious
       - typescript
 
+  '@strapi/types@5.46.0(@types/node@25.6.0)(typescript@5.9.3)':
+    dependencies:
+      '@casl/ability': 6.7.5
+      '@koa/cors': 5.0.0
+      '@koa/router': 12.0.2
+      '@strapi/database': 5.46.0(@types/node@25.6.0)
+      '@strapi/logger': 5.46.0
+      '@strapi/permissions': 5.46.0
+      '@strapi/utils': 5.46.0
+      commander: 8.3.0
+      json-logic-js: 2.0.5
+      koa: 2.16.4
+      koa-body: 6.0.1
+      node-schedule: 2.1.1
+      typedoc: 0.28.19(typescript@5.9.3)
+      typedoc-github-wiki-theme: 2.1.0(typedoc-plugin-markdown@4.11.0(typedoc@0.28.19(typescript@5.9.3)))
+      typedoc-plugin-markdown: 4.11.0(typedoc@0.28.19(typescript@5.9.3))
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@types/node'
+      - better-sqlite3
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+      - typescript
+
   '@strapi/typescript-utils@5.43.0':
     dependencies:
       chalk: 4.1.2
@@ -11918,7 +11951,7 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.10)
       postcss-modules-values: 4.0.0(postcss@8.5.10)
       postcss-value-parser: 4.2.0
-      semver: 7.5.4
+      semver: 7.7.4
     optionalDependencies:
       webpack: 5.106.2(esbuild@0.25.12)
 
@@ -12559,7 +12592,7 @@ snapshots:
       minimatch: 3.1.5
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
-      semver: 7.5.4
+      semver: 7.7.4
       tapable: 2.3.3
       typescript: 5.4.4
       webpack: 5.106.2(esbuild@0.25.12)
@@ -12763,7 +12796,7 @@ snapshots:
     dependencies:
       globalthis: 1.0.4
       matcher: 4.0.0
-      semver: 7.5.4
+      semver: 7.7.4
       serialize-error: 8.1.0
 
   global-directory@4.0.1:
@@ -13416,7 +13449,7 @@ snapshots:
   koa-session@6.4.0:
     dependencies:
       crc: 3.8.0
-      debug: 4.3.4
+      debug: 4.4.3(supports-color@5.5.0)
       is-type-of: 1.4.0
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -14093,7 +14126,7 @@ snapshots:
       ignore-by-default: 1.0.1
       minimatch: 3.1.5
       pstree.remy: 1.1.8
-      semver: 7.5.4
+      semver: 7.7.4
       simple-update-notifier: 2.0.0
       supports-color: 5.5.0
       touch: 3.1.1
@@ -14261,7 +14294,7 @@ snapshots:
       got: 11.8.6
       registry-auth-token: 4.2.2
       registry-url: 5.1.0
-      semver: 7.5.4
+      semver: 7.7.4
 
   package-manager-detector@0.2.11:
     dependencies:
@@ -15509,6 +15542,10 @@ snapshots:
     dependencies:
       typedoc-plugin-markdown: 4.11.0(typedoc@0.28.19(typescript@5.4.5))
 
+  typedoc-github-wiki-theme@2.1.0(typedoc-plugin-markdown@4.11.0(typedoc@0.28.19(typescript@5.9.3))):
+    dependencies:
+      typedoc-plugin-markdown: 4.11.0(typedoc@0.28.19(typescript@5.9.3))
+
   typedoc-plugin-markdown@3.17.1(typedoc@0.25.10(typescript@5.9.3)):
     dependencies:
       handlebars: 4.7.9
@@ -15517,6 +15554,10 @@ snapshots:
   typedoc-plugin-markdown@4.11.0(typedoc@0.28.19(typescript@5.4.5)):
     dependencies:
       typedoc: 0.28.19(typescript@5.4.5)
+
+  typedoc-plugin-markdown@4.11.0(typedoc@0.28.19(typescript@5.9.3)):
+    dependencies:
+      typedoc: 0.28.19(typescript@5.9.3)
 
   typedoc@0.25.10(typescript@5.4.4):
     dependencies:
@@ -15541,6 +15582,15 @@ snapshots:
       markdown-it: 14.1.1
       minimatch: 10.2.5
       typescript: 5.4.5
+      yaml: 2.8.3
+
+  typedoc@0.28.19(typescript@5.9.3):
+    dependencies:
+      '@gerrit0/mini-shiki': 3.23.0
+      lunr: 2.3.9
+      markdown-it: 14.1.1
+      minimatch: 10.2.5
+      typescript: 5.9.3
       yaml: 2.8.3
 
   typescript@5.4.4: {}
