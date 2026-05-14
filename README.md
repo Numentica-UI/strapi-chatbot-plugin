@@ -4,7 +4,7 @@ An AI-powered FAQ chatbot plugin for Strapi. Drop it into any Strapi project and
 
 > ⚠️ **Note:** To test the chatbot API, you can use the [**_nui-strapi-chatbot-react_**](https://www.npmjs.com/package/nui-strapi-chatbot-react) package as a simple frontend UI.
 
-[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D%2018-green.svg)](https://nodejs.org/)
+[![Node.js >= 20](https://img.shields.io/badge/Node.js-%3E%3D%2020-green.svg)](https://nodejs.org/)
 [![npm version](https://img.shields.io/npm/v/nui-strapi-chatbot-plugin)](https://www.npmjs.com/package/nui-strapi-chatbot-plugin)
 ![Strapi v5](https://img.shields.io/badge/Strapi-%5E5.0.0-blueviolet)
 
