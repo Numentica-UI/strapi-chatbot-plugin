@@ -1,5 +1,5 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.10",
   "keywords": [],
   "type": "commonjs",
   "main": "dist/server/index.js",
@@ -43,6 +43,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
     "@commitlint/cli": "^20.5.0",
+    "@strapi/admin": "^5.46.0",
     "@strapi/sdk-plugin": "^5.4.0",
     "@strapi/strapi": "^5.33.3",
     "@strapi/typescript-utils": "^5.33.3",
@@ -73,6 +74,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "packageManager": "pnpm@10.25.0",
   "strapi": {
     "kind": "plugin",
     "name": "nui-strapi-chatbot-plugin",
