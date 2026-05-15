@@ -1,5 +1,5 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.10",
   "keywords": [],
   "type": "commonjs",
   "main": "dist/server/index.js",
@@ -75,7 +75,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@10.25.0",
   "strapi": {
     "kind": "plugin",
     "name": "nui-strapi-chatbot-plugin",

@@ -1,11 +1,5 @@
 # nui-strapi-chatbot-plugin
 
-## 1.0.11
-
-### Patch Changes
-
-- 4a99917: Added pnpm public hoist pattern for strapi types
-
 ## 1.0.10
 
 ### Patch Changes
