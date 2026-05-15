@@ -75,7 +75,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@10.25.0",
   "strapi": {
     "kind": "plugin",
     "name": "nui-strapi-chatbot-plugin",

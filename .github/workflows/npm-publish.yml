@@ -13,32 +13,30 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
+          cache: 'npm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci --ignore-scripts
       - name: Apply changeset version bump
-        run: pnpm changeset:version
+        run: npm run changeset:version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Sync pnpm-lock.yaml
-        run: pnpm install --ignore-scripts
+      - name: Sync package-lock.json
+        run: npm install --ignore-scripts
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json pnpm-lock.yaml CHANGELOG.md .changeset
+          git add package.json package-lock.json CHANGELOG.md .changeset
           git commit -m "chore(release): v$(node -p "require('./package.json').version")" --no-verify
           git push origin HEAD:main --no-verify
       - name: Build
-        run: pnpm build
+        run: npm run build
       - name: Publish to npm
-        run: pnpm changeset:publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
