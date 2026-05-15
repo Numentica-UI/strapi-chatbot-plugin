@@ -1,5 +1,11 @@
 # nui-strapi-chatbot-plugin
 
+## 1.0.11
+
+### Patch Changes
+
+- de28b27: Changed package manager
+
 ## 1.0.10
 
 ### Patch Changes
