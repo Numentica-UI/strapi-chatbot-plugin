@@ -139,19 +139,6 @@ const SavedBadgeText = styled(Typography)`
   font-family: Inter, sans-serif;
 `;
 
-const SaveButton = styled(Button)`
-  border: none;
-  color: white;
-  font-size: 13px;
-  padding: 7px 14px;
-  height: 34px;
-  border-radius: 8px;
-  font-weight: 500;
-  text-align: center;
-  gap: 6px;
-  font-family: Inter, sans-serif;
-`;
-
 const HomePage = () => {
   const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>(
     [],
@@ -363,22 +350,11 @@ const HomePage = () => {
             </Box>
 
             <Flex alignItems="center">
-              {isSaved ? (
+              {isSaved && (
                 <SavedBadge background="success100">
                   <Check width={14} height={14} color="success600" />
                   <SavedBadgeText textColor="success600">Saved!</SavedBadgeText>
                 </SavedBadge>
-              ) : (
-                !isDirty && (
-                  <SaveButton
-                    onClick={handleSubmit(onSubmit)}
-                    startIcon={<Check width={14} height={14} />}
-                    background="primary600"
-                    disabled={isSubmitting}
-                  >
-                    Save Settings
-                  </SaveButton>
-                )
               )}
             </Flex>
           </Flex>
