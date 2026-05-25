@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Box, Flex, Typography } from "@strapi/design-system";
-import { Lock } from "@strapi/icons";
+import { Lock, Information } from "@strapi/icons";
 
 const Container = styled(Box)`
   border-radius: 14px;
@@ -74,6 +74,22 @@ const SectionDesc = styled(Typography)<{ $isLocked: boolean }>`
   display: block;
 `;
 
+const ErrorBanner = styled(Flex)`
+  background: ${({ theme }) => theme.colors.danger100};
+  border: 1px solid ${({ theme }) => theme.colors.danger200};
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+`;
+
+const ErrorText = styled(Typography)`
+  font-size: 12px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.danger600};
+`;
+
 const ContentArea = styled(Box)<{ $isLocked: boolean }>`
   opacity: ${({ $isLocked }) => ($isLocked ? 0.35 : 1)};
   pointer-events: ${({ $isLocked }) => ($isLocked ? "none" : "auto")};
@@ -93,6 +109,7 @@ interface LockedSectionProps {
   description: string;
   isLocked: boolean;
   children: React.ReactNode;
+  error?: string;
 }
 
 const LockedSection = ({
@@ -100,13 +117,14 @@ const LockedSection = ({
   description,
   isLocked,
   children,
+  error,
 }: LockedSectionProps) => {
   return (
     <Container marginBottom={6}>
       {/* HEADER */}
       <HeaderBox>
         <Flex justifyContent="space-between" alignItems="center">
-          <Box>
+          <Box flex="1">
             <SectionTitle
               variant="delta"
               fontWeight="bold"
@@ -122,6 +140,12 @@ const LockedSection = ({
             >
               {description}
             </SectionDesc>
+            {error && (
+              <ErrorBanner>
+                <Information width={14} height={14} color="danger600" />
+                <ErrorText>{error}</ErrorText>
+              </ErrorBanner>
+            )}
           </Box>
 
           {isLocked && (

@@ -147,6 +147,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savedOpenaiKey, setSavedOpenaiKey] = useState("");
+  const [collectionError, setCollectionError] = useState("");
 
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
@@ -255,6 +256,21 @@ const HomePage = () => {
   }, [get]);
 
   const onSubmit = async (data: FormValues) => {
+    // Read latest state directly - data param from handleSubmit may be stale
+    const activeCollections = getValues("activeCollections");
+
+    const collectionsWithNoFields = activeCollections.filter(
+      (item) => !item.fields.some((f) => f.enabled),
+    );
+
+    if (collectionsWithNoFields.length > 0) {
+      const names = collectionsWithNoFields.map((c) => c.name).join(", ");
+      setCollectionError(`Please select at least one field for: ${names}`);
+      return;
+    }
+
+    setCollectionError("");
+
     try {
       const normalizedDomain = normalizeDomain(data.baseDomain);
 
@@ -398,6 +414,7 @@ const HomePage = () => {
             title="Response Templates"
             description="Define which data fields and card layouts the AI can use in structured responses."
             isLocked={isLocked}
+            error={collectionError}
           >
             <ResponseTemplates
               collections={values.activeCollections}
@@ -422,6 +439,7 @@ const HomePage = () => {
                       },
                 );
                 setValue("activeCollections", updated, { shouldDirty: true });
+                setCollectionError("");
               }}
               onToggleAll={(uid, val) => {
                 const current = getValues("activeCollections");
@@ -434,6 +452,7 @@ const HomePage = () => {
                       },
                 );
                 setValue("activeCollections", updated, { shouldDirty: true });
+                setCollectionError("");
               }}
               onRemoveCollection={(uid) => {
                 const current = getValues("activeCollections");
