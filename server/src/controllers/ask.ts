@@ -149,25 +149,14 @@ async function rephraseQuestion(
         Do NOT return any explanations, only the optimized search string.
 
         ### RULES
-        1. **Dependency Check:**
-           ONLY combine with history if the new question meets ANY of these:
-
-           A) Contains a PRONOUN that refers back to previous results:
-              → "it", "that", "they", "these", "those", "them", "this one", "that one"
-
-           B) Is GRAMMATICALLY INCOMPLETE without prior context:
-              → Missing a subject (e.g. "Which is best?", "How much?", "Where to buy?")
-              → Cannot be understood as a standalone question
-
-           C) Is a COMPARATIVE or RANKING question about previous results:
-              → "which is better", "which one should I pick", "what's the difference"
-              → "rank them", "compare them", "which is cheapest among these"
-
-           If NONE of the above → treat as NEW TOPIC, ignore history.
+        1. **Dependency Check (The "Pronoun" Rule):**
+           - ONLY combine with history if the new question contains **Pronouns** ("it", "that", "they") or is **Grammatically Incomplete** ("How much?", "Where do I buy?", "Is it refundable?").
 
         2. **Independence Check (The "Specifics" Rule):**
            - If the user asks a complete question containing a **New Specific Noun** or **Scenario** (e.g., "Group of 7 people", "Booking for pets"), treat it as a **Standalone Query**.
            - **Do NOT** attach the previous topic to it.
+           - *Example:* History="Commuter Pass", Input="Can I book for a group of 7?" -> Output="Group booking for 7 people" (Correct).
+           - *Bad Output:* "Group booking for Commuter Pass" (Incorrect).
 
         3. **Output:**
            - Return ONLY the optimized search string.`,
@@ -181,7 +170,9 @@ async function rephraseQuestion(
     usage.total_tokens += response.usage?.total_tokens || 0;
     const rewritten = response.choices[0].message.content?.trim();
 
-    if (!rewritten) return question;
+    if (!rewritten) {
+      return question;
+    }
 
     const lower = rewritten.toLowerCase();
     if (
@@ -196,7 +187,7 @@ async function rephraseQuestion(
 
     return rewritten;
   } catch (err) {
-    console.error("Error in rephraseQuestion:", err);
+    console.error("[REPHRASE] Error:", err);
     return question;
   }
 }
@@ -288,16 +279,25 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
   if (!plan || !plan.collection) {
     return null;
   }
+
   const config = activeCollections.find((c: any) => c.name === plan.collection);
 
   if (!config) {
+    console.warn(
+      "[REALTIME] Collection not found in activeCollections:",
+      plan.collection,
+    );
     return null;
   }
+
   const sanitizedFilters = sanitizeFilters(plan.filters || {});
   const requestedFields = extractFilterFields(sanitizedFilters);
 
   for (const field of requestedFields) {
     if (!config.fields.includes(field)) {
+      console.warn(
+        `[REALTIME] Field '${field}' not in allowed fields — aborting`,
+      );
       return null;
     }
   }
@@ -319,7 +319,6 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
     }
 
     // LIST / SEARCH OPERATION
-
     const contentType = strapi.contentTypes[uid];
 
     const mediaFields = config.fields.filter((field: string) => {
@@ -335,6 +334,7 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
         populateObj[field] = true;
       });
     }
+
     const result = await strapi.entityService.findMany(uid, {
       filters: sanitizedFilters,
       sort: plan.sort,
@@ -347,7 +347,6 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
       for (const f of config.fields) {
         const value = row[f];
 
-        // If it's a populated media object
         if (value && typeof value === "object" && value.url) {
           clean[f] = value.url;
         } else {
@@ -364,7 +363,7 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
       items: cleaned,
     };
   } catch (err) {
-    console.error("Realtime search error:", err);
+    console.error("[REALTIME] Search error:", err);
     return null;
   }
 }
@@ -386,7 +385,6 @@ function cosineSimilarity(a: number[], b: number[]) {
 }
 
 async function searchFAQ(question: string, strapi: any, usage: any) {
-  // 1. Create embedding
   const openai = await getOpenAI(strapi);
 
   const embedding = await openai.embeddings.create({
@@ -403,7 +401,6 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
     return [];
   }
 
-  // 2. Fetch all FAQ embeddings
   const faqs = await strapi.db
     .connection("chatbot_config_faqqas")
     .select("answer", "embedding")
@@ -412,22 +409,18 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
 
   if (!faqs.length) return [];
 
-  // 3. Score similarity
   const scored = faqs.map((f: any) => {
     let dbVector = f.embedding;
 
     try {
-      // If stored as string JSON → parse
       if (typeof dbVector === "string") {
         dbVector = JSON.parse(dbVector);
       }
 
-      // Force all values to numbers
       dbVector = Array.isArray(dbVector)
         ? dbVector.map((n: any) => Number(n))
         : [];
 
-      // Length mismatch guard
       if (!Array.isArray(dbVector) || dbVector.length !== queryVector.length) {
         return { answer: f.answer, similarity: 0 };
       }
@@ -441,15 +434,12 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
     }
   });
 
-  // 4. Sort by similarity
   scored.sort((a, b) => b.similarity - a.similarity);
 
-  // 5. Threshold check
   if (!scored.length || scored[0].similarity < 0.4) {
     return [];
   }
 
-  // 6. Return top 3 answers
   return scored.slice(0, 3).map((s) => s.answer);
 }
 
@@ -488,7 +478,6 @@ FIELD RULES
 --------------------------------
 - Only use fields that exist in the selected collection schema.
 - Never hallucinate fields.
-
 
 --------------------------------
 LOCATION NORMALIZATION (CRITICAL)
@@ -611,7 +600,6 @@ Otherwise return:
   "sort": []
 }
 
-
 --------------------------------
 AVAILABLE COLLECTIONS
 --------------------------------
@@ -632,7 +620,6 @@ ${JSON.stringify(activeCollections, null, 2)}
   try {
     const raw = response.choices[0].message.content || "{}";
 
-    // Safety cleanup in case model adds ```json
     const cleaned = raw
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -642,6 +629,7 @@ ${JSON.stringify(activeCollections, null, 2)}
 
     return plan;
   } catch (err) {
+    console.error("[PLANNER] JSON parse error:", err);
     return null;
   }
 }
@@ -650,48 +638,38 @@ async function realtimeInterpreterAI(
   strapi: any,
   question: string,
   realtimeData: any,
-  cardStyles: any,
   usage: any,
 ) {
   if (!realtimeData) return null;
   const openai = await getOpenAI(strapi);
 
-  const collectionUid = `api::${realtimeData.collection}.${realtimeData.collection}`;
-
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    temperature: 0,
+    temperature: 0.2,
     messages: [
       {
         role: "system",
         content: `
-You are a data filter. 
-You receive a question and a list of items from a database.
-Your job is to return ONLY the items that are relevant to the question as JSON.
+You are a realtime data interpreter.
 
-RULES:
-- Return ONLY valid JSON, no text, no explanation
-- Only include items that directly answer the question
-- If question asks for cheapest → return only the cheapest item
-- If question asks for all → return all items
-- If question asks for specific author/title → return only matching items
-- Never hallucinate or modify item data
-- Keep all original fields exactly as they are
+Convert database JSON into a SHORT natural language summary.
 
-OUTPUT FORMAT:
-{
-  "items": [ ...relevant items only... ]
-}
-        `,
+Rules:
+- Do NOT output JSON
+- Do NOT hallucinate
+- If count → say number
+- If list → summarize important fields only
+- Max 3–4 lines
+`,
       },
       {
         role: "user",
         content: `
 QUESTION: ${question}
 
-ALL ITEMS:
-${JSON.stringify(realtimeData.items, null, 2)}
-        `,
+REALTIME DATA:
+${JSON.stringify(realtimeData)}
+`,
       },
     ],
   });
@@ -700,32 +678,79 @@ ${JSON.stringify(realtimeData.items, null, 2)}
   usage.completion_tokens += response.usage?.completion_tokens || 0;
   usage.total_tokens += response.usage?.total_tokens || 0;
 
+  const text = response.choices[0].message.content;
+
+  return text;
+}
+
+async function filterRelevantItems(
+  strapi: any,
+  question: string,
+  realtimeMeta: any,
+  usage: any,
+): Promise<any> {
+  if (
+    !realtimeMeta ||
+    realtimeMeta.type !== "list" ||
+    !realtimeMeta.items?.length
+  ) {
+    return realtimeMeta;
+  }
+
+  // If only 1 item, no need to filter
+  if (realtimeMeta.items.length === 1) return realtimeMeta;
+
   try {
-    const raw = response.choices[0].message.content || "{}";
+    const openai = await getOpenAI(strapi);
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content: `You are a data filter.
+Your job is to return ONLY the items that are relevant to the user's question as a JSON array.
+
+RULES:
+- Return ONLY a valid JSON array, no text, no explanation, no markdown
+- Only include items that directly answer the question
+- If question asks for cheapest/lowest price → return only the single cheapest item
+- If question asks for most expensive/highest → return only the single most expensive item
+- If question asks for a specific title/name → return only matching items
+- If question asks for all / list / show → return all items unchanged
+- Never hallucinate or modify item data
+- Keep all original fields exactly as they are
+- If unsure → return all items unchanged`,
+        },
+        {
+          role: "user",
+          content: `QUESTION: ${question}
+
+ITEMS:
+${JSON.stringify(realtimeMeta.items, null, 2)}`,
+        },
+      ],
+    });
+
+    usage.prompt_tokens += response.usage?.prompt_tokens || 0;
+    usage.completion_tokens += response.usage?.completion_tokens || 0;
+    usage.total_tokens += response.usage?.total_tokens || 0;
+
+    const raw = response.choices[0].message.content || "[]";
     const cleaned = raw
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
-    const parsed = JSON.parse(cleaned);
-
-    // build final cards payload
-    const filteredItems =
-      parsed.items?.length > 0 ? parsed.items : realtimeData.items; // fallback to all items if filter fails
+    const filteredItems = JSON.parse(cleaned);
 
     return {
-      title: realtimeData.collection,
-      schema: realtimeData.schema,
-      items: filteredItems,
-      cardStyle: cardStyles?.[collectionUid] || null,
+      ...realtimeMeta,
+      items: Array.isArray(filteredItems) ? filteredItems : realtimeMeta.items,
     };
   } catch (err) {
-    // fallback to full data if JSON parse fails
-    return {
-      title: realtimeData.collection,
-      schema: realtimeData.schema,
-      items: realtimeData.items,
-      cardStyle: cardStyles?.[collectionUid] || null,
-    };
+    console.error("[FILTER] Error — returning original items:", err);
+    return realtimeMeta;
   }
 }
 
@@ -746,6 +771,7 @@ async function finalAggregator(
   ctx.set("Connection", "keep-alive");
   ctx.status = 200;
   ctx.res.flushHeaders?.();
+
   const openai = await getOpenAI(strapi);
 
   const stream = await openai.chat.completions.create({
@@ -833,7 +859,7 @@ Max 5 lines.
 QUESTION: ${question}
 
 CONTACT_LINK:
-${contactLink || "NOT AVAILABLE"}
+${contactLink || "NOT_AVAILABLE"}
 
 FAQ:
 ${JSON.stringify(faq)}
@@ -863,9 +889,16 @@ ${realtimeText}
   usage.completion_tokens += estimatedTokens;
   usage.total_tokens += estimatedTokens;
 
-  if (realtimeMeta && realtimeMeta.type === "list" && realtimeText) {
+  if (realtimeMeta && realtimeMeta.type === "list") {
+    const collectionUid = `api::${realtimeMeta.collection}.${realtimeMeta.collection}`;
+    const cardsPayload = {
+      title: realtimeMeta.collection,
+      schema: realtimeMeta.schema,
+      items: realtimeMeta.items,
+      cardStyle: cardStyles?.[collectionUid] || null,
+    };
     ctx.res.write(`event: cards\n`);
-    ctx.res.write(`data: ${JSON.stringify(realtimeText)}\n\n`);
+    ctx.res.write(`data: ${JSON.stringify(cardsPayload)}\n\n`);
   }
 
   ctx.res.write("data: [DONE]\n\n");
@@ -949,6 +982,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ctx.body = { valid: false, message: reason };
     }
   },
+
   async ask(ctx: any) {
     const { question, history = [] } = ctx.request.body;
 
@@ -967,9 +1001,6 @@ export default ({ strapi }: { strapi: any }) => ({
 
     try {
       const activeCollections = await getActiveCollections(strapi);
-
-      if (!activeCollections || activeCollections.length === 0) {
-      }
 
       const rewritten = await rephraseQuestion(
         strapi,
@@ -994,7 +1025,6 @@ export default ({ strapi }: { strapi: any }) => ({
       );
 
       // REALTIME
-
       let realtimeResults = null;
       let realtimeAIText = null;
 
@@ -1005,7 +1035,14 @@ export default ({ strapi }: { strapi: any }) => ({
           strapi,
           rewritten,
           realtimeResults,
-          cardStyles,
+          usage,
+        );
+
+        // Filter down cards to only what's relevant to the question
+        realtimeResults = await filterRelevantItems(
+          strapi,
+          rewritten,
+          realtimeResults,
           usage,
         );
       } else {
@@ -1026,7 +1063,7 @@ export default ({ strapi }: { strapi: any }) => ({
 
       return;
     } catch (err) {
-      console.error("[ERROR]", err);
+      console.error("[ASK] ERROR:", err);
       ctx.body = { type: "text", content: "Error occurred." };
     }
   },
