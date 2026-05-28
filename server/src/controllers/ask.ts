@@ -793,6 +793,29 @@ INPUTS:
 - User question
 
 --------------------------------
+RESPONSE FORMAT (CRITICAL)
+--------------------------------
+Always respond using simple inline HTML tags only.
+- For bullet lists → use <ul><li>item</li></ul>
+- For numbered lists → use <ol><li>item</li></ol>
+- For bold text → use <b>text</b>
+- For italic text → use <i>text</i>
+- For underline → use <u>text</u>
+- For strikethrough → use <s>text</s>
+- For line breaks → use <br>
+- For paragraphs → use <p>text</p>
+- For headings → use <h1>, <h2>, <h3>, <h4> depending on importance
+- For links → use <a href='url' target='_blank'>label</a>
+- For inline code → use <code>text</code>
+- For highlighted/important text → use <mark>text</mark>
+- For small/fine print → use <small>text</small>
+- For tables → use <table><tr><th>header</th></tr><tr><td>data</td></tr></table>
+- NEVER use markdown (no **, no ##, no - , no \n for formatting)
+- NEVER use backticks or code blocks
+- Keep tags minimal and clean
+- Never add inline styles
+
+--------------------------------
 RESPONSE LENGTH RULE
 --------------------------------
 Default → SHORT & PRECISE (2–3 lines max)
@@ -825,6 +848,7 @@ asks to contact a person.
 
 Example:
 "You can contact us here: https://example.com/contact"
+
 
 --------------------------------
 ANSWER LOGIC
