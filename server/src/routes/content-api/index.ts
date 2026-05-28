@@ -19,8 +19,8 @@ export default () => ({
     },
     {
       method: "GET",
-      path: "/suggestion-and-logo",
-      handler: "suggestQuestionsAndLogo.getSuggestionAndLogo",
+      path: "/suggestions-and-privacy",
+      handler: "suggestionsAndPrivacy.getSuggestionsAndPrivacy",
       config: {
         auth: false,
       },
