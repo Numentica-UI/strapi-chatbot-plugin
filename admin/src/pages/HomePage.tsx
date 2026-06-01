@@ -36,6 +36,7 @@ type FormValues = {
   openaiKey: string;
   baseDomain: string;
   contactLink: string;
+  privacyPolicyUrl: string;
   systemInstructions: string;
   responseInstructions: string;
   suggestedQuestions: string[];
@@ -164,6 +165,7 @@ const HomePage = () => {
       openaiKey: "",
       baseDomain: "",
       contactLink: "",
+      privacyPolicyUrl: "",
       systemInstructions: "",
       responseInstructions: "",
       suggestedQuestions: [],
@@ -173,7 +175,10 @@ const HomePage = () => {
 
   const values = watch();
   const isLocked =
-    !values.baseDomain || !values.openaiKey || !values.contactLink;
+    !values.baseDomain ||
+    !values.openaiKey ||
+    !values.contactLink ||
+    !values.privacyPolicyUrl;
 
   const init = async () => {
     try {
@@ -235,6 +240,7 @@ const HomePage = () => {
         openaiKey: settings.openaiKey || "",
         baseDomain: normalizedBase,
         contactLink: settings.contactLink || "",
+        privacyPolicyUrl: settings.privacyPolicyUrl || "",
         systemInstructions: settings.systemInstructions || "",
         responseInstructions: settings.responseInstructions || "",
         suggestedQuestions: settings.suggestedQuestions || [],
@@ -292,6 +298,7 @@ const HomePage = () => {
           responseInstructions: data.responseInstructions,
           baseDomain: normalizedDomain,
           contactLink: data.contactLink,
+          privacyPolicyUrl: data.privacyPolicyUrl,
           suggestedQuestions: data.suggestedQuestions,
         },
       });
@@ -400,6 +407,7 @@ const HomePage = () => {
             openaiKey={values.openaiKey}
             savedOpenaiKey={savedOpenaiKey}
             contactLink={values.contactLink}
+            privacyPolicyUrl={values.privacyPolicyUrl}
             onManage={(type, value = "") => {
               if (type === "key")
                 setValue("openaiKey", value, { shouldDirty: true });
@@ -407,6 +415,8 @@ const HomePage = () => {
                 setValue("baseDomain", value, { shouldDirty: true });
               if (type === "contact")
                 setValue("contactLink", value, { shouldDirty: true });
+              if (type === "privacy")
+                setValue("privacyPolicyUrl", value, { shouldDirty: true });
             }}
           />
 

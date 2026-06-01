@@ -12,13 +12,14 @@ import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import { useFetchClient } from "@strapi/admin/strapi-admin";
 
-type SettingType = "key" | "domain" | "contact";
+type SettingType = "key" | "domain" | "contact" | "privacy";
 
 interface BasicSettingsProps {
   openaiKey: string;
   savedOpenaiKey: string;
   baseDomain: string;
   contactLink: string;
+  privacyPolicyUrl: string;
   onManage: (type: SettingType, value?: string) => void;
 }
 
@@ -277,6 +278,13 @@ const TokenValue = styled(Typography)`
   white-space: nowrap;
 `;
 
+const getPlaceholder = (type: SettingType): string => {
+  if (type === "domain") return "https://your-domain.com";
+  if (type === "contact") return "https://your-domain.com/contact";
+  if (type === "privacy") return "https://your-domain.com/privacy-policy";
+  return "sk-…";
+};
+
 const SettingRow = ({
   title,
   description,
@@ -340,18 +348,6 @@ const SettingRow = ({
     reset({ fieldValue: value });
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  const handleShowKey = () => {
-    setShowKey((prev) => !prev);
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSubmit(onSave)();
@@ -360,8 +356,8 @@ const SettingRow = ({
 
   return (
     <RowBox
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       $isEditing={isEditing}
       $isLast={isLast}
     >
@@ -384,18 +380,15 @@ const SettingRow = ({
                 <StyledInput
                   autoFocus
                   type={type === "key" && !showKey ? "password" : "text"}
-                  placeholder={
-                    type === "domain"
-                      ? "https://your-domain.com"
-                      : type === "contact"
-                        ? "https://your-domain.com/contact"
-                        : "sk-…"
-                  }
+                  placeholder={getPlaceholder(type)}
                   {...register("fieldValue")}
                   onKeyDown={handleKeyDown}
                 />
                 {type === "key" && (
-                  <EyeButton type="button" onClick={handleShowKey}>
+                  <EyeButton
+                    type="button"
+                    onClick={() => setShowKey((p) => !p)}
+                  >
                     {showKey ? (
                       <Eye width={16} height={16} />
                     ) : (
@@ -509,6 +502,7 @@ const BasicSettings = ({
   savedOpenaiKey,
   baseDomain,
   contactLink,
+  privacyPolicyUrl,
   onManage,
 }: BasicSettingsProps) => {
   const [tokenUsage, setTokenUsage] = React.useState<TokenUsage | undefined>(
@@ -565,6 +559,14 @@ const BasicSettings = ({
         title="Contact Link"
         description="Shown as 'Talk to Support' in the chatbot"
         value={contactLink}
+        onManage={onManage}
+      />
+
+      <SettingRow
+        type="privacy"
+        title="Privacy Policy URL"
+        description="Linked in the chatbot footer for user transparency"
+        value={privacyPolicyUrl}
         onManage={onManage}
         isLast
       />

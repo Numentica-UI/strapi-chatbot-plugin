@@ -1,5 +1,5 @@
 export default ({ strapi }: { strapi: any }) => ({
-  async getSuggestionAndLogo(ctx: any) {
+  async getSuggestionsAndPrivacy(ctx: any) {
     const pluginStore = strapi.store({
       environment: null,
       type: "plugin",
@@ -10,7 +10,7 @@ export default ({ strapi }: { strapi: any }) => ({
 
     ctx.body = {
       suggestedQuestions: settings?.suggestedQuestions || [],
-      logoUrl: settings?.logoUrl || null,
+      privacyPolicyUrl: settings?.privacyPolicyUrl || null,
     };
   },
 });

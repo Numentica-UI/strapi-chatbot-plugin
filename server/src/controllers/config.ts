@@ -10,6 +10,7 @@ const ALLOWED_SETTINGS_KEYS: Record<
   systemInstructions: { type: "string", maxLength: 4000 },
   responseInstructions: { type: "string", maxLength: 4000 },
   contactLink: { type: "string", maxLength: 500 },
+  privacyPolicyUrl: { type: "string", maxLength: 500 },
   callsPerMinute: { type: "number" },
   cardStyles: { type: "object" },
   config: { type: "object" },
