@@ -278,6 +278,13 @@ const TokenValue = styled(Typography)`
   white-space: nowrap;
 `;
 
+const getPlaceholder = (type: SettingType): string => {
+  if (type === "domain") return "https://your-domain.com";
+  if (type === "contact") return "https://your-domain.com/contact";
+  if (type === "privacy") return "https://your-domain.com/privacy-policy";
+  return "sk-…";
+};
+
 const SettingRow = ({
   title,
   description,
@@ -373,15 +380,7 @@ const SettingRow = ({
                 <StyledInput
                   autoFocus
                   type={type === "key" && !showKey ? "password" : "text"}
-                  placeholder={
-                    type === "domain"
-                      ? "https://your-domain.com"
-                      : type === "contact"
-                        ? "https://your-domain.com/contact"
-                        : type === "privacy"
-                          ? "https://your-domain.com/privacy-policy"
-                          : "sk-…"
-                  }
+                  placeholder={getPlaceholder(type)}
                   {...register("fieldValue")}
                   onKeyDown={handleKeyDown}
                 />
