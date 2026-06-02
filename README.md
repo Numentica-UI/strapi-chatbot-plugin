@@ -39,31 +39,31 @@ npm run develop
 1. Start your Strapi app.
 
 2. Open the admin panel and navigate to **NUI Chatbot Configuration** in the sidebar.
-<p align="center"><img src="./screenshots/Plugin_Homepage.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Plugin_Homepage.png" width="90%"/></p>
 
 3. Add your frontend base domain (used to resolve card assets from its public folder).
-<p align="center"><img src="./screenshots/Add_Base_Domain.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Add_Base_Domain.png" width="90%"/></p>
 
 4. Set up your [OpenAI API key](https://platform.openai.com/settings/organization/api-keys). Make sure **`gpt-4o-mini`** and **`text-embedding-3-small`** models are available on your account.
-<p align="center"><img src="./screenshots/Add_API_Key.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Add_API_Key.png" width="90%"/></p>
 
 5. Clicking **_Save_** will validate the API key and save it.
-<p align="center"><img src="./screenshots/API_Key_Validation.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/API_Key_Validation.png" width="90%"/></p>
 
 6. Add a contact link so the AI can provide it to users on request.
-<p align="center"><img src="./screenshots/Add_Contact_Link.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Add_Contact_Link.png" width="90%"/></p>
 
 7. Save the configuration.
-<p align="center"><img src="./screenshots/Save_Button.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Save_Button.png" width="90%"/></p>
 
 8. Add your FAQ entries in the **Chatbot-FAQ** collection.
-<p align="center"><img src="./screenshots/Chatbot_FAQ.png" width="90%"/></p>
+<p align="center"><img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Chatbot_FAQ.png" width="90%"/></p>
 
 9. The chatbot is ready to use — test it directly from the admin panel.
 <p align="center">
-  <img src="./screenshots/Chatbot_Preview_1.png" width="49%"/>
+  <img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Chatbot_Preview_1.png" width="49%"/>
   &nbsp;
-  <img src="./screenshots/Chatbot_Preview_2.png" width="49%"/>
+  <img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Chatbot_Preview_2.png" width="49%"/>
 </p>
 
 ---
@@ -103,17 +103,17 @@ npm run build && npm run develop
 
 - **Response Template**
   - Add collections for AI to query realtime data
-    <img src="./screenshots/Response_Template.png" width="50%"/>
+    <img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Response_Template.png" width="50%"/>
 
 - **Suggested Questions**
   - Add questions so that it can be fetched in frontend as suggestions
-    <img src="./screenshots/Suggested_Questions.png" width="50%"/>
+    <img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/Suggested_Questions.png" width="50%"/>
 
 - **AI Instructions**
   - System Instrcutions : Used in realtime querying. Sent while AI creates DB query
   - Response Tone : Used in the final response sent by AI.
 
-    <img src="./screenshots/AI_Instructions.png" width="50%"/>
+    <img src="https://strapi-chat-bot-plugin-images.s3.us-east-1.amazonaws.com/AI_Instructions.png" width="50%"/>
 
 ## 📚 Links
 
