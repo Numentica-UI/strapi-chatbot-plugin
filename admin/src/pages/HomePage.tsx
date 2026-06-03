@@ -177,8 +177,7 @@ const HomePage = () => {
   const isLocked =
     !values.baseDomain ||
     !values.openaiKey ||
-    !values.contactLink ||
-    !values.privacyPolicyUrl;
+    !values.contactLink ;
 
   const init = async () => {
     try {
