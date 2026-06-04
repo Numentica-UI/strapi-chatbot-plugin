@@ -105,6 +105,7 @@ async function getActiveCollections(strapi: any) {
               "date",
               "datetime",
               "time",
+              "boolean",
               "relation",
               "media",
             ].includes(attr.type)
@@ -448,6 +449,8 @@ async function simplePlanner(
   question: string,
   activeCollections: any[],
   instructions: { system: string },
+  currentDate: string,
+  timezone: string,
   usage: any,
 ) {
   const openai = await getOpenAI(strapi);
@@ -459,6 +462,8 @@ async function simplePlanner(
       {
         role: "system",
         content: `
+TODAY'S DATE, TIME & TIMEZONE: ${currentDate} (${timezone})
+
         ${instructions.system || ""}
 You are a STRICT database query planner that converts user questions into Strapi query JSON.
 
@@ -550,6 +555,14 @@ NUMBER FILTER RULES
 - "under" → lte
 - "above" → gte
 - "between" → between
+
+--------------------------------
+DATE FILTER RULES
+--------------------------------
+- Use TODAY'S DATE above as reference for all date comparisons
+- "available", "active", "not expired" → { "expiresAt": { "gte": "$currentDate}" } }
+- "availability" boolean → { "availability": { "eq": true } }
+- NEVER hardcode dates
 
 --------------------------------
 OPERATION RULES
@@ -764,6 +777,8 @@ async function finalAggregator(
   contactLink: string | null,
   instructions: { response: string },
   cardStyles: any,
+  currentDate: string,
+  timezone: string,
   usage: any,
 ) {
   ctx.set("Content-Type", "text/event-stream");
@@ -849,7 +864,6 @@ asks to contact a person.
 Example:
 "You can contact us here: https://example.com/contact"
 
-
 --------------------------------
 ANSWER LOGIC
 --------------------------------
@@ -880,6 +894,8 @@ Max 5 lines.
       {
         role: "user",
         content: `
+TODAY'S DATE, TIME & TIMEZONE: ${currentDate} (${timezone})
+
 QUESTION: ${question}
 
 CONTACT_LINK:
@@ -1008,7 +1024,27 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async ask(ctx: any) {
-    const { question, history = [] } = ctx.request.body;
+    const {
+      question,
+      history = [],
+      clientDate,
+      clientTimezone,
+    } = ctx.request.body;
+
+    const currentDate = clientDate
+      ? new Date(clientDate).toLocaleString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: clientTimezone || "UTC",
+        })
+      : "Failed to parse date";
+
+    const timezone = clientTimezone || "UTC";
 
     const usage = {
       prompt_tokens: 0,
@@ -1045,6 +1081,8 @@ export default ({ strapi }: { strapi: any }) => ({
         rewritten,
         activeCollections,
         instructions,
+        currentDate,
+        timezone,
         usage,
       );
 
@@ -1082,6 +1120,8 @@ export default ({ strapi }: { strapi: any }) => ({
         contactLink,
         instructions,
         cardStyles,
+        currentDate,
+        timezone,
         usage,
       );
 
