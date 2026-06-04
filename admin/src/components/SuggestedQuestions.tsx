@@ -59,7 +59,7 @@ const EditFlex = styled(Flex)`
   flex: 1;
 `;
 
-const SaveEditButton = styled(Button)`
+const SaveEditButton = styled.button`
   padding: 6px 12px;
   border-radius: 8px;
   background: ${({ theme }) => theme.colors.primary600};
@@ -68,9 +68,13 @@ const SaveEditButton = styled(Button)`
   cursor: pointer;
   font-weight: 600;
   font-size: 12px;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
-const CancelEditButton = styled(Button)`
+const CancelEditButton = styled.button`
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.colors.neutral200};
@@ -282,7 +286,10 @@ const SuggestedQuestions = ({
                   if (e.key === "Enter") handleSaveEdit(index);
                 }}
               />
-              <SaveEditButton onClick={() => handleSaveEdit(index)}>
+              <SaveEditButton
+                onClick={() => handleSaveEdit(index)}
+                disabled={!editValue.trim()}
+              >
                 Save
               </SaveEditButton>
               <CancelEditButton onClick={handleCancelEdit}>
@@ -330,7 +337,9 @@ const SuggestedQuestions = ({
               if (e.key === "Enter") handleSaveAdd();
             }}
           />
-          <SaveEditButton onClick={handleSaveAdd}>Add</SaveEditButton>
+          <SaveEditButton onClick={handleSaveAdd} disabled={!addValue.trim()}>
+            Add
+          </SaveEditButton>
           <CancelEditButton onClick={handleCancelAdd}>Cancel</CancelEditButton>
         </AddInputRow>
       ) : (
