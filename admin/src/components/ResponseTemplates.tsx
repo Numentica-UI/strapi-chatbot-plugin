@@ -239,6 +239,10 @@ const SubmitButton = styled.button`
   &:hover {
     opacity: 0.9;
   }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const CancelButton = styled.button`
@@ -296,8 +300,21 @@ const ResponseTemplates = ({
   const [selectedUid, setSelectedUid] = useState("");
   const [openItem, setOpenItem] = useState<string | undefined>();
 
+  const pendingAutoSelectRef = React.useRef<string | null>(null);
+
+  React.useLayoutEffect(() => {
+    const uid = pendingAutoSelectRef.current;
+    if (!uid) return;
+    const exists = collections.some((c) => c.uid === uid);
+    if (exists) {
+      onToggleAll(uid, true);
+      pendingAutoSelectRef.current = null;
+    }
+  });
+
   const handleAdd = () => {
     if (selectedUid) {
+      pendingAutoSelectRef.current = selectedUid;
       onAddCollection(selectedUid);
       setOpenItem(selectedUid);
     }
@@ -442,17 +459,29 @@ const ResponseTemplates = ({
             value={selectedUid}
             onChange={(e) => setSelectedUid(e.target.value)}
           >
-            <option value="">Select a collection type...</option>
-            {availableCollections.map((availableCollection) => (
-              <option
-                key={availableCollection.uid}
-                value={availableCollection.uid}
-              >
-                {availableCollection.name}
+            {availableCollections.length === 0 ? (
+              <option value="" disabled>
+                No collections available to add
               </option>
-            ))}
+            ) : (
+              <>
+                <option value="">Select a collection type...</option>
+                {availableCollections.map((availableCollection) => (
+                  <option
+                    key={availableCollection.uid}
+                    value={availableCollection.uid}
+                  >
+                    {availableCollection.name}
+                  </option>
+                ))}
+              </>
+            )}
           </InlineSelect>
-          <SubmitButton type="button" onClick={handleAdd}>
+          <SubmitButton
+            type="button"
+            onClick={handleAdd}
+            disabled={!selectedUid || availableCollections.length === 0}
+          >
             Add
           </SubmitButton>
           <CancelButton type="button" onClick={handleCancel}>
@@ -460,13 +489,11 @@ const ResponseTemplates = ({
           </CancelButton>
         </AddActionRow>
       ) : (
-        availableCollections.length > 0 && (
-          <AddButtonWrapper>
-            <GhostAddButton type="button" onClick={handleStartAdd}>
-              <Plus width={12} /> Add collection
-            </GhostAddButton>
-          </AddButtonWrapper>
-        )
+        <AddButtonWrapper>
+          <GhostAddButton type="button" onClick={handleStartAdd}>
+            <Plus width={12} /> Add collection
+          </GhostAddButton>
+        </AddButtonWrapper>
       )}
     </>
   );
