@@ -393,8 +393,10 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
     input: question,
   });
 
-  usage.prompt_tokens += embedding.usage?.prompt_tokens || 0;
-  usage.total_tokens += embedding.usage?.total_tokens || 0;
+  const embeddingTokensUsed = embedding.usage?.total_tokens || 0;
+
+  usage.embedding_tokens += embeddingTokensUsed;
+  usage.total_tokens += embeddingTokensUsed;
 
   let queryVector = embedding.data[0].embedding;
 
@@ -967,7 +969,7 @@ ${realtimeText}
         totalTokens: existing.totalTokens + usage.total_tokens,
         promptTokens: existing.promptTokens + usage.prompt_tokens,
         completionTokens: existing.completionTokens + usage.completion_tokens,
-        embeddingTokens: existing.embeddingTokens,
+        embeddingTokens: existing.embeddingTokens + usage.embedding_tokens,
       },
     });
   } catch (e) {
