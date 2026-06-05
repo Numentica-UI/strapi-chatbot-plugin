@@ -50,7 +50,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       ...newSettings,
     };
 
-    if (rebuiltCollections.length > 0) {
+    if (newSettings.config) {
       await pluginStore.set({
         key: "collections",
         value: rebuiltCollections,
