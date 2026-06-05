@@ -1076,15 +1076,19 @@ export default ({ strapi }: { strapi: any }) => ({
       const faqResults = await searchFAQ(rewritten, strapi, usage);
 
       // PLAN
-      const plan = await simplePlanner(
-        strapi,
-        rewritten,
-        activeCollections,
-        instructions,
-        currentDate,
-        timezone,
-        usage,
-      );
+      let plan = null;
+
+      if (activeCollections.length > 0) {
+        plan = await simplePlanner(
+          strapi,
+          rewritten,
+          activeCollections,
+          instructions,
+          currentDate,
+          timezone,
+          usage,
+        );
+      }
 
       // REALTIME
       let realtimeResults = null;
@@ -1100,14 +1104,12 @@ export default ({ strapi }: { strapi: any }) => ({
           usage,
         );
 
-        // Filter down cards to only what's relevant to the question
         realtimeResults = await filterRelevantItems(
           strapi,
           rewritten,
           realtimeResults,
           usage,
         );
-      } else {
       }
 
       await finalAggregator(
