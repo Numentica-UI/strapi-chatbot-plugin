@@ -8,7 +8,6 @@ async function getOpenAI(strapi: any) {
   });
 
   const settings = await pluginStore.get({ key: "settings" });
-
   const key = settings?.openaiKey;
 
   if (!key) {
@@ -52,7 +51,6 @@ async function getCardStyles(strapi: any) {
   });
 
   const settings = await pluginStore.get({ key: "settings" });
-
   return settings?.cardStyles || {};
 }
 
@@ -67,61 +65,84 @@ async function getActiveCollections(strapi: any) {
     const settings = await pluginStore.get({ key: "collections" });
     if (!settings) return [];
 
+    const relationConfig: Record<string, Record<string, string[]>> = (
+      await pluginStore.get({ key: "settings" })
+    )?.relationConfig || {};
+
     const activeList = [];
 
     for (const item of settings) {
       const hasEnabledFields = item.fields?.some((f: any) => f.enabled);
-
-      if (!hasEnabledFields) {
-        continue;
-      }
+      if (!hasEnabledFields) continue;
 
       const uid = `api::${item.name}.${item.name}`;
       const contentType = strapi.contentTypes[uid];
 
       if (!contentType) {
-        console.warn(` [WARNING] Content type not found for UID: ${uid}`);
+        console.warn(`[WARNING] Content type not found for UID: ${uid}`);
         continue;
       }
 
-      const enabledFields = item.fields
-        ?.filter((f: any) => f.enabled)
-        ?.map((f: any) => f.name)
-        ?.filter((fieldName: string) => {
-          const attr = contentType.attributes[fieldName];
-          return (
-            attr &&
-            [
-              "string",
-              "text",
-              "email",
-              "uid",
-              "richtext",
-              "enumeration",
-              "integer",
-              "biginteger",
-              "decimal",
-              "float",
-              "date",
-              "datetime",
-              "time",
-              "boolean",
-              "relation",
-              "media",
-            ].includes(attr.type)
-          );
-        });
+      const ALLOWED_TYPES = [
+        "string",
+        "text",
+        "email",
+        "uid",
+        "richtext",
+        "enumeration",
+        "integer",
+        "biginteger",
+        "decimal",
+        "float",
+        "date",
+        "datetime",
+        "time",
+        "boolean",
+        "relation",
+        "media",
+      ];
 
-      if (!enabledFields || enabledFields.length === 0) continue;
+      const collectionRelationConfig = relationConfig[item.name] || {};
+
+      const fieldConfigs = item.fields
+        ?.filter((f: any) => f.enabled)
+        ?.map((f: any) => {
+          const attr = contentType.attributes[f.name];
+          if (!attr || !ALLOWED_TYPES.includes(attr.type)) return null;
+
+          const fieldConfig: any = { name: f.name, type: attr.type };
+
+          if (attr.type === "relation" && attr.target) {
+            const savedSubFields = collectionRelationConfig[f.name];
+
+            const inlineSubFields = (f.relationFields as any[] | undefined)
+              ?.filter((sf: any) => sf.enabled)
+              ?.map((sf: any) => sf.name);
+
+            const enabledSubFields = savedSubFields ?? inlineSubFields ?? [];
+
+            if (enabledSubFields.length > 0) {
+              fieldConfig.relationTarget = attr.target;
+              fieldConfig.relationFields = enabledSubFields;
+            }
+          }
+
+          return fieldConfig;
+        })
+        ?.filter(Boolean);
+
+      if (!fieldConfigs || fieldConfigs.length === 0) continue;
 
       activeList.push({
         name: item.name,
-        fields: enabledFields,
+        fields: fieldConfigs.map((f: any) => f.name),
+        fieldConfigs,
       });
     }
 
     return activeList;
   } catch (err) {
+    console.error("[getActiveCollections] Error:", err);
     return [];
   }
 }
@@ -132,10 +153,6 @@ async function rephraseQuestion(
   question: string,
   usage: any,
 ) {
-  if (!history || !Array.isArray(history) || history.length === 0) {
-    return question;
-  }
-
   try {
     const openai = await getOpenAI(strapi);
 
@@ -146,7 +163,7 @@ async function rephraseQuestion(
         {
           role: "system",
           content: `You are a Search Query Optimizer.
-        Your task is to determine if the user's new message is a **Follow-up** or a **New Topic** and if a follow-up just rewrite the question .
+        Your task is to determine if the user's new message is a **Follow-up** or a **New Topic** and if a follow-up or has spelling mistakes just rewrite the question .
         Do NOT return any explanations, only the optimized search string.
 
         ### RULES
@@ -166,25 +183,13 @@ async function rephraseQuestion(
         { role: "user", content: question },
       ],
     });
+
     usage.prompt_tokens += response.usage?.prompt_tokens || 0;
     usage.completion_tokens += response.usage?.completion_tokens || 0;
     usage.total_tokens += response.usage?.total_tokens || 0;
+
     const rewritten = response.choices[0].message.content?.trim();
-
-    if (!rewritten) {
-      return question;
-    }
-
-    const lower = rewritten.toLowerCase();
-    if (
-      lower.includes("unavailable") ||
-      lower.includes("sorry") ||
-      lower.includes("i am") ||
-      lower.includes("cannot") ||
-      rewritten.length > 120
-    ) {
-      return question;
-    }
+    if (!rewritten) return question;
 
     return rewritten;
   } catch (err) {
@@ -230,7 +235,6 @@ function sanitizeFilters(filters: any): any {
     if (operators.includes(key) && !key.startsWith("$")) {
       newKey = `$${key}`;
     }
-
     newFilters[newKey] = sanitizeFilters(filters[key]);
   }
 
@@ -239,15 +243,12 @@ function sanitizeFilters(filters: any): any {
 
 function updateJsonContext(prevContext: any, question: string) {
   const MAX_HISTORY = 10;
-
   const ctx = { ...(prevContext || {}) };
 
-  // Maintain history
   ctx.history = Array.isArray(ctx.history) ? ctx.history : [];
   ctx.history.push(question);
   if (ctx.history.length > MAX_HISTORY) ctx.history.shift();
 
-  // Simple keyword extraction
   const words = question
     .toLowerCase()
     .replace(/[^\w\s]/g, "")
@@ -255,7 +256,6 @@ function updateJsonContext(prevContext: any, question: string) {
     .filter((w) => w.length > 3);
 
   ctx.keywords = [...new Set([...(ctx.keywords || []), ...words])];
-
   ctx.lastQuestion = question;
 
   return ctx;
@@ -277,9 +277,7 @@ function extractFilterFields(filters: any, collected: Set<string> = new Set()) {
 }
 
 async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
-  if (!plan || !plan.collection) {
-    return null;
-  }
+  if (!plan || !plan.collection) return null;
 
   const config = activeCollections.find((c: any) => c.name === plan.collection);
 
@@ -306,35 +304,94 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
   const uid = `api::${plan.collection}.${plan.collection}`;
 
   try {
-    // COUNT OPERATION
     if (plan.operation === "count") {
       const count = await strapi.entityService.count(uid, {
         filters: sanitizedFilters,
       });
-
-      return {
-        type: "count",
-        collection: plan.collection,
-        value: count,
-      };
+      return { type: "count", collection: plan.collection, value: count };
     }
 
-    // LIST / SEARCH OPERATION
     const contentType = strapi.contentTypes[uid];
 
-    const mediaFields = config.fields.filter((field: string) => {
-      const attr = contentType.attributes[field];
-      return attr?.type === "media";
-    });
+    console.log(
+      `[REALTIME] Content type attributes for "${plan.collection}":`,
+      JSON.stringify(
+        Object.entries(contentType.attributes).reduce(
+          (acc: any, [key, val]: [string, any]) => {
+            acc[key] = {
+              type: (val as any).type,
+              ...((val as any).relation
+                ? { relation: (val as any).relation }
+                : {}),
+              ...((val as any).target ? { target: (val as any).target } : {}),
+            };
+            return acc;
+          },
+          {},
+        ),
+        null,
+        2,
+      ),
+    );
+
+    const fieldConfigs: any[] =
+      config.fieldConfigs ||
+      config.fields.map((f: string) => ({
+        name: f,
+        type: contentType.attributes[f]?.type,
+      }));
+
+    const mediaFields = fieldConfigs
+      .filter((fc: any) => fc.type === "media")
+      .map((fc: any) => fc.name);
+
+    const relationFieldConfigs = fieldConfigs.filter(
+      (fc: any) => fc.type === "relation",
+    );
+    const relationFields = relationFieldConfigs.map((fc: any) => fc.name);
+
+    console.log(
+      `[REALTIME] Media fields detected for "${plan.collection}":`,
+      mediaFields,
+    );
+    console.log(
+      `[REALTIME] Relation fields detected for "${plan.collection}":`,
+      relationFields,
+    );
+    console.log(
+      `[REALTIME] Relation field configs (with sub-fields):`,
+      JSON.stringify(relationFieldConfigs, null, 2),
+    );
 
     let populateObj: any = undefined;
 
-    if (mediaFields.length > 0) {
+    if (mediaFields.length > 0 || relationFields.length > 0) {
       populateObj = {};
+
       mediaFields.forEach((field: string) => {
         populateObj[field] = true;
       });
+
+      relationFieldConfigs.forEach((fc: any) => {
+        if (fc.relationFields && fc.relationFields.length > 0) {
+          populateObj[fc.name] = { fields: fc.relationFields };
+          console.log(
+            `[REALTIME] Relation "${fc.name}" → selective populate:`,
+            fc.relationFields,
+          );
+        } else {
+          populateObj[fc.name] = true;
+          console.log(
+            `[REALTIME] Relation "${fc.name}" → full populate (no sub-fields configured)`,
+          );
+        }
+      });
     }
+
+    console.log(
+      `[REALTIME] Populate object for "${plan.collection}":`,
+      JSON.stringify(populateObj, null, 2),
+    );
 
     const result = await strapi.entityService.findMany(uid, {
       filters: sanitizedFilters,
@@ -343,19 +400,109 @@ async function searchRealtime(strapi: any, plan: any, activeCollections: any) {
       ...(populateObj ? { populate: populateObj } : {}),
     });
 
+    console.log(
+      `[REALTIME] Raw result from Strapi for "${plan.collection}" (first item):`,
+      JSON.stringify(result?.[0] || {}, null, 2),
+    );
+    console.log(`[REALTIME] Total raw items returned:`, result?.length ?? 0);
+
+    const relationSubFieldMap: Record<string, string[]> = {};
+    relationFieldConfigs.forEach((fc: any) => {
+      if (fc.relationFields?.length) {
+        relationSubFieldMap[fc.name] = fc.relationFields;
+      }
+    });
+
     const cleaned = result.map((row: any) => {
       const clean: any = {};
+
       for (const f of config.fields) {
         const value = row[f];
 
-        if (value && typeof value === "object" && value.url) {
-          clean[f] = value.url;
+        console.log(
+          `[REALTIME] Field "${f}" raw value:`,
+          JSON.stringify(value, null, 2),
+        );
+
+        if (value && typeof value === "object" && (value as any).url) {
+          console.log(
+            `[REALTIME] Field "${f}" → MEDIA, url: ${(value as any).url}`,
+          );
+          clean[f] = (value as any).url;
+        } else if (
+          value &&
+          typeof value === "object" &&
+          !Array.isArray(value)
+        ) {
+          const selectedSubFields = relationSubFieldMap[f];
+
+          if (selectedSubFields?.length) {
+            selectedSubFields.forEach((sf) => {
+              const key = `${f}.${sf}`;
+              clean[key] = (value as any)[sf] ?? null;
+              console.log(
+                `[REALTIME] Field "${f}" → sub-field "${sf}" → "${clean[key]}"`,
+              );
+            });
+          } else {
+            const resolved =
+              (value as any).name ||
+              (value as any).title ||
+              (value as any).label ||
+              (value as any).fullName ||
+              (value as any).username ||
+              (value as any).id ||
+              JSON.stringify(value);
+            console.log(
+              `[REALTIME] Field "${f}" → RELATION (no sub-fields), display: "${resolved}"`,
+              `| keys: [${Object.keys(value).join(", ")}]`,
+            );
+            clean[f] = resolved;
+          }
+        } else if (Array.isArray(value)) {
+          const selectedSubFields = relationSubFieldMap[f];
+
+          if (selectedSubFields?.length) {
+            clean[f] = value.map((item: any) => {
+              const obj: any = {};
+              selectedSubFields.forEach((sf) => {
+                obj[sf] = item[sf] ?? null;
+              });
+              return obj;
+            });
+            console.log(
+              `[REALTIME] Field "${f}" → ARRAY RELATION with sub-fields:`,
+              clean[f],
+            );
+          } else {
+            const resolved = value.map(
+              (item: any) =>
+                item.name ||
+                item.title ||
+                item.label ||
+                item.fullName ||
+                item.username ||
+                item.id ||
+                JSON.stringify(item),
+            );
+            console.log(
+              `[REALTIME] Field "${f}" → ARRAY RELATION (no sub-fields):`,
+              resolved,
+            );
+            clean[f] = resolved.join(", ");
+          }
         } else {
           clean[f] = value;
         }
       }
+
       return clean;
     });
+
+    console.log(
+      `[REALTIME] Cleaned items for "${plan.collection}":`,
+      JSON.stringify(cleaned, null, 2),
+    );
 
     return {
       type: "list",
@@ -394,15 +541,11 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
   });
 
   const embeddingTokensUsed = embedding.usage?.total_tokens || 0;
-
   usage.embedding_tokens += embeddingTokensUsed;
   usage.total_tokens += embeddingTokensUsed;
 
   let queryVector = embedding.data[0].embedding;
-
-  if (!queryVector || !queryVector.length) {
-    return [];
-  }
+  if (!queryVector || !queryVector.length) return [];
 
   const faqs = await strapi.db
     .connection("chatbot_config_faqqas")
@@ -416,9 +559,7 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
     let dbVector = f.embedding;
 
     try {
-      if (typeof dbVector === "string") {
-        dbVector = JSON.parse(dbVector);
-      }
+      if (typeof dbVector === "string") dbVector = JSON.parse(dbVector);
 
       dbVector = Array.isArray(dbVector)
         ? dbVector.map((n: any) => Number(n))
@@ -437,13 +578,11 @@ async function searchFAQ(question: string, strapi: any, usage: any) {
     }
   });
 
-  scored.sort((a, b) => b.similarity - a.similarity);
+  scored.sort((a: any, b: any) => b.similarity - a.similarity);
 
-  if (!scored.length || scored[0].similarity < 0.4) {
-    return [];
-  }
+  if (!scored.length || scored[0].similarity < 0.4) return [];
 
-  return scored.slice(0, 3).map((s) => s.answer);
+  return scored.slice(0, 3).map((s: any) => s.answer);
 }
 
 async function simplePlanner(
@@ -634,68 +773,15 @@ ${JSON.stringify(activeCollections, null, 2)}
 
   try {
     const raw = response.choices[0].message.content || "{}";
-
     const cleaned = raw
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
-
-    const plan = JSON.parse(cleaned);
-
-    return plan;
+    return JSON.parse(cleaned);
   } catch (err) {
     console.error("[PLANNER] JSON parse error:", err);
     return null;
   }
-}
-
-async function realtimeInterpreterAI(
-  strapi: any,
-  question: string,
-  realtimeData: any,
-  usage: any,
-) {
-  if (!realtimeData) return null;
-  const openai = await getOpenAI(strapi);
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.2,
-    messages: [
-      {
-        role: "system",
-        content: `
-You are a realtime data interpreter.
-
-Convert database JSON into a SHORT natural language summary.
-
-Rules:
-- Do NOT output JSON
-- Do NOT hallucinate
-- If count → say number
-- If list → summarize important fields only
-- Max 3–4 lines
-`,
-      },
-      {
-        role: "user",
-        content: `
-QUESTION: ${question}
-
-REALTIME DATA:
-${JSON.stringify(realtimeData)}
-`,
-      },
-    ],
-  });
-
-  usage.prompt_tokens += response.usage?.prompt_tokens || 0;
-  usage.completion_tokens += response.usage?.completion_tokens || 0;
-  usage.total_tokens += response.usage?.total_tokens || 0;
-
-  const text = response.choices[0].message.content;
-
-  return text;
 }
 
 async function filterRelevantItems(
@@ -712,7 +798,6 @@ async function filterRelevantItems(
     return realtimeMeta;
   }
 
-  // If only 1 item, no need to filter
   if (realtimeMeta.items.length === 1) return realtimeMeta;
 
   try {
@@ -775,7 +860,6 @@ async function finalAggregator(
   question: string,
   faq: any,
   realtimeMeta: any,
-  realtimeText: any,
   contactLink: string | null,
   instructions: { response: string },
   cardStyles: any,
@@ -801,12 +885,11 @@ async function finalAggregator(
         content: `
 
         ${instructions.response || ""}
-You are an intelligent AI Assistant for a website chatbot.
+You are an intelligent AI Assistant for a website chatbot. If you don't know the answer based on the data you are provided, answer that honestly to the user.
 
 INPUTS:
 - FAQ semantic answers
 - REALTIME_META (structured database info)
-- REALTIME_TEXT (human summary)
 - User question
 
 --------------------------------
@@ -848,7 +931,6 @@ If FAQ answer is long:
 CORE RULE
 --------------------------------
 REALTIME_META decides logic.
-REALTIME_TEXT decides wording.
 NEVER mention image URLs, file paths, or media links in your response.
 Images are handled separately by the UI.
 
@@ -874,13 +956,15 @@ CASE 1 — REALTIME_META.type = "count"
 Return ONE sentence with the number.
 
 CASE 2 — REALTIME_META.type = "list"
-Use REALTIME_TEXT as main answer.
+Summarize the realtime items naturally.
+Note: relation fields may appear as "fieldName.subField" keys
+(e.g. "author.name", "author.email") — treat them naturally.
 
 CASE 3 — REALTIME_META = null
 Use FAQ.
 
 CASE 4 — BOTH EXIST
-Use REALTIME_TEXT as main + FAQ as support.
+Use realtime items as primary source and FAQ as supporting information.
 
 CASE 5 — NOTHING
 Use the system instructions context to answer general questions about the business.
@@ -890,7 +974,6 @@ Never hallucinate information not present in system instructions or FAQ.
 
 Never show JSON.
 Never hallucinate.
-Max 5 lines.
 `,
       },
       {
@@ -908,9 +991,6 @@ ${JSON.stringify(faq)}
 
 REALTIME_META:
 ${JSON.stringify(realtimeMeta)}
-
-REALTIME_TEXT:
-${realtimeText}
 `,
       },
     ],
@@ -927,7 +1007,6 @@ ${realtimeText}
   }
 
   const estimatedTokens = Math.ceil(fullText.length / 4);
-
   usage.completion_tokens += estimatedTokens;
   usage.total_tokens += estimatedTokens;
 
@@ -986,13 +1065,12 @@ export default ({ strapi }: { strapi: any }) => ({
     try {
       const temp = new OpenAI({ apiKey: key });
 
-      const response = await temp.chat.completions.create({
+      await temp.chat.completions.create({
         model: "gpt-4o-mini",
         max_tokens: 5,
         messages: [{ role: "user", content: "2+2" }],
       });
 
-      const answer = response.choices?.[0]?.message?.content?.trim();
       ctx.body = {
         valid: true,
         message: "Key is valid and gpt-4o-mini is accessible.",
@@ -1052,6 +1130,7 @@ export default ({ strapi }: { strapi: any }) => ({
       prompt_tokens: 0,
       completion_tokens: 0,
       total_tokens: 0,
+      embedding_tokens: 0,
     };
 
     const instructions = await getInstructions(strapi);
@@ -1074,12 +1153,9 @@ export default ({ strapi }: { strapi: any }) => ({
       const contactLink = await getContactLink(strapi);
       const cardStyles = await getCardStyles(strapi);
 
-      // FAQ
       const faqResults = await searchFAQ(rewritten, strapi, usage);
 
-      // PLAN
       let plan = null;
-
       if (activeCollections.length > 0) {
         plan = await simplePlanner(
           strapi,
@@ -1092,20 +1168,9 @@ export default ({ strapi }: { strapi: any }) => ({
         );
       }
 
-      // REALTIME
       let realtimeResults = null;
-      let realtimeAIText = null;
-
       if (plan && plan.collection) {
         realtimeResults = await searchRealtime(strapi, plan, activeCollections);
-
-        realtimeAIText = await realtimeInterpreterAI(
-          strapi,
-          rewritten,
-          realtimeResults,
-          usage,
-        );
-
         realtimeResults = await filterRelevantItems(
           strapi,
           rewritten,
@@ -1120,7 +1185,6 @@ export default ({ strapi }: { strapi: any }) => ({
         rewritten,
         faqResults,
         realtimeResults,
-        realtimeAIText,
         contactLink,
         instructions,
         cardStyles,
@@ -1154,10 +1218,6 @@ export default ({ strapi }: { strapi: any }) => ({
       embeddingTokens: 0,
     };
 
-    // pricing
-    // Input:  $0.150 per 1M tokens
-    // Output: $0.600 per 1M tokens
-    // Embeddings: $0.020 per 1M tokens
     const inputCost = (usage.promptTokens / 1_000_000) * 0.15;
     const outputCost = (usage.completionTokens / 1_000_000) * 0.6;
     const embeddingCost = (usage.embeddingTokens / 1_000_000) * 0.02;

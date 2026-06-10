@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import {
   Box,
@@ -7,17 +7,132 @@ import {
   Checkbox,
   Accordion,
 } from "@strapi/design-system";
-import { Plus, Trash, Information } from "@strapi/icons";
+import {
+  Plus,
+  Trash,
+  Information,
+  ChevronUp,
+  ChevronDown,
+} from "@strapi/icons";
+
+export interface FieldMeta {
+  name: string;
+  type?: string;
+  relationTarget?: string;
+  relationSubFieldNames?: string[];
+}
+
+export interface CollectionMeta {
+  uid: string;
+  name: string;
+  fields: FieldMeta[];
+  cardStyle?: string;
+}
+
+export type GlobalPermissions = Record<string, boolean>;
 
 interface ResponseTemplatesProps {
-  collections: any[];
-  availableCollections: any[];
-  onToggleField: (uid: string, fieldName: string) => void;
-  onToggleAll: (uid: string, value: boolean) => void;
+  collections: CollectionMeta[];
+  availableCollections: CollectionMeta[];
+  permissions: GlobalPermissions;
   cardOptions: { id: string; label: string }[];
+  onSetPermission: (key: string, value: boolean) => void;
+  onSetManyPermissions: (keys: string[], value: boolean) => void;
   onRemoveCollection: (uid: string) => void;
   onUpdateCardStyle: (uid: string, style: string) => void;
   onAddCollection: (uid: string) => void;
+}
+
+function permKey(uid: string, fieldName: string): string {
+  return `${uid}.${fieldName}`;
+}
+
+function resolveSubFieldKey(targetUid: string, subFieldName: string): string {
+  return permKey(targetUid, subFieldName);
+}
+
+type TriState = "checked" | "indeterminate" | "unchecked";
+
+function triStateFromKeys(
+  keys: string[],
+  permissions: GlobalPermissions,
+): TriState {
+  const knownKeys = keys.filter((k) => k in permissions);
+  if (knownKeys.length === 0) return "unchecked";
+  const enabled = knownKeys.filter((k) => permissions[k] === true).length;
+  if (enabled === 0) return "unchecked";
+  if (enabled === knownKeys.length) return "checked";
+  return "indeterminate";
+}
+
+const HiddenNativeCheckbox = styled.input`
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+`;
+
+const IndeterminateBox = styled.div`
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  background: ${({ theme }) => theme.colors.primary600};
+  border: 1px solid ${({ theme }) => theme.colors.primary600};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+`;
+
+const DashLine = styled.div`
+  width: 12px;
+  height: 1.5px;
+  background: ${({ theme }) => theme.colors.neutral0};
+  border-radius: 1px;
+`;
+
+function TriStateCheckbox({
+  state,
+  onChange,
+}: {
+  state: TriState;
+  onChange: (selectAll: boolean) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = state === "indeterminate";
+      ref.current.checked = state === "checked";
+    }
+  }, [state]);
+
+  if (state === "indeterminate") {
+    return (
+      <>
+        {/* Hidden native input so the DOM indeterminate property is set */}
+        <HiddenNativeCheckbox
+          type="checkbox"
+          ref={ref}
+          checked={false}
+          onChange={() => onChange(true)}
+        />
+        {/* Visual representation matching Strapi's checkbox */}
+        <IndeterminateBox onClick={() => onChange(true)}>
+          <DashLine />
+        </IndeterminateBox>
+      </>
+    );
+  }
+
+  return (
+    <Checkbox
+      checked={state === "checked"}
+      onCheckedChange={() => onChange(state !== "checked")}
+    />
+  );
 }
 
 const CustomText = styled.span<{
@@ -49,11 +164,9 @@ const StyledAccordionItem = styled(Accordion.Item)`
   border-top: none !important;
   border-bottom: 1px solid ${({ theme }) => theme.colors.neutral200} !important;
   transition: background 0.2s ease;
-
   &[data-state="open"] {
     background: ${({ theme }) => theme.colors.primary100} !important;
   }
-
   &,
   &:hover,
   &:focus,
@@ -64,7 +177,6 @@ const StyledAccordionItem = styled(Accordion.Item)`
     outline: none !important;
     box-shadow: none !important;
   }
-
   & > div {
     border-top: none !important;
   }
@@ -77,7 +189,6 @@ const HeaderRow = styled(Flex)`
   padding-left: 24px;
   justify-content: space-between;
   background: transparent;
-
   ${StyledAccordionItem}[data-state='open'] & {
     border-bottom: 1px solid ${({ theme }) => theme.colors.neutral200};
   }
@@ -272,7 +383,6 @@ const AccordionContent = styled(Accordion.Content)`
 const FieldsRow = styled(Flex)`
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
   align-items: center;
 `;
 
@@ -286,12 +396,72 @@ const CardStyleRow = styled(Flex)`
   gap: 8px;
 `;
 
+const RelationToggleButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.primary600};
+  line-height: 1;
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const RelationSubPanel = styled(Box)`
+  width: 100%;
+  background: ${({ theme }) => theme.colors.neutral0};
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const RelationSubPanelTitle = styled.span`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.neutral500};
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+`;
+
+const SubFieldsRow = styled(Flex)`
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+`;
+
+function labelFromUid(uid: string): string {
+  const parts = uid?.split("::") ?? [];
+  const rest = parts[1] ?? uid;
+  const name = rest.split(".")[0] ?? rest;
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 const ResponseTemplates = ({
   collections,
   availableCollections,
-  onToggleField,
-  onToggleAll,
+  permissions,
   cardOptions,
+  onSetPermission,
+  onSetManyPermissions,
   onRemoveCollection,
   onUpdateCardStyle,
   onAddCollection,
@@ -299,25 +469,23 @@ const ResponseTemplates = ({
   const [isAdding, setIsAdding] = useState(false);
   const [selectedUid, setSelectedUid] = useState("");
   const [openItem, setOpenItem] = useState<string | undefined>();
+  const [openRelations, setOpenRelations] = useState<Record<string, boolean>>(
+    {},
+  );
 
-  const pendingAutoSelectRef = React.useRef<string | null>(null);
+  const toggleRelationPanel = (collectionUid: string, fieldName: string) => {
+    const key = `${collectionUid}::${fieldName}`;
+    setOpenRelations((prev) => {
+      if (prev[key]) return {};
+      return { [key]: true };
+    });
+  };
 
-  React.useLayoutEffect(() => {
-    const uid = pendingAutoSelectRef.current;
-    if (!uid) return;
-    const exists = collections.some((c) => c.uid === uid);
-    if (exists) {
-      onToggleAll(uid, true);
-      pendingAutoSelectRef.current = null;
-    }
-  });
+  const isRelationOpen = (collectionUid: string, fieldName: string) =>
+    !!openRelations[`${collectionUid}::${fieldName}`];
 
   const handleAdd = () => {
-    if (selectedUid) {
-      pendingAutoSelectRef.current = selectedUid;
-      onAddCollection(selectedUid);
-      setOpenItem(selectedUid);
-    }
+    if (selectedUid) onAddCollection(selectedUid);
     setIsAdding(false);
     setSelectedUid("");
   };
@@ -338,20 +506,34 @@ const ResponseTemplates = ({
       <AccordionRoot value={openItem} onValueChange={setOpenItem}>
         {collections.map((collection) => {
           const { uid, name, fields, cardStyle } = collection;
-          const enabledCount = fields.filter((f: any) => f.enabled).length;
-          const totalCount = fields.length;
+          const isOpen = openItem === uid;
+
+          const nonRelationFields = fields.filter((f) => f.type !== "relation");
+          const enabledNonRelation = nonRelationFields.filter(
+            (f) => permissions[permKey(uid, f.name)] === true,
+          ).length;
+          const totalNonRelation = nonRelationFields.length;
+
+          const allFieldKeys = fields.flatMap((f) => {
+            if (f.type === "relation") {
+              if (f.relationTarget && f.relationSubFieldNames?.length) {
+                return f.relationSubFieldNames
+                  .map((sf) => resolveSubFieldKey(f.relationTarget!, sf))
+                  .filter((k) => k in permissions);
+              }
+              return [];
+            }
+            return [permKey(uid, f.name)];
+          });
+
+          const collectionTriState = triStateFromKeys(
+            allFieldKeys,
+            permissions,
+          );
+
           const cardLabel = Array.isArray(cardOptions)
             ? cardOptions.find((opt) => opt.id === cardStyle)?.label || "None"
             : "None";
-          const isOpen = openItem === uid;
-
-          const handleRemoveCollection = () => onRemoveCollection(uid);
-          const handleClearCardStyle = () => onUpdateCardStyle(uid, "");
-          const handleUpdateCardStyle = (optId: string) => () =>
-            onUpdateCardStyle(uid, optId);
-          const handleToggleAll = (val: boolean) => onToggleAll(uid, val);
-          const handleToggleField = (fieldName: string) => () =>
-            onToggleField(uid, fieldName);
 
           return (
             <StyledAccordionItem key={uid} value={uid}>
@@ -374,67 +556,217 @@ const ResponseTemplates = ({
                         color="neutral500"
                         style={{ display: "block" }}
                       >
-                        {enabledCount} of {totalCount} fields active ·{" "}
-                        {cardLabel}
+                        {enabledNonRelation} of {totalNonRelation} fields active
+                        · {cardLabel}
                       </CustomText>
                     </Box>
                   </StyledTrigger>
                   <ActionsContainer>
                     <ActionButton
                       type="button"
-                      onClick={handleRemoveCollection}
+                      onClick={() => onRemoveCollection(uid)}
                     >
                       <Trash width="13" height="13" />
                     </ActionButton>
                   </ActionsContainer>
                 </HeaderRow>
               </StyledHeader>
+
               <AccordionContent>
                 <Box padding={6} background="transparent">
                   <SectionTitle>FIELDS</SectionTitle>
+
                   <FieldsRow>
+                    {/* ── "All" checkbox for the whole collection ── */}
                     <Flex gap={2} alignItems="center">
-                      <Checkbox
-                        checked={enabledCount === totalCount}
-                        onCheckedChange={handleToggleAll}
+                      <TriStateCheckbox
+                        state={collectionTriState}
+                        onChange={(selectAll) =>
+                          onSetManyPermissions(allFieldKeys, selectAll)
+                        }
                       />
                       <CustomText size="13px" weight={500}>
                         All
                       </CustomText>
                     </Flex>
                     <VerticalDivider />
-                    {fields.map((field: any) => (
-                      <FieldItem key={field.name}>
-                        <Checkbox
-                          checked={field.enabled}
-                          onCheckedChange={handleToggleField(field.name)}
-                        />
-                        <CustomText size="13px">{field.name}</CustomText>
-                      </FieldItem>
-                    ))}
+
+                    {fields.map((field) => {
+                      const isRelation = field.type === "relation";
+
+                      let fieldChecked = false;
+                      let fieldIndeterminate = false;
+
+                      if (
+                        isRelation &&
+                        field.relationTarget &&
+                        field.relationSubFieldNames?.length
+                      ) {
+                        const subKeys = field.relationSubFieldNames
+                          .map((sf) =>
+                            resolveSubFieldKey(field.relationTarget!, sf),
+                          )
+                          .filter((k) => k in permissions);
+                        const ts = triStateFromKeys(subKeys, permissions);
+                        fieldChecked = ts === "checked";
+                        fieldIndeterminate = ts === "indeterminate";
+                      } else {
+                        fieldChecked =
+                          permissions[permKey(uid, field.name)] === true;
+                      }
+
+                      const fieldState: TriState = fieldIndeterminate
+                        ? "indeterminate"
+                        : fieldChecked
+                          ? "checked"
+                          : "unchecked";
+
+                      const relationOpen =
+                        isRelation && isRelationOpen(uid, field.name);
+
+                      return (
+                        <FieldItem key={field.name}>
+                          <TriStateCheckbox
+                            state={fieldState}
+                            onChange={(selectAll) => {
+                              if (
+                                isRelation &&
+                                field.relationTarget &&
+                                field.relationSubFieldNames?.length
+                              ) {
+                                const subKeys = field.relationSubFieldNames.map(
+                                  (sf) =>
+                                    resolveSubFieldKey(
+                                      field.relationTarget!,
+                                      sf,
+                                    ),
+                                );
+                                onSetManyPermissions(subKeys, selectAll);
+                              } else {
+                                onSetPermission(
+                                  permKey(uid, field.name),
+                                  selectAll,
+                                );
+                              }
+                            }}
+                          />
+                          <CustomText size="13px">{field.name}</CustomText>
+
+                          {isRelation &&
+                            field.relationSubFieldNames &&
+                            field.relationSubFieldNames.length > 0 && (
+                              <RelationToggleButton
+                                type="button"
+                                title={`${relationOpen ? "Hide" : "Show"} ${field.name} fields`}
+                                onClick={() =>
+                                  toggleRelationPanel(uid, field.name)
+                                }
+                              >
+                                {relationOpen ? (
+                                  <ChevronUp width="12" height="12" />
+                                ) : (
+                                  <ChevronDown width="12" height="12" />
+                                )}
+                              </RelationToggleButton>
+                            )}
+                        </FieldItem>
+                      );
+                    })}
                   </FieldsRow>
-                  <SectionTitle>CARD STYLE</SectionTitle>
-                  <CardStyleRow>
-                    <CardStyleButton
-                      type="button"
-                      active={!cardStyle}
-                      onClick={handleClearCardStyle}
-                    >
-                      None
-                    </CardStyleButton>
-                    {(Array.isArray(cardOptions) ? cardOptions : []).map(
-                      (option) => (
-                        <CardStyleButton
-                          key={option.id}
-                          type="button"
-                          active={cardStyle === option.id}
-                          onClick={handleUpdateCardStyle(option.id)}
-                        >
-                          {option.label}
-                        </CardStyleButton>
-                      ),
-                    )}
-                  </CardStyleRow>
+
+                  {/* ── Relation sub-panels ── */}
+                  {fields.map((field) => {
+                    if (
+                      field.type !== "relation" ||
+                      !field.relationTarget ||
+                      !field.relationSubFieldNames?.length ||
+                      !isRelationOpen(uid, field.name)
+                    )
+                      return null;
+
+                    const targetUid = field.relationTarget;
+                    const subFieldNames = field.relationSubFieldNames;
+
+                    const subKeys = subFieldNames
+                      .map((sf) => resolveSubFieldKey(targetUid, sf))
+                      .filter((k) => k in permissions);
+
+                    const allSubTs = triStateFromKeys(subKeys, permissions);
+                    const panelLabel = labelFromUid(targetUid);
+
+                    return (
+                      <RelationSubPanel key={`subpanel-${field.name}`}>
+                        <RelationSubPanelTitle>
+                          {panelLabel} fields
+                          <span
+                            style={{
+                              fontWeight: 400,
+                              opacity: 0.6,
+                              marginLeft: 6,
+                            }}
+                          >
+                            (same as {panelLabel} collection)
+                          </span>
+                        </RelationSubPanelTitle>
+                        <SubFieldsRow>
+                          {/* All for this relation */}
+                          <Flex gap={2} alignItems="center">
+                            <TriStateCheckbox
+                              state={allSubTs}
+                              onChange={(selectAll) =>
+                                onSetManyPermissions(subKeys, selectAll)
+                              }
+                            />
+                            <CustomText size="13px" weight={500}>
+                              All
+                            </CustomText>
+                          </Flex>
+                          <VerticalDivider />
+
+                          {subFieldNames.map((sf) => {
+                            const key = resolveSubFieldKey(targetUid, sf);
+                            const isEnabled = permissions[key] === true;
+                            return (
+                              <FieldItem key={sf}>
+                                <Checkbox
+                                  checked={isEnabled}
+                                  onCheckedChange={(val: boolean) =>
+                                    onSetPermission(key, val)
+                                  }
+                                />
+                                <CustomText size="13px">{sf}</CustomText>
+                              </FieldItem>
+                            );
+                          })}
+                        </SubFieldsRow>
+                      </RelationSubPanel>
+                    );
+                  })}
+
+                  <Box paddingTop={6}>
+                    <SectionTitle>CARD STYLE</SectionTitle>
+                    <CardStyleRow>
+                      <CardStyleButton
+                        type="button"
+                        active={!cardStyle}
+                        onClick={() => onUpdateCardStyle(uid, "")}
+                      >
+                        None
+                      </CardStyleButton>
+                      {(Array.isArray(cardOptions) ? cardOptions : []).map(
+                        (option) => (
+                          <CardStyleButton
+                            key={option.id}
+                            type="button"
+                            active={cardStyle === option.id}
+                            onClick={() => onUpdateCardStyle(uid, option.id)}
+                          >
+                            {option.label}
+                          </CardStyleButton>
+                        ),
+                      )}
+                    </CardStyleRow>
+                  </Box>
                 </Box>
               </AccordionContent>
             </StyledAccordionItem>
@@ -466,12 +798,9 @@ const ResponseTemplates = ({
             ) : (
               <>
                 <option value="">Select a collection type...</option>
-                {availableCollections.map((availableCollection) => (
-                  <option
-                    key={availableCollection.uid}
-                    value={availableCollection.uid}
-                  >
-                    {availableCollection.name}
+                {availableCollections.map((c) => (
+                  <option key={c.uid} value={c.uid}>
+                    {c.name}
                   </option>
                 ))}
               </>

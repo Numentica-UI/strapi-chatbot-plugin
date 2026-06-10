@@ -14,23 +14,15 @@ import { useForm } from "react-hook-form";
 
 import ChatbotPreview from "../components/ChatbotPreview";
 import BasicSettings from "../components/BasicSettings";
-import ResponseTemplates from "../components/ResponseTemplates";
+import ResponseTemplates, {
+  type CollectionMeta,
+  type FieldMeta,
+  type GlobalPermissions,
+} from "../components/ResponseTemplates";
 import SuggestedQuestions from "../components/SuggestedQuestions";
 import AiInstructions from "../components/AiInstructions";
 import SetupProgress from "../components/SetupProgress";
 import LockedSection from "../components/LockedSection";
-
-type FieldConfig = {
-  name: string;
-  enabled: boolean;
-};
-
-type CollectionConfig = {
-  uid: string;
-  name: string;
-  fields: FieldConfig[];
-  cardStyle?: string;
-};
 
 type FormValues = {
   openaiKey: string;
@@ -40,8 +32,182 @@ type FormValues = {
   systemInstructions: string;
   responseInstructions: string;
   suggestedQuestions: string[];
-  activeCollections: CollectionConfig[];
+  activeCollectionUids: string[];
+  cardStyles: Record<string, string>;
+  permissions: GlobalPermissions;
 };
+
+const SYSTEM_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "publishedAt",
+  "createdBy",
+  "updatedBy",
+  "locale",
+  "localizations",
+  "__component",
+  "id",
+];
+
+const ALLOWED_SUB_FIELD_TYPES = [
+  "string",
+  "text",
+  "email",
+  "uid",
+  "integer",
+  "biginteger",
+  "decimal",
+  "float",
+  "boolean",
+  "enumeration",
+  "date",
+  "datetime",
+  "media",
+];
+
+function permKey(uid: string, fieldName: string): string {
+  return `${uid}.${fieldName}`;
+}
+
+function buildCollectionMeta(allCts: any[]): CollectionMeta[] {
+  return allCts.map((ct: any) => {
+    const fields: FieldMeta[] = (ct.attributes || [])
+      .filter((attr: any) => !SYSTEM_FIELDS.includes(attr.name))
+      .map((attr: any): FieldMeta => {
+        const base: FieldMeta = {
+          name: attr.name,
+          type: attr.type,
+        };
+
+        if (attr.type === "relation" && attr.target) {
+          base.relationTarget = attr.target;
+          const relatedCt = allCts.find((c: any) => c.uid === attr.target);
+          if (relatedCt && Array.isArray(relatedCt.attributes)) {
+            base.relationSubFieldNames = relatedCt.attributes
+              .filter(
+                (subAttr: any) =>
+                  !SYSTEM_FIELDS.includes(subAttr.name) &&
+                  ALLOWED_SUB_FIELD_TYPES.includes(subAttr.type),
+              )
+              .map((subAttr: any) => subAttr.name);
+          }
+        }
+
+        return base;
+      });
+
+    return {
+      uid: ct.uid,
+      name: ct.displayName,
+      fields,
+    };
+  });
+}
+
+function buildPermissionsFromSaved(
+  allCollectionMeta: CollectionMeta[],
+  savedConfig: Record<string, string[]>,
+  savedRelationConfig: Record<string, Record<string, string[]>>,
+): GlobalPermissions {
+  const perms: GlobalPermissions = {};
+
+  for (const col of allCollectionMeta) {
+    for (const field of col.fields) {
+      if (field.type !== "relation") {
+        perms[permKey(col.uid, field.name)] = false;
+      }
+      if (
+        field.type === "relation" &&
+        field.relationTarget &&
+        field.relationSubFieldNames
+      ) {
+        for (const sf of field.relationSubFieldNames) {
+          perms[permKey(field.relationTarget, sf)] = false;
+        }
+      }
+    }
+  }
+
+  for (const [uid, enabledFields] of Object.entries(savedConfig)) {
+    for (const fieldName of enabledFields) {
+      const key = permKey(uid, fieldName);
+      if (key in perms) perms[key] = true;
+    }
+  }
+
+  for (const col of allCollectionMeta) {
+    const relConf = savedRelationConfig[col.uid] || {};
+    for (const field of col.fields) {
+      if (field.type !== "relation" || !field.relationTarget) continue;
+      const enabledSubFields = relConf[field.name] || [];
+      for (const sf of enabledSubFields) {
+        const key = permKey(field.relationTarget, sf);
+        if (key in perms) perms[key] = true;
+      }
+    }
+  }
+
+  return perms;
+}
+
+function serializePermissions(
+  activeCollectionUids: string[],
+  allCollectionMeta: CollectionMeta[],
+  permissions: GlobalPermissions,
+): {
+  config: Record<string, string[]>;
+  relationConfig: Record<string, Record<string, string[]>>;
+} {
+  const config: Record<string, string[]> = {};
+
+  for (const uid of activeCollectionUids) {
+    const col = allCollectionMeta.find((c) => c.uid === uid);
+    if (!col) continue;
+
+    const enabledFields: string[] = [];
+    for (const field of col.fields) {
+      if (field.type === "relation") continue;
+      if (permissions[permKey(uid, field.name)] === true) {
+        enabledFields.push(field.name);
+      }
+    }
+    if (enabledFields.length > 0) config[uid] = enabledFields;
+  }
+
+  const relationConfig: Record<string, Record<string, string[]>> = {};
+
+  for (const uid of activeCollectionUids) {
+    const col = allCollectionMeta.find((c) => c.uid === uid);
+    if (!col) continue;
+
+    const relFields: Record<string, string[]> = {};
+    for (const field of col.fields) {
+      if (
+        field.type !== "relation" ||
+        !field.relationTarget ||
+        !field.relationSubFieldNames
+      )
+        continue;
+      const enabled = field.relationSubFieldNames.filter(
+        (sf) => permissions[permKey(field.relationTarget!, sf)] === true,
+      );
+      if (enabled.length > 0) relFields[field.name] = enabled;
+    }
+    if (Object.keys(relFields).length > 0) relationConfig[uid] = relFields;
+  }
+
+  return { config, relationConfig };
+}
+
+function countEnabledForCollection(
+  col: CollectionMeta,
+  permissions: GlobalPermissions,
+): number {
+  return col.fields.filter(
+    (f) =>
+      f.type !== "relation" && permissions[permKey(col.uid, f.name)] === true,
+  ).length;
+}
 
 function normalizeDomain(url: string): string {
   if (!url) return "";
@@ -49,8 +215,7 @@ function normalizeDomain(url: string): string {
   if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
     normalized = "https://" + normalized;
   }
-  normalized = normalized.replace(/\/+$/, "");
-  return normalized;
+  return normalized.replace(/\/+$/, "");
 }
 
 const LoaderWrapper = styled(Flex)`
@@ -141,7 +306,7 @@ const SavedBadgeText = styled(Typography)`
 `;
 
 const HomePage = () => {
-  const [allContentTypes, setAllContentTypes] = useState<CollectionConfig[]>(
+  const [allCollectionMeta, setAllCollectionMeta] = useState<CollectionMeta[]>(
     [],
   );
   const [cardOptions, setCardOptions] = useState<any[]>([]);
@@ -169,68 +334,64 @@ const HomePage = () => {
       systemInstructions: "",
       responseInstructions: "",
       suggestedQuestions: [],
-      activeCollections: [],
+      activeCollectionUids: [],
+      cardStyles: {},
+      permissions: {},
     },
   });
 
   const values = watch();
   const isLocked =
-    !values.baseDomain ||
-    !values.openaiKey ||
-    !values.contactLink ;
+    !values.baseDomain || !values.openaiKey || !values.contactLink;
+
+  const activeCollections = values.activeCollectionUids
+    .map((uid) => {
+      const meta = allCollectionMeta.find((c) => c.uid === uid);
+      if (!meta) return null;
+      return { ...meta, cardStyle: values.cardStyles[uid] };
+    })
+    .filter(Boolean) as (CollectionMeta & { cardStyle?: string })[];
+
+  const addableCollections = allCollectionMeta.filter(
+    (c) =>
+      c.uid !== "plugin::nui-strapi-chatbot-plugin.faqqa" &&
+      !values.activeCollectionUids.includes(c.uid),
+  );
 
   const init = async () => {
     try {
       const { data } = await get("/nui-strapi-chatbot-plugin/collections");
       const settings = data.settings || {};
-      const savedConfig = settings.config || {};
-      const savedStyles = settings.cardStyles || {};
+      const savedConfig: Record<string, string[]> = settings.config || {};
+      const savedRelationConfig: Record<
+        string,
+        Record<string, string[]>
+      > = settings.relationConfig || {};
+      const savedStyles: Record<string, string> = settings.cardStyles || {};
 
       const normalizedBase = normalizeDomain(settings.baseDomain || "");
 
       if (normalizedBase) {
         fetch(`${normalizedBase}/card-mapping.json`, { cache: "no-store" })
-          .then((res) => {
-            if (!res.ok && res.status !== 304)
-              throw new Error("Failed to load card mapping");
-            return res.status === 304 ? null : res.json();
-          })
-          .then((data) => {
-            if (data) setCardOptions(data);
+          .then((res) => (res.ok || res.status === 304 ? res.json() : null))
+          .then((d) => {
+            if (d) setCardOptions(d);
           })
           .catch(() => setCardOptions([]));
       }
 
-      const SYSTEM_FIELDS = [
-        "createdAt",
-        "updatedAt",
-        "publishedAt",
-        "createdBy",
-        "updatedBy",
-        "locale",
-        "localizations",
-        "__component",
-        "id",
-      ];
+      const allCts: any[] = data.contentTypes || [];
+      const meta = buildCollectionMeta(allCts);
+      setAllCollectionMeta(meta);
 
-      const formattedAll: CollectionConfig[] = (data.contentTypes || []).map(
-        (ct: any) => ({
-          uid: ct.uid,
-          name: ct.displayName,
-          cardStyle: savedStyles[ct.uid] || undefined,
-          fields: ct.attributes
-            .filter((attr: any) => !SYSTEM_FIELDS.includes(attr.name))
-            .map((attr: any) => ({
-              name: attr.name,
-              enabled: savedConfig[ct.uid]?.includes(attr.name) || false,
-            })),
-        }),
+      const permissions = buildPermissionsFromSaved(
+        meta,
+        savedConfig,
+        savedRelationConfig,
       );
 
-      setAllContentTypes(formattedAll);
-
-      const initialActive = formattedAll.filter((ct: CollectionConfig) =>
-        Object.keys(savedConfig).includes(ct.uid),
+      const activeUids = Object.keys(savedConfig).filter((uid) =>
+        meta.some((c) => c.uid === uid),
       );
 
       setSavedOpenaiKey(settings.openaiKey || "");
@@ -243,7 +404,9 @@ const HomePage = () => {
         systemInstructions: settings.systemInstructions || "",
         responseInstructions: settings.responseInstructions || "",
         suggestedQuestions: settings.suggestedQuestions || [],
-        activeCollections: initialActive,
+        activeCollectionUids: activeUids,
+        cardStyles: savedStyles,
+        permissions,
       });
     } catch (err: any) {
       const message =
@@ -261,37 +424,39 @@ const HomePage = () => {
   }, [get]);
 
   const onSubmit = async (data: FormValues) => {
-    // Read latest state directly - data param from handleSubmit may be stale
-    const activeCollections = getValues("activeCollections");
-
-    const collectionsWithNoFields = activeCollections.filter(
-      (item) => !item.fields.some((f) => f.enabled),
-    );
-
-    if (collectionsWithNoFields.length > 0) {
-      const names = collectionsWithNoFields.map((c) => c.name).join(", ");
-      setCollectionError(`Please select at least one field for: ${names}`);
-      return;
+    const errors: string[] = [];
+    for (const uid of data.activeCollectionUids) {
+      const col = allCollectionMeta.find((c) => c.uid === uid);
+      if (!col) continue;
+      const hasEnabled = col.fields.some(
+        (f) =>
+          f.type !== "relation" &&
+          data.permissions[permKey(uid, f.name)] === true,
+      );
+      if (!hasEnabled) errors.push(col.name);
     }
 
+    if (errors.length > 0) {
+      setCollectionError(
+        `Please select at least one field for: ${errors.join(", ")}`,
+      );
+      return;
+    }
     setCollectionError("");
 
     try {
       const normalizedDomain = normalizeDomain(data.baseDomain);
-
-      const configToSave: Record<string, string[]> = {};
-      const stylesToSave: Record<string, string> = {};
-
-      data.activeCollections.forEach((item) => {
-        const enabled = item.fields.filter((f) => f.enabled).map((f) => f.name);
-        if (enabled.length > 0) configToSave[item.uid] = enabled;
-        if (item.cardStyle) stylesToSave[item.uid] = item.cardStyle;
-      });
+      const { config, relationConfig } = serializePermissions(
+        data.activeCollectionUids,
+        allCollectionMeta,
+        data.permissions,
+      );
 
       await post("/nui-strapi-chatbot-plugin/collections", {
         data: {
-          config: configToSave,
-          cardStyles: stylesToSave,
+          config,
+          cardStyles: data.cardStyles,
+          relationConfig,
           openaiKey: data.openaiKey,
           systemInstructions: data.systemInstructions,
           responseInstructions: data.responseInstructions,
@@ -305,12 +470,10 @@ const HomePage = () => {
       setSavedOpenaiKey(data.openaiKey);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
-
       toggleNotification({
         type: "success",
         message: "Settings saved successfully!",
       });
-
       await init();
     } catch {
       toggleNotification({
@@ -319,6 +482,61 @@ const HomePage = () => {
       });
     }
   };
+
+  const handleSetPermission = (key: string, value: boolean) => {
+    const current = getValues("permissions");
+    setValue(
+      "permissions",
+      { ...current, [key]: value },
+      { shouldDirty: true },
+    );
+    setCollectionError("");
+  };
+
+  const handleSetManyPermissions = (keys: string[], value: boolean) => {
+    const current = getValues("permissions");
+    const updated = { ...current };
+    for (const key of keys) updated[key] = value;
+    setValue("permissions", updated, { shouldDirty: true });
+    setCollectionError("");
+  };
+
+  const handleAddCollection = (uid: string) => {
+    const current = getValues("activeCollectionUids");
+    if (current.includes(uid)) return;
+    setValue("activeCollectionUids", [...current, uid], { shouldDirty: true });
+  };
+
+  const handleRemoveCollection = (uid: string) => {
+    const currentUids = getValues("activeCollectionUids");
+    const currentPerms = getValues("permissions");
+    const col = allCollectionMeta.find((c) => c.uid === uid);
+
+    const updatedUids = currentUids.filter((u) => u !== uid);
+
+    const updatedPerms = { ...currentPerms };
+    if (col) {
+      for (const field of col.fields) {
+        if (field.type !== "relation") {
+          updatedPerms[permKey(uid, field.name)] = false;
+        }
+      }
+    }
+
+    setValue("activeCollectionUids", updatedUids, { shouldDirty: true });
+    setValue("permissions", updatedPerms, { shouldDirty: true });
+  };
+
+  const handleUpdateCardStyle = (uid: string, style: string) => {
+    const current = getValues("cardStyles");
+    setValue("cardStyles", { ...current, [uid]: style }, { shouldDirty: true });
+  };
+
+  const activeCollectionsForProgress = activeCollections.map((col) => ({
+    uid: col.uid,
+    name: col.name,
+    enabledCount: countEnabledForCollection(col, values.permissions),
+  }));
 
   if (isLoading)
     return (
@@ -370,7 +588,6 @@ const HomePage = () => {
                 </PageSubtitle>
               </Box>
             </Box>
-
             <Flex alignItems="center">
               {isSaved && (
                 <SavedBadge background="success100">
@@ -394,7 +611,7 @@ const HomePage = () => {
             baseDomain={values.baseDomain}
             openaiKey={values.openaiKey}
             contactLink={values.contactLink}
-            collections={values.activeCollections}
+            collections={activeCollectionsForProgress}
             questions={values.suggestedQuestions}
             instructions={
               !!values.systemInstructions && !!values.responseInstructions
@@ -426,71 +643,15 @@ const HomePage = () => {
             error={collectionError}
           >
             <ResponseTemplates
-              collections={values.activeCollections}
-              availableCollections={allContentTypes.filter(
-                (c) =>
-                  c.uid !== "plugin::nui-strapi-chatbot-plugin.faqqa" &&
-                  !values.activeCollections.some(
-                    (active) => active.uid === c.uid,
-                  ),
-              )}
+              collections={activeCollections}
+              availableCollections={addableCollections}
+              permissions={values.permissions}
               cardOptions={cardOptions}
-              onToggleField={(uid, fName) => {
-                const current = getValues("activeCollections");
-                const updated = current.map((c) =>
-                  c.uid !== uid
-                    ? c
-                    : {
-                        ...c,
-                        fields: c.fields.map((f) =>
-                          f.name === fName ? { ...f, enabled: !f.enabled } : f,
-                        ),
-                      },
-                );
-                setValue("activeCollections", updated, { shouldDirty: true });
-                setCollectionError("");
-              }}
-              onToggleAll={(uid, val) => {
-                const current = getValues("activeCollections");
-                const updated = current.map((c) =>
-                  c.uid !== uid
-                    ? c
-                    : {
-                        ...c,
-                        fields: c.fields.map((f) => ({ ...f, enabled: val })),
-                      },
-                );
-                setValue("activeCollections", updated, { shouldDirty: true });
-                setCollectionError("");
-              }}
-              onRemoveCollection={(uid) => {
-                const current = getValues("activeCollections");
-                setValue(
-                  "activeCollections",
-                  current.filter((c) => c.uid !== uid),
-                  { shouldDirty: true },
-                );
-              }}
-              onUpdateCardStyle={(uid, style) => {
-                const current = getValues("activeCollections");
-                const updated = current.map((c) =>
-                  c.uid === uid ? { ...c, cardStyle: style } : c,
-                );
-                setValue("activeCollections", updated, { shouldDirty: true });
-              }}
-              onAddCollection={(uid) => {
-                const current = getValues("activeCollections");
-                const newlyAdded = allContentTypes.find((ct) => ct.uid === uid);
-                if (newlyAdded) {
-                  const formatted = {
-                    ...JSON.parse(JSON.stringify(newlyAdded)),
-                    cardStyle: cardOptions[0]?.id || "",
-                  };
-                  setValue("activeCollections", [...current, formatted], {
-                    shouldDirty: true,
-                  });
-                }
-              }}
+              onSetPermission={handleSetPermission}
+              onSetManyPermissions={handleSetManyPermissions}
+              onRemoveCollection={handleRemoveCollection}
+              onUpdateCardStyle={handleUpdateCardStyle}
+              onAddCollection={handleAddCollection}
             />
           </LockedSection>
 

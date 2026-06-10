@@ -15,6 +15,7 @@ const ALLOWED_SETTINGS_KEYS: Record<
   cardStyles: { type: "object" },
   config: { type: "object" },
   suggestedQuestions: { type: "array" },
+  relationConfig: { type: "object" },
 };
 
 function sanitizeSettings(raw: any): Record<string, any> {
@@ -125,9 +126,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       .map((ct: any) => ({
         uid: ct.uid,
         displayName: ct.info.displayName,
-        attributes: Object.keys(ct.attributes).map((attr) => ({
-          name: attr,
-        })),
+        attributes: Object.entries(ct.attributes).map(
+          ([name, attr]: [string, any]) => ({
+            name,
+            type: attr.type,
+            ...(attr.target ? { target: attr.target } : {}),
+          }),
+        ),
       }));
 
     ctx.body = {
