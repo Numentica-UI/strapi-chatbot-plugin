@@ -195,8 +195,8 @@ const AiInstructions = ({
           <Information width={13} height={13} fill={theme.colors.neutral500} />
         </LabelRow>
         <HelpText>
-          Each line is a separate instruction. Changes auto-save when you click
-          elsewhere.
+          Each line is a separate instruction. After making changes, click elsewhere to open the confirmation dialog, 
+          then choose “Save” to apply them.
         </HelpText>
         <TextAreaWrapper>
           <StyledTextarea
@@ -235,8 +235,8 @@ const AiInstructions = ({
           </TonePill>
         </PillRow>
         <HelpText>
-          Customize the AI response message. Changes auto-save when you click
-          elsewhere.
+          Customize the AI response message. After making changes, click elsewhere to open the confirmation dialog, 
+          then choose “Save” to apply them.
         </HelpText>
         <TextAreaWrapper>
           <StyledTextarea
