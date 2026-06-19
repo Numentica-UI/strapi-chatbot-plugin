@@ -120,14 +120,31 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       .service("config")
       .getConfig();
 
+    const SYSTEM_FIELDS = new Set([
+      "createdAt",
+      "updatedAt",
+      "publishedAt",
+      "createdBy",
+      "updatedBy",
+      "locale",
+      "localizations",
+      "__component",
+      "id",
+    ]);
+
     const contentTypes = Object.values(strapi.contentTypes)
       .filter((ct: any) => ct.uid.startsWith("api::"))
       .map((ct: any) => ({
         uid: ct.uid,
         displayName: ct.info.displayName,
-        attributes: Object.keys(ct.attributes).map((attr) => ({
-          name: attr,
-        })),
+        attributes: Object.entries(ct.attributes)
+          .filter(([name]) => !SYSTEM_FIELDS.has(name))
+          .map(([name, attr]: [string, any]) => ({
+            name,
+            type: attr.type,
+            relationTarget:
+              attr.type === "relation" ? (attr.target ?? null) : null,
+          })),
       }));
 
     ctx.body = {
