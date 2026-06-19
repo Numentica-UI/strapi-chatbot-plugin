@@ -88,7 +88,7 @@
     "url": "git+https://github.com/Numentica-UI/strapi-chatbot-plugin.git"
   },
   "author": "app-release-admin@numentica-ui.com",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Numentica-UI/strapi-chatbot-plugin/issues"
   },
