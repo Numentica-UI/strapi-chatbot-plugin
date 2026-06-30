@@ -87,6 +87,13 @@
     "type": "git",
     "url": "git+https://github.com/Numentica-UI/strapi-chatbot-plugin.git"
   },
+  "keywords": [
+    "strapi",
+    "strapi-plugin",
+    "ai-chatbot",
+    "faq",
+    "openai"
+  ]
   "author": "app-release-admin@numentica-ui.com",
   "license": "MIT",
   "bugs": {
